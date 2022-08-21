@@ -1,0 +1,12 @@
+{% extends "admin/change_list.html" %}
+{% load static %}
+{% load i18n %}
+
+{% block object-tools-items %}
+{{ block.super }}
+<li>
+    <a href="{% url 'taskanalytics:admin_taskanalytics_download_csv' %}" class="btn btn-high">
+        {% translate "Download as CSV" %}
+    </a>
+</li>
+{% endblock %}

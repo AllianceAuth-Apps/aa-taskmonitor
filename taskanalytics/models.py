@@ -2,6 +2,8 @@ import uuid
 
 from django.db import models
 
+from .managers import TaskLogManager
+
 
 class TaskLog(models.Model):
     """The log of a celery task."""
@@ -22,6 +24,8 @@ class TaskLog(models.Model):
     task_name = models.CharField(max_length=255, db_index=True)
     timestamp = models.DateTimeField(db_index=True)
     traceback = models.TextField(null=True, default=None)
+
+    objects = TaskLogManager()
 
     def __str__(self):
         return f"{self.task_name}:{self.pk}"

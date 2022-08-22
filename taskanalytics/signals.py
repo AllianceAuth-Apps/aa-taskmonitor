@@ -13,6 +13,7 @@ from django.utils import timezone
 
 from .core import TaskRecords, extract_app_name
 from .models import TaskLogEntry
+from .tasks import run_housekeeping_if_stale
 
 records = TaskRecords()
 
@@ -49,6 +50,7 @@ def task_retry_handler(request=None, reason=None, **kw):
             timestamp=timezone.now(),
             traceback=str(tb.format_exc()) if reason else "",
         )
+    run_housekeeping_if_stale()
 
 
 @task_success.connect
@@ -66,6 +68,7 @@ def task_success_handler(sender=None, **kw):
             task_name=task_name,
             timestamp=timezone.now(),
         )
+    run_housekeeping_if_stale()
 
 
 @task_failure.connect
@@ -86,6 +89,7 @@ def task_failure_handler(
             timestamp=timezone.now(),
             traceback=str(tb.format_exc()) if traceback else "",
         )
+    run_housekeeping_if_stale()
 
 
 @task_internal_error.connect
@@ -106,3 +110,4 @@ def task_internal_error_handler(
             timestamp=timezone.now(),
             traceback=str(tb.format_exc()) if traceback else "",
         )
+    run_housekeeping_if_stale()

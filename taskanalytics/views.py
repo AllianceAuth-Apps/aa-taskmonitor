@@ -20,6 +20,8 @@ def admin_taskanalytics_download_csv(request):
     model = queryset.model
     exclude_fields = ("traceback",)
 
+    logger.info("Preparing to export the task log with %s entries.", queryset.count())
+
     fields = [
         field
         for field in model._meta.fields + model._meta.many_to_many

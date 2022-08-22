@@ -9,7 +9,7 @@ from app_utils.logging import LoggerAddTag
 
 from . import __title__
 from .app_settings import TASKANALYTICS_LOGS_AGE
-from .models import TaskLog
+from .models import TaskLogEntry
 
 logger = LoggerAddTag(get_extension_logger(__name__), __title__)
 
@@ -18,7 +18,7 @@ logger = LoggerAddTag(get_extension_logger(__name__), __title__)
 def run_housekeeping():
     """Cleanup Database."""
 
-    old_entries = TaskLog.objects.filter(
+    old_entries = TaskLogEntry.objects.filter(
         time__lte=timezone.now() - timedelta(days=TASKANALYTICS_LOGS_AGE)
     )
     old_entries_count = old_entries.count()

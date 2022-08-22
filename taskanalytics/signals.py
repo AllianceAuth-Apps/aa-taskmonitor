@@ -17,7 +17,7 @@ from allianceauth.services.hooks import get_extension_logger
 from app_utils.logging import LoggerAddTag
 
 from . import __title__
-from .models import TaskLog
+from .models import TaskLogEntry
 
 logger = LoggerAddTag(get_extension_logger(__name__), __title__)
 
@@ -72,13 +72,13 @@ def task_retry_handler(request=None, reason=None, **kw):
     if request:
         task_id = request.id
         task_name = request.task
-        TaskLog.objects.create(
+        TaskLogEntry.objects.create(
             app_name=extract_app_name(task_name),
             exception=str(reason) if reason else None,
             received=fetch_received(task_id),
             retries=request.retries,
             started=fetch_started(task_id),
-            state=TaskLog.State.RETRY,
+            state=TaskLogEntry.State.RETRY,
             task_id=task_id,
             task_name=task_name,
             timestamp=timezone.now(),
@@ -91,12 +91,12 @@ def task_success_handler(sender=None, **kw):
     if sender and sender.request:
         task_id = sender.request.id
         task_name = sender.request.task
-        TaskLog.objects.create(
+        TaskLogEntry.objects.create(
             app_name=extract_app_name(task_name),
             received=fetch_received(task_id),
             retries=sender.request.retries,
             started=fetch_started(task_id),
-            state=TaskLog.State.SUCCESS,
+            state=TaskLogEntry.State.SUCCESS,
             task_id=task_id,
             task_name=task_name,
             timestamp=timezone.now(),
@@ -109,13 +109,13 @@ def task_failure_handler(
 ):
     if sender and task_id:
         task_name = sender.request.task if sender.request else ""
-        TaskLog.objects.create(
+        TaskLogEntry.objects.create(
             app_name=extract_app_name(task_name),
             exception=str(exception) if exception else "",
             received=fetch_received(task_id),
             retries=sender.request.retries if sender.request else None,
             started=fetch_started(task_id),
-            state=TaskLog.State.FAILURE,
+            state=TaskLogEntry.State.FAILURE,
             task_id=task_id,
             task_name=task_name,
             timestamp=timezone.now(),
@@ -129,13 +129,13 @@ def task_internal_error_handler(
 ):
     if task_id and request:
         task_name = request.task
-        TaskLog.objects.create(
+        TaskLogEntry.objects.create(
             app_name=extract_app_name(task_name),
             exception=str(exception) if exception else "",
             received=fetch_received(task_id),
             retries=request.retries,
             started=fetch_started(task_id),
-            state=TaskLog.State.FAILURE,
+            state=TaskLogEntry.State.FAILURE,
             task_id=task_id,
             task_name=task_name,
             timestamp=timezone.now(),

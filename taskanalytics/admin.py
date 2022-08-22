@@ -1,9 +1,9 @@
 from django.contrib import admin
 
-from .models import TaskLog
+from .models import TaskLogEntry
 
 
-@admin.register(TaskLog)
+@admin.register(TaskLogEntry)
 class TaskLogAdmin(admin.ModelAdmin):
     list_display = ("timestamp", "task_name", "state", "runtime", "app_name")
     ordering = ["-timestamp"]

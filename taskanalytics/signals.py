@@ -1,6 +1,4 @@
-import datetime as dt
 import traceback as tb
-from typing import Optional
 
 from celery.signals import (
     task_failure,
@@ -13,58 +11,25 @@ from celery.signals import (
 
 from django.utils import timezone
 
-from allianceauth.services.hooks import get_extension_logger
-from app_utils.logging import LoggerAddTag
-
-from . import __title__
+from .core import TaskRecords, extract_app_name
 from .models import TaskLogEntry
 
-logger = LoggerAddTag(get_extension_logger(__name__), __title__)
+records = TaskRecords()
 
-tasks_received = {}
-tasks_started = {}
-
-
-def extract_app_name(task_name: str) -> str:
-    parts = task_name.split(".")
-    try:
-        idx = parts.index("tasks")
-    except ValueError:
-        if len(parts) == 2:
-            return parts[0]
-        else:
-            return ""
-    return parts[idx - 1] if idx > 0 else ""
-
-
-def fetch_received(task_id: str) -> Optional[dt.datetime]:
-    try:
-        received = tasks_received[task_id]
-        del tasks_received[task_id]
-    except KeyError:
-        received = None
-    return received
-
-
-def fetch_started(task_id) -> Optional[dt.datetime]:
-    try:
-        started = tasks_started[task_id]
-        del tasks_started[task_id]
-    except KeyError:
-        started = None
-    return started
+TASK_RECEIVED = "received"
+TASK_STARTED = "started"
 
 
 @task_received.connect
 def task_received_handler(request=None, **kw):
     if request:
-        tasks_received[request.id] = timezone.now()
+        records.set(request.id, TASK_RECEIVED, timezone.now())
 
 
 @task_prerun.connect
 def task_prerun_handler(task_id=None, **kw):
     if task_id:
-        tasks_started[task_id] = timezone.now()
+        records.set(task_id, TASK_STARTED, timezone.now())
 
 
 @task_retry.connect
@@ -75,9 +40,9 @@ def task_retry_handler(request=None, reason=None, **kw):
         TaskLogEntry.objects.create(
             app_name=extract_app_name(task_name),
             exception=str(reason) if reason else None,
-            received=fetch_received(task_id),
+            received=records.fetch(task_id, TASK_RECEIVED),
             retries=request.retries,
-            started=fetch_started(task_id),
+            started=records.fetch(task_id, TASK_STARTED),
             state=TaskLogEntry.State.RETRY,
             task_id=task_id,
             task_name=task_name,
@@ -93,9 +58,9 @@ def task_success_handler(sender=None, **kw):
         task_name = sender.request.task
         TaskLogEntry.objects.create(
             app_name=extract_app_name(task_name),
-            received=fetch_received(task_id),
+            received=records.fetch(task_id, TASK_RECEIVED),
             retries=sender.request.retries,
-            started=fetch_started(task_id),
+            started=records.fetch(task_id, TASK_STARTED),
             state=TaskLogEntry.State.SUCCESS,
             task_id=task_id,
             task_name=task_name,
@@ -112,9 +77,9 @@ def task_failure_handler(
         TaskLogEntry.objects.create(
             app_name=extract_app_name(task_name),
             exception=str(exception) if exception else "",
-            received=fetch_received(task_id),
+            received=records.fetch(task_id, TASK_RECEIVED),
             retries=sender.request.retries if sender.request else None,
-            started=fetch_started(task_id),
+            started=records.fetch(task_id, TASK_STARTED),
             state=TaskLogEntry.State.FAILURE,
             task_id=task_id,
             task_name=task_name,
@@ -132,9 +97,9 @@ def task_internal_error_handler(
         TaskLogEntry.objects.create(
             app_name=extract_app_name(task_name),
             exception=str(exception) if exception else "",
-            received=fetch_received(task_id),
+            received=records.fetch(task_id, TASK_RECEIVED),
             retries=request.retries,
-            started=fetch_started(task_id),
+            started=records.fetch(task_id, TASK_STARTED),
             state=TaskLogEntry.State.FAILURE,
             task_id=task_id,
             task_name=task_name,

@@ -1,6 +1,6 @@
 from django.test import TestCase
 
-from ..signals import extract_app_name
+from taskanalytics.core import TaskRecords, extract_app_name
 
 
 class TestExtractAppName(TestCase):
@@ -39,3 +39,24 @@ class TestExtractAppName(TestCase):
         result = extract_app_name("tasks.dummy")
         # then
         self.assertEqual(result, "")
+
+
+class TestTaskRecords(TestCase):
+    def test_should_store_and_retrieve_data(self):
+        # given
+        records = TaskRecords()
+        # when
+        records.set("abc", "alpha", 5)
+        result = records.get("abc", "alpha")
+        # then
+        self.assertEqual(result, 5)
+
+    def test_should_delete_data(self):
+        # given
+        records = TaskRecords()
+        # when
+        records.set("abc", "alpha", 5)
+        result = records.fetch("abc", "alpha")
+        # then
+        self.assertEqual(result, 5)
+        self.assertIsNone(records.get("abc", "alpha"))

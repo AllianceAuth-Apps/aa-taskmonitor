@@ -16,10 +16,13 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "myauth.settings.local")
 django.setup()
 
 """MAIN"""
+from taskanalytics.models import TaskLogEntry
 from taskanalytics.tests.factories import TaskLogEntryFactory
 
 MAX_ENTRIES = 1_000
 
 print(f"Generating {MAX_ENTRIES} task log entry...")
-TaskLogEntryFactory.create_batch(size=MAX_ENTRIES)
+objs = TaskLogEntryFactory.build_batch(size=MAX_ENTRIES)
+print("Storing...")
+TaskLogEntry.objects.bulk_create(objs, batch_size=500, ignore_conflicts=True)
 print("DONE!")

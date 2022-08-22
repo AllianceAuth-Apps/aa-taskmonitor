@@ -5,6 +5,7 @@ from django.test import RequestFactory, TestCase
 from app_utils.testdata_factories import UserFactory
 from app_utils.testing import response_text
 
+from taskanalytics.models import TaskLogEntry
 from taskanalytics.views import admin_taskanalytics_download_csv
 
 from .factories import TaskLogEntryFactory
@@ -28,32 +29,35 @@ class TestViews(TestCase):
 
     def test_should_export_data_to_csv(self):
         # given
-        entry = TaskLogEntryFactory()
         user = UserFactory(is_staff=True)
         request = self.request_factory.get("/")
         request.user = user
         self.maxDiff = None
         # when
+        for _ in range(50):
+            TaskLogEntryFactory()
         response = admin_taskanalytics_download_csv(request)
         # then
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.headers["Content-Type"], "text/csv")
         lines = response_text(response).splitlines()
+        lines.reverse()
         self.assertEqual(
-            lines[0],
+            lines.pop(),
             "id;app_name;exception;retries;received;runtime;started;state;"
             "task_id;task_name;timestamp",
         )
-        values = lines[1].split(";")
-        self.assertEqual(len(values), 11)
-        self.assertEqual(values[0], str(entry.pk))
-        self.assertEqual(values[1], entry.app_name)
-        self.assertEqual(values[2], "")
-        self.assertEqual(values[3], "0")
-        self.assertEqual(values[4], format_dt(entry.received))
-        self.assertEqual(values[5], str(entry.runtime))
-        self.assertEqual(values[6], format_dt(entry.started))
-        self.assertEqual(values[7], "success")
-        self.assertEqual(values[8], entry.task_id)
-        self.assertEqual(values[9], entry.task_name)
-        self.assertEqual(values[10], format_dt(entry.timestamp))
+        for entry in TaskLogEntry.objects.order_by("pk"):
+            values = lines.pop().split(";")
+            self.assertEqual(len(values), 11)
+            self.assertEqual(values[0], str(entry.pk))
+            self.assertEqual(values[1], entry.app_name)
+            self.assertEqual(values[2], "" if not entry.exception else entry.exception)
+            self.assertEqual(values[3], str(entry.retries))
+            self.assertEqual(values[4], format_dt(entry.received))
+            self.assertEqual(values[5], str(entry.runtime))
+            self.assertEqual(values[6], format_dt(entry.started))
+            self.assertEqual(values[7], entry.get_state_display())
+            self.assertEqual(values[8], str(entry.task_id))
+            self.assertEqual(values[9], entry.task_name)
+            self.assertEqual(values[10], format_dt(entry.timestamp))

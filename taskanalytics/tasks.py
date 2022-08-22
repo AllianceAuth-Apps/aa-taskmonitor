@@ -22,5 +22,5 @@ def run_housekeeping():
         time__lte=timezone.now() - timedelta(days=TASKANALYTICS_LOGS_AGE)
     )
     old_entries_count = old_entries.count()
-    old_entries.delete()
+    old_entries._raw_delete(old_entries.db)
     logger.info(f"House keeping deleted {old_entries_count} old entries from logs.")

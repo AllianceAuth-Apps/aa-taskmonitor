@@ -16,7 +16,7 @@ logger = LoggerAddTag(get_extension_logger(__name__), __title__)
 @login_required
 @staff_member_required
 def admin_taskanalytics_download_csv(request):
-    queryset = TaskLogEntry.objects.all()
+    queryset = TaskLogEntry.objects.order_by("pk")
     model = queryset.model
     exclude_fields = ("traceback",)
 

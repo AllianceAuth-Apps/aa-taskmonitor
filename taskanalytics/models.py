@@ -17,7 +17,7 @@ class TaskLogEntry(models.Model):
     exception = models.TextField(null=True, default=None)
     retries = models.IntegerField(null=True, default=None)
     received = models.DateTimeField(null=True, default=None)
-    runtime = models.FloatField(null=True, default=None)
+    runtime = models.FloatField(null=True, default=None, db_index=True)
     started = models.DateTimeField(null=True, default=None)
     state = models.IntegerField(choices=State.choices, db_index=True)
     task_id = models.UUIDField(default=uuid.uuid4, db_index=True)

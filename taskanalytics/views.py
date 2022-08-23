@@ -1,8 +1,13 @@
 import csv
+import datetime as dt
 
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.decorators import login_required
+from django.db import models
+from django.db.models import Count, F, Max, Min, Sum, Value
 from django.http import HttpResponse
+from django.shortcuts import render
+from django.utils import timezone
 
 from allianceauth.services.hooks import get_extension_logger
 from app_utils.logging import LoggerAddTag
@@ -49,3 +54,52 @@ def admin_taskanalytics_download_csv(request):
             values.append(value)
         writer.writerow(values)
     return response
+
+
+@login_required
+@staff_member_required
+def admin_taskanalytics_reports(request):
+    oldest_date = TaskLogEntry.objects.aggregate(oldest=Min("timestamp"))["oldest"]
+    youngest_date = TaskLogEntry.objects.aggregate(youngest=Max("timestamp"))[
+        "youngest"
+    ]
+    total_runs = TaskLogEntry.objects.count()
+    total_runtime = TaskLogEntry.objects.aggregate(total_runtime=Sum("runtime"))[
+        "total_runtime"
+    ]
+    total_runtime_date = timezone.now() - dt.timedelta(seconds=total_runtime)
+    task_runs_per_app = (
+        TaskLogEntry.objects.values("app_name")
+        .annotate(num_runs=Count("pk"))
+        .annotate(
+            p_total=F("num_runs")
+            / Value(total_runs, output_field=models.FloatField())
+            * 100
+        )
+        .order_by("-num_runs")
+    )
+    tasks_top_runs = (
+        TaskLogEntry.objects.values("task_name")
+        .annotate(num_runs=Count("pk"))
+        .annotate(
+            p_total=F("num_runs")
+            / Value(total_runs, output_field=models.FloatField())
+            * 100
+        )
+        .order_by("-num_runs")[:10]
+    )
+    tasks_top_runtime = (
+        TaskLogEntry.objects.values("task_name")
+        .annotate(max_runtime=Max("runtime"))
+        .order_by("-max_runtime")[:10]
+    )
+    context = {
+        "oldest_date": oldest_date,
+        "youngest_date": youngest_date,
+        "total_runs": total_runs,
+        "total_runtime_date": total_runtime_date,
+        "task_runs_per_app": task_runs_per_app,
+        "tasks_top_runs": tasks_top_runs,
+        "tasks_top_runtime": tasks_top_runtime,
+    }
+    return render(request, "admin/taskanalytics/tasklogentry/reports.html", context)

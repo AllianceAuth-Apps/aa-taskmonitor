@@ -1,0 +1,71 @@
+ {% extends 'admin/base_site.html' %}
+ {% load i18n %}
+ {% load humanize %}
+
+ {% block content %}
+    <h1>Taskanalytics - Reports</h1>
+
+    <h2>Task runs per app</h2>
+    <p>{{ total_runs|intcomma }} task executions within {{ oldest_date|timesince:youngest_date }}</p>
+    <table>
+        <thead>
+            <tr>
+                <th>App Name</th>
+                <th>Count</th>
+                <th>% total</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in task_runs_per_app %}
+                <tr>
+                    <td>{{ row.app_name }}</td>
+                    <td>{{ row.num_runs|intcomma }}</td>
+                    <td>{{ row.p_total|floatformat:0 }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <h2>Tasks top run</h2>
+    <p>{{ total_runs|intcomma }} task executions within {{ oldest_date|timesince:youngest_date }}</p>
+    <table>
+        <thead>
+            <tr>
+                <th>Task Name</th>
+                <th>Count</th>
+                <th>% total</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in tasks_top_runs %}
+                <tr>
+                    <td>{{ row.task_name }}</td>
+                    <td>{{ row.num_runs|intcomma }}</td>
+                    <td>{{ row.p_total|floatformat:0 }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <h2>Tasks top runtime</h2>
+    <p>{{ total_runtime_date|timesince }} total cumulative runtime within {{ oldest_date|timesince:youngest_date }}</p>
+    <table>
+        <thead>
+            <tr>
+                <th>Task Name</th>
+                <th>Runtime(s)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in tasks_top_runtime %}
+                <tr>
+                    <td>{{ row.task_name }}</td>
+                    <td>{{ row.max_runtime|floatformat:3 }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <br>
+    <a href="{% url 'admin:taskanalytics_tasklogentry_changelist' %}"><input type="button" value="Back"></a>
+ {% endblock %}

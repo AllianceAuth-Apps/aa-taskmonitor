@@ -36,6 +36,13 @@ class TaskLogEntryFactory(factory.django.DjangoModelFactory):
         return (self.timestamp - self.started).total_seconds()
 
     @factory.lazy_attribute
+    def priority(self):
+        return choices(
+            population=[1, 2, 3, 4, 5, 6, 7, 8, 9],
+            weights=[5, 5, 10, 20, 100, 20, 10, 5, 5],
+        )[0]
+
+    @factory.lazy_attribute
     def retries(self):
         return choices(
             population=[0, 1, 2, 3],

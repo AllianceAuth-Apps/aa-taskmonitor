@@ -34,21 +34,14 @@ def task_prerun_handler(task_id=None, **kw):
 
 
 @task_retry.connect
-def task_retry_handler(request=None, reason=None, **kw):
-    if request:
-        task_id = request.id
-        task_name = request.task
-        TaskLogEntry.objects.create(
-            app_name=extract_app_name(task_name),
-            exception=str(reason) if reason else None,
-            received=records.fetch(task_id, TASK_RECEIVED),
-            retries=request.retries,
-            started=records.fetch(task_id, TASK_STARTED),
+def task_retry_handler(sender=None, request=None, reason=None, **kw):
+    if sender and request:
+        store_task_info(
             state=TaskLogEntry.State.RETRY,
-            task_id=task_id,
-            task_name=task_name,
-            timestamp=timezone.now(),
-            traceback=str(tb.format_exc()) if reason else "",
+            records=records,
+            sender=sender,
+            request=request,
+            exception=reason,
         )
     run_housekeeping_if_stale()
 
@@ -56,17 +49,8 @@ def task_retry_handler(request=None, reason=None, **kw):
 @task_success.connect
 def task_success_handler(sender=None, **kw):
     if sender and sender.request:
-        task_id = sender.request.id
-        task_name = sender.request.task
-        TaskLogEntry.objects.create(
-            app_name=extract_app_name(task_name),
-            received=records.fetch(task_id, TASK_RECEIVED),
-            retries=sender.request.retries,
-            started=records.fetch(task_id, TASK_STARTED),
-            state=TaskLogEntry.State.SUCCESS,
-            task_id=task_id,
-            task_name=task_name,
-            timestamp=timezone.now(),
+        store_task_info(
+            state=TaskLogEntry.State.SUCCESS, records=records, sender=sender
         )
     run_housekeeping_if_stale()
 
@@ -76,38 +60,56 @@ def task_failure_handler(
     sender=None, task_id=None, exception=None, traceback=None, **kw
 ):
     if sender and task_id:
-        task_name = sender.request.task if sender.request else ""
-        TaskLogEntry.objects.create(
-            app_name=extract_app_name(task_name),
-            exception=str(exception) if exception else "",
-            received=records.fetch(task_id, TASK_RECEIVED),
-            retries=sender.request.retries if sender.request else None,
-            started=records.fetch(task_id, TASK_STARTED),
+        store_task_info(
             state=TaskLogEntry.State.FAILURE,
+            records=records,
+            sender=sender,
             task_id=task_id,
-            task_name=task_name,
-            timestamp=timezone.now(),
-            traceback=str(tb.format_exc()) if traceback else "",
+            exception=exception,
         )
     run_housekeeping_if_stale()
 
 
 @task_internal_error.connect
-def task_internal_error_handler(
-    task_id=None, request=None, exception=None, traceback=None, **kw
-):
+def task_internal_error_handler(task_id=None, request=None, exception=None, **kw):
     if task_id and request:
-        task_name = request.task
-        TaskLogEntry.objects.create(
-            app_name=extract_app_name(task_name),
-            exception=str(exception) if exception else "",
-            received=records.fetch(task_id, TASK_RECEIVED),
-            retries=request.retries,
-            started=records.fetch(task_id, TASK_STARTED),
+        store_task_info(
             state=TaskLogEntry.State.FAILURE,
+            records=records,
+            request=request,
             task_id=task_id,
-            task_name=task_name,
-            timestamp=timezone.now(),
-            traceback=str(tb.format_exc()) if traceback else "",
+            exception=exception,
         )
     run_housekeeping_if_stale()
+
+
+def store_task_info(
+    *,
+    state: int,
+    records: TaskRecords,
+    sender=None,
+    request: dict = None,
+    task_id: str = None,
+    exception=None,
+) -> dict:
+    """Build args from a task request."""
+    if request is None:
+        request = sender.request
+    if task_id is None:
+        task_id = request.id
+    task_name = request.task
+    args = {
+        "app_name": extract_app_name(task_name),
+        "parent_id": request.parent_id,
+        "priority": sender.priority if sender else None,
+        "received": records.fetch(task_id, TASK_RECEIVED),
+        "retries": request.retries,
+        "started": records.fetch(task_id, TASK_STARTED),
+        "state": state,
+        "task_id": task_id,
+        "task_name": task_name,
+        "timestamp": timezone.now(),
+        "exception": str(exception) if exception else None,
+        "traceback": str(tb.format_exc()) if exception else None,
+    }
+    return TaskLogEntry.objects.create(**args)

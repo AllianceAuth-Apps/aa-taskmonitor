@@ -15,7 +15,9 @@ class TaskLogEntry(models.Model):
 
     app_name = models.CharField(max_length=255, db_index=True)
     exception = models.TextField(null=True, default=None)
-    retries = models.IntegerField(null=True, default=None)
+    parent_id = models.UUIDField(null=True, default=None)
+    priority = models.IntegerField(null=True, default=None)
+    retries = models.IntegerField()
     received = models.DateTimeField(null=True, default=None)
     runtime = models.FloatField(null=True, default=None, db_index=True)
     started = models.DateTimeField(null=True, default=None)

@@ -16,6 +16,7 @@ from .models import TaskLogEntry
 logger = LoggerAddTag(get_extension_logger(__name__), __title__)
 
 CACHE_KEY = "TASKANALYTICS_LAST_HOUSEKEEPING"
+DEFAULT_TASK_PRIORITY = 7
 
 
 def run_housekeeping_if_stale():
@@ -26,7 +27,7 @@ def run_housekeeping_if_stale():
         timeout=TASKANALYTICS_HOUSEKEEPING_FREQUENCY * 60,
     )
     if was_expired:
-        run_housekeeping.delay()
+        run_housekeeping.apply_async(priority=DEFAULT_TASK_PRIORITY)
 
 
 @shared_task(base=QueueOnce)

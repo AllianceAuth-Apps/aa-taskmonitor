@@ -44,20 +44,22 @@ class TestViews(TestCase):
         lines.reverse()
         self.assertEqual(
             lines.pop(),
-            "id;app_name;exception;retries;received;runtime;started;state;"
+            "id;app_name;exception;parent_id;priority;retries;received;runtime;started;state;"
             "task_id;task_name;timestamp",
         )
         for entry in TaskLogEntry.objects.order_by("pk"):
             values = lines.pop().split(";")
-            self.assertEqual(len(values), 11)
+            self.assertEqual(len(values), 13)
             self.assertEqual(values[0], str(entry.pk))
             self.assertEqual(values[1], entry.app_name)
             self.assertEqual(values[2], "" if not entry.exception else entry.exception)
-            self.assertEqual(values[3], str(entry.retries))
-            self.assertEqual(values[4], format_dt(entry.received))
-            self.assertEqual(values[5], str(entry.runtime))
-            self.assertEqual(values[6], format_dt(entry.started))
-            self.assertEqual(values[7], entry.get_state_display())
-            self.assertEqual(values[8], str(entry.task_id))
-            self.assertEqual(values[9], entry.task_name)
-            self.assertEqual(values[10], format_dt(entry.timestamp))
+            self.assertEqual(values[3], "" if not entry.parent_id else entry.parent_id)
+            self.assertEqual(values[4], str(entry.priority))
+            self.assertEqual(values[5], str(entry.retries))
+            self.assertEqual(values[6], format_dt(entry.received))
+            self.assertEqual(values[7], str(entry.runtime))
+            self.assertEqual(values[8], format_dt(entry.started))
+            self.assertEqual(values[9], entry.get_state_display())
+            self.assertEqual(values[10], str(entry.task_id))
+            self.assertEqual(values[11], entry.task_name)
+            self.assertEqual(values[12], format_dt(entry.timestamp))

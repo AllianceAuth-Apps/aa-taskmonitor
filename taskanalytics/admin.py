@@ -5,7 +5,14 @@ from .models import TaskLogEntry
 
 @admin.register(TaskLogEntry)
 class TaskLogAdmin(admin.ModelAdmin):
-    list_display = ("timestamp", "task_name", "state", "runtime", "app_name")
+    list_display = (
+        "timestamp",
+        "task_name",
+        "priority",
+        "state",
+        "runtime",
+        "app_name",
+    )
     ordering = ["-timestamp"]
     list_filter = ("state", "timestamp", "app_name", "task_name")
     search_fields = ("task_name", "app_name", "task_id")

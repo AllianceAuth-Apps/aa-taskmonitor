@@ -19,7 +19,7 @@ django.setup()
 from taskanalytics.models import TaskLogEntry
 from taskanalytics.tests.factories import TaskLogEntryFactory
 
-MAX_ENTRIES = 500_000
+MAX_ENTRIES = 1_000
 
 print(f"Generating {MAX_ENTRIES:,} task log entry...")
 objs = TaskLogEntryFactory.build_batch(size=MAX_ENTRIES)

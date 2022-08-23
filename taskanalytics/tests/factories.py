@@ -8,7 +8,7 @@ from factory.faker import faker
 
 from django.utils import timezone
 
-from taskanalytics.models import TaskLogEntry
+from taskanalytics.models import TaskLog
 
 # generate fake apps and task names
 faker = faker.Faker()
@@ -20,9 +20,9 @@ for app_name in {faker.first_name().lower() for _ in range(10)}:
     ]
 
 
-class TaskLogEntryFactory(factory.django.DjangoModelFactory):
+class TaskLogFactory(factory.django.DjangoModelFactory):
     class Meta:
-        model = TaskLogEntry
+        model = TaskLog
 
     app_name = factory.fuzzy.FuzzyChoice(fake_tasks.keys())
     received = factory.fuzzy.FuzzyDateTime(timezone.now() - dt.timedelta(minutes=5))
@@ -57,22 +57,22 @@ class TaskLogEntryFactory(factory.django.DjangoModelFactory):
     def state(self):
         return choices(
             population=[
-                TaskLogEntry.State.SUCCESS,
-                TaskLogEntry.State.RETRY,
-                TaskLogEntry.State.FAILURE,
+                TaskLog.State.SUCCESS,
+                TaskLog.State.RETRY,
+                TaskLog.State.FAILURE,
             ],
             weights=[80, 15, 5],
         )[0]
 
     @factory.lazy_attribute
     def exception(self):
-        if self.state == TaskLogEntry.State.SUCCESS:
+        if self.state == TaskLog.State.SUCCESS:
             return None
         return faker.sentence()
 
     @factory.lazy_attribute
     def traceback(self):
-        if self.state == TaskLogEntry.State.SUCCESS:
+        if self.state == TaskLog.State.SUCCESS:
             return None
         return faker.paragraph()
 

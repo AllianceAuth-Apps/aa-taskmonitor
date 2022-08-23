@@ -4,10 +4,10 @@ from unittest.mock import patch
 from django.test import TestCase
 from django.utils import timezone
 
-from taskanalytics.models import TaskLogEntry
+from taskanalytics.models import TaskLog
 from taskanalytics.tasks import run_housekeeping
 
-from .factories import TaskLogEntryFactory
+from .factories import TaskLogFactory
 
 TASKS_PATH = "taskanalytics.tasks"
 
@@ -16,12 +16,12 @@ TASKS_PATH = "taskanalytics.tasks"
 class TestTasks(TestCase):
     def test_should_delete_stale_entries_only(self):
         # given
-        stale_entry = TaskLogEntryFactory(
+        stale_entry = TaskLogFactory(
             timestamp=timezone.now() - dt.timedelta(days=3, seconds=1)
         )
-        current_entry = TaskLogEntryFactory(timestamp=timezone.now())
+        current_entry = TaskLogFactory(timestamp=timezone.now())
         # when
         run_housekeeping()
         # then
-        self.assertFalse(TaskLogEntry.objects.filter(pk=stale_entry.pk).exists())
-        self.assertTrue(TaskLogEntry.objects.filter(pk=current_entry.pk).exists())
+        self.assertFalse(TaskLog.objects.filter(pk=stale_entry.pk).exists())
+        self.assertTrue(TaskLog.objects.filter(pk=current_entry.pk).exists())

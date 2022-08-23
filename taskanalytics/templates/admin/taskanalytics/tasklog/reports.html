@@ -22,6 +22,10 @@
                     <td>{{ row.num_runs|intcomma }}</td>
                     <td>{{ row.p_total|floatformat:0 }}</td>
                 </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="3">No data</td>
+                </tr>
             {% endfor %}
         </tbody>
     </table>
@@ -43,6 +47,10 @@
                     <td>{{ row.num_runs|intcomma }}</td>
                     <td>{{ row.p_total|floatformat:0 }}</td>
                 </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="3">No data</td>
+                </tr>
             {% endfor %}
         </tbody>
     </table>
@@ -62,10 +70,14 @@
                     <td>{{ row.task_name }}</td>
                     <td>{{ row.max_runtime|floatformat:3 }}</td>
                 </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="3">No data</td>
+                </tr>
             {% endfor %}
         </tbody>
     </table>
 
     <br>
-    <a href="{% url 'admin:taskanalytics_tasklogentry_changelist' %}"><input type="button" value="Back"></a>
+    <a href="{% url 'admin:taskanalytics_tasklog_changelist' %}"><input type="button" value="Back"></a>
  {% endblock %}

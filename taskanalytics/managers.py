@@ -5,7 +5,7 @@ from django.db import models
 from django.utils import timezone
 
 
-class TaskLogEntryManager(models.Manager):
+class TaskLogManager(models.Manager):
     def create_from_task(
         self,
         *,

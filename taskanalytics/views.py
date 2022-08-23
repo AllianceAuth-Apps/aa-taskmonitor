@@ -13,7 +13,7 @@ from allianceauth.services.hooks import get_extension_logger
 from app_utils.logging import LoggerAddTag
 
 from . import __title__
-from .models import TaskLogEntry
+from .models import TaskLog
 
 logger = LoggerAddTag(get_extension_logger(__name__), __title__)
 
@@ -21,7 +21,7 @@ logger = LoggerAddTag(get_extension_logger(__name__), __title__)
 @login_required
 @staff_member_required
 def admin_taskanalytics_download_csv(request):
-    queryset = TaskLogEntry.objects.order_by("pk")
+    queryset = TaskLog.objects.order_by("pk")
     model = queryset.model
     exclude_fields = ("traceback",)
 
@@ -59,17 +59,18 @@ def admin_taskanalytics_download_csv(request):
 @login_required
 @staff_member_required
 def admin_taskanalytics_reports(request):
-    oldest_date = TaskLogEntry.objects.aggregate(oldest=Min("timestamp"))["oldest"]
-    youngest_date = TaskLogEntry.objects.aggregate(youngest=Max("timestamp"))[
-        "youngest"
-    ]
-    total_runs = TaskLogEntry.objects.count()
-    total_runtime = TaskLogEntry.objects.aggregate(total_runtime=Sum("runtime"))[
+    oldest_date = TaskLog.objects.aggregate(oldest=Min("timestamp"))["oldest"]
+    youngest_date = TaskLog.objects.aggregate(youngest=Max("timestamp"))["youngest"]
+    total_runs = TaskLog.objects.count()
+    total_runtime = TaskLog.objects.aggregate(total_runtime=Sum("runtime"))[
         "total_runtime"
     ]
-    total_runtime_date = timezone.now() - dt.timedelta(seconds=total_runtime)
+    try:
+        total_runtime_date = timezone.now() - dt.timedelta(seconds=total_runtime)
+    except TypeError:
+        total_runtime_date = None
     task_runs_per_app = (
-        TaskLogEntry.objects.values("app_name")
+        TaskLog.objects.values("app_name")
         .annotate(num_runs=Count("pk"))
         .annotate(
             p_total=F("num_runs")
@@ -79,7 +80,7 @@ def admin_taskanalytics_reports(request):
         .order_by("-num_runs")
     )
     tasks_top_runs = (
-        TaskLogEntry.objects.values("task_name")
+        TaskLog.objects.values("task_name")
         .annotate(num_runs=Count("pk"))
         .annotate(
             p_total=F("num_runs")
@@ -89,7 +90,7 @@ def admin_taskanalytics_reports(request):
         .order_by("-num_runs")[:10]
     )
     tasks_top_runtime = (
-        TaskLogEntry.objects.values("task_name")
+        TaskLog.objects.values("task_name")
         .annotate(max_runtime=Max("runtime"))
         .order_by("-max_runtime")[:10]
     )
@@ -102,4 +103,4 @@ def admin_taskanalytics_reports(request):
         "tasks_top_runs": tasks_top_runs,
         "tasks_top_runtime": tasks_top_runtime,
     }
-    return render(request, "admin/taskanalytics/tasklogentry/reports.html", context)
+    return render(request, "admin/taskanalytics/tasklog/reports.html", context)

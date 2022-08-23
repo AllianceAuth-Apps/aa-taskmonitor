@@ -8,9 +8,9 @@ from taskanalytics.core import (
     task_retry_handler_2,
     task_success_handler_2,
 )
-from taskanalytics.models import TaskLogEntry
+from taskanalytics.models import TaskLog
 
-from .factories import TaskLogEntryFactory
+from .factories import TaskLogFactory
 from .helpers import SenderStub
 
 CORE_PATH = "taskanalytics.core"
@@ -22,25 +22,25 @@ class TestSignalHandlingEnd2End(TestCase):
     def test_should_create_entry_for_succeeded_task(self, mock_TaskRecords):
         # given
         mock_TaskRecords.return_value.get.return_value = timezone.now()
-        expected = TaskLogEntryFactory.build(state=TaskLogEntry.State.SUCCESS)
+        expected = TaskLogFactory.build(state=TaskLog.State.SUCCESS)
         sender = SenderStub.create_from_obj(expected)
         # when
         task_success_handler_2(sender=sender)
         # then
         self.assertTrue(
-            TaskLogEntry.objects.filter(
-                task_id=expected.task_id, state=TaskLogEntry.State.SUCCESS
+            TaskLog.objects.filter(
+                task_id=expected.task_id, state=TaskLog.State.SUCCESS
             ).exists()
         )
 
     def test_should_create_entry_for_failed_task(self, mock_TaskRecords):
         # given
         mock_TaskRecords.return_value.get.return_value = timezone.now()
-        expected = TaskLogEntryFactory.build(
-            state=TaskLogEntry.State.FAILURE, exception=None, traceback=None
+        expected = TaskLogFactory.build(
+            state=TaskLog.State.FAILURE, exception=None, traceback=None
         )
         sender = SenderStub.create_from_obj(expected)
-        other_task = TaskLogEntryFactory.build()
+        other_task = TaskLogFactory.build()
         sender.request.id = str(other_task.task_id)  # now different from expected
         # when
         task_failure_handler_2(
@@ -48,16 +48,16 @@ class TestSignalHandlingEnd2End(TestCase):
         )
         # then
         self.assertTrue(
-            TaskLogEntry.objects.filter(
-                task_id=expected.task_id, state=TaskLogEntry.State.FAILURE
+            TaskLog.objects.filter(
+                task_id=expected.task_id, state=TaskLog.State.FAILURE
             ).exists()
         )
 
     def test_should_create_entry_for_retried_task(self, mock_TaskRecords):
         # given
         mock_TaskRecords.return_value.get.return_value = timezone.now()
-        expected = TaskLogEntryFactory.build(
-            state=TaskLogEntry.State.RETRY, exception=None, traceback=None
+        expected = TaskLogFactory.build(
+            state=TaskLog.State.RETRY, exception=None, traceback=None
         )
         sender = SenderStub.create_from_obj(expected)
         sender_no_request = SenderStub.create_from_obj(expected)
@@ -68,7 +68,7 @@ class TestSignalHandlingEnd2End(TestCase):
         )
         # then
         self.assertTrue(
-            TaskLogEntry.objects.filter(
-                task_id=expected.task_id, state=TaskLogEntry.State.RETRY
+            TaskLog.objects.filter(
+                task_id=expected.task_id, state=TaskLog.State.RETRY
             ).exists()
         )

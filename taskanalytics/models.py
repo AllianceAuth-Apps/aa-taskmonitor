@@ -2,11 +2,11 @@ import uuid
 
 from django.db import models
 
-from .managers import TaskLogEntryManager
+from .managers import TaskLogManager
 
 
-class TaskLogEntry(models.Model):
-    """The log entry for an executed celery task."""
+class TaskLog(models.Model):
+    """Log entry for an executed celery task."""
 
     class State(models.IntegerChoices):
         SUCCESS = 1, "success"
@@ -27,7 +27,7 @@ class TaskLogEntry(models.Model):
     timestamp = models.DateTimeField(db_index=True)
     traceback = models.TextField(null=True, default=None)
 
-    objects = TaskLogEntryManager()
+    objects = TaskLogManager()
 
     def __str__(self):
         return f"{self.task_name}:{self.pk}"

@@ -5,10 +5,10 @@ from django.test import RequestFactory, TestCase
 from app_utils.testdata_factories import UserFactory
 from app_utils.testing import response_text
 
-from taskanalytics.models import TaskLogEntry
+from taskanalytics.models import TaskLog
 from taskanalytics.views import admin_taskanalytics_download_csv
 
-from .factories import TaskLogEntryFactory
+from .factories import TaskLogFactory
 
 
 def format_dt(my_dt) -> str:
@@ -35,7 +35,7 @@ class TestViews(TestCase):
         self.maxDiff = None
         # when
         for _ in range(50):
-            TaskLogEntryFactory()
+            TaskLogFactory()
         response = admin_taskanalytics_download_csv(request)
         # then
         self.assertEqual(response.status_code, 200)
@@ -47,7 +47,7 @@ class TestViews(TestCase):
             "id;app_name;exception;parent_id;priority;retries;received;runtime;started;state;"
             "task_id;task_name;timestamp",
         )
-        for entry in TaskLogEntry.objects.order_by("pk"):
+        for entry in TaskLog.objects.order_by("pk"):
             values = lines.pop().split(";")
             self.assertEqual(len(values), 13)
             self.assertEqual(values[0], str(entry.pk))

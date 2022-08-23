@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from taskanalytics.models import TaskLogEntry
+from taskanalytics.models import TaskLog
 
 
 @dataclass
@@ -17,7 +17,7 @@ class SenderStub:
     priority: int
 
     @classmethod
-    def create_from_obj(cls, obj: TaskLogEntry):
+    def create_from_obj(cls, obj: TaskLog):
         request = RequestStub(
             parent_id=obj.parent_id,
             retries=obj.retries,

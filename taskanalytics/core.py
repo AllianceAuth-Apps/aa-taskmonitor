@@ -7,7 +7,7 @@ from django.core.cache import cache
 from django.utils import timezone
 
 from .app_settings import TASKANALYTICS_HOUSEKEEPING_FREQUENCY
-from .models import TaskLogEntry
+from .models import TaskLog
 from .tasks import DEFAULT_TASK_PRIORITY, run_housekeeping
 
 TASK_RECEIVED = "received"
@@ -85,8 +85,8 @@ def task_prerun_handler_2(task_id):
 def task_retry_handler_2(sender, request, reason):
     """Handle task retry signal."""
     if sender and request:
-        TaskLogEntry.objects.create_from_task(
-            state=TaskLogEntry.State.RETRY,
+        TaskLog.objects.create_from_task(
+            state=TaskLog.State.RETRY,
             records=records,
             sender=sender,
             request=request,
@@ -98,8 +98,8 @@ def task_retry_handler_2(sender, request, reason):
 def task_success_handler_2(sender):
     """Handle task success signal."""
     if sender and sender.request:
-        TaskLogEntry.objects.create_from_task(
-            state=TaskLogEntry.State.SUCCESS, records=records, sender=sender
+        TaskLog.objects.create_from_task(
+            state=TaskLog.State.SUCCESS, records=records, sender=sender
         )
     run_housekeeping_if_stale()
 
@@ -107,8 +107,8 @@ def task_success_handler_2(sender):
 def task_failure_handler_2(sender, task_id, exception):
     """Handle task failure signal."""
     if sender and task_id:
-        TaskLogEntry.objects.create_from_task(
-            state=TaskLogEntry.State.FAILURE,
+        TaskLog.objects.create_from_task(
+            state=TaskLog.State.FAILURE,
             records=records,
             sender=sender,
             task_id=task_id,
@@ -120,8 +120,8 @@ def task_failure_handler_2(sender, task_id, exception):
 def task_internal_error_handler_2(task_id, request, exception):
     """Handle task internal error signal."""
     if task_id and request:
-        TaskLogEntry.objects.create_from_task(
-            state=TaskLogEntry.State.FAILURE,
+        TaskLog.objects.create_from_task(
+            state=TaskLog.State.FAILURE,
             records=records,
             request=request,
             task_id=task_id,

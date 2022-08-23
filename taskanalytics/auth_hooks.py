@@ -6,4 +6,4 @@ from . import urls
 
 @hooks.register("url_hook")
 def register_urls():
-    return UrlHook(urls, "killtracker", r"^killtracker/")
+    return UrlHook(urls, "taskanalytics", r"^taskanalytics/")

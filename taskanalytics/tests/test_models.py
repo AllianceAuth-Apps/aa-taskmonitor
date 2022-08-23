@@ -1,4 +1,3 @@
-from dataclasses import dataclass
 from unittest.mock import patch
 
 from django.test import TestCase
@@ -7,32 +6,9 @@ from taskanalytics.core import TASK_RECEIVED, TASK_STARTED, TaskRecords
 from taskanalytics.models import TaskLogEntry
 
 from .factories import TaskLogEntryFactory
+from .helpers import SenderStub
 
 MODELS_PATH = "taskanalytics.models"
-
-
-@dataclass
-class RequestStub:
-    id: str
-    retries: int
-    task: str
-    parent_id: str = None
-
-
-@dataclass
-class SenderStub:
-    request: RequestStub
-    priority: int
-
-    @classmethod
-    def create_from_obj(cls, obj: TaskLogEntry):
-        request = RequestStub(
-            parent_id=obj.parent_id,
-            retries=obj.retries,
-            task=obj.task_name,
-            id=obj.task_id,
-        )
-        return cls(request=request, priority=obj.priority)
 
 
 class TestManagerCreateFromTask(TestCase):
@@ -58,11 +34,12 @@ class TestManagerCreateFromTask(TestCase):
             state=TaskLogEntry.State.FAILURE, exception=None, traceback=None
         )
         sender = SenderStub.create_from_obj(expected)
-        other_task = TaskLogEntryFactory()
-        sender.request.id = other_task.task_id  # now different from expected
+        other_task = TaskLogEntryFactory.build()
+        sender.request.id = str(other_task.task_id)  # now different from expected
+        expected_task_id = str(expected.task_id)
         records = TaskRecords()
-        records.set(expected.task_id, TASK_RECEIVED, expected.received)
-        records.set(expected.task_id, TASK_STARTED, expected.started)
+        records.set(expected_task_id, TASK_RECEIVED, expected.received)
+        records.set(expected_task_id, TASK_STARTED, expected.started)
         # when
         with patch("django.utils.timezone.now") as mock_now:
             mock_now.return_value = expected.timestamp
@@ -70,7 +47,7 @@ class TestManagerCreateFromTask(TestCase):
                 state=expected.state,
                 records=records,
                 sender=sender,
-                task_id=expected.task_id,
+                task_id=expected_task_id,
             )
         # then
         self._assert_equal_objs(expected, result)

@@ -1,5 +1,6 @@
 import datetime as dt
 from random import choice, choices, randint
+from uuid import UUID
 
 import factory
 import factory.fuzzy
@@ -28,8 +29,11 @@ class TaskLogEntryFactory(factory.django.DjangoModelFactory):
     started = factory.LazyAttribute(
         lambda o: factory.fuzzy.FuzzyDateTime(start_dt=o.received).fuzz()
     )
-    task_id = factory.Faker("uuid4")
     task_name = factory.LazyAttribute(lambda o: choice(fake_tasks[o.app_name]))
+
+    @factory.lazy_attribute
+    def task_id(self):
+        return UUID(faker.uuid4())
 
     @factory.lazy_attribute
     def runtime(self):

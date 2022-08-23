@@ -1,4 +1,5 @@
 import traceback as tb
+from uuid import UUID
 
 from django.db import models
 from django.utils import timezone
@@ -31,13 +32,13 @@ class TaskLogEntryManager(models.Manager):
             traceback_out = None
         args = {
             "app_name": extract_app_name(task_name),
-            "parent_id": request.parent_id,
+            "parent_id": UUID(request.parent_id) if request.parent_id else None,
             "priority": sender.priority if sender else None,
             "received": records.fetch(task_id, TASK_RECEIVED),
             "retries": request.retries,
             "started": records.fetch(task_id, TASK_STARTED),
             "state": state,
-            "task_id": task_id,
+            "task_id": UUID(task_id),
             "task_name": task_name,
             "timestamp": timezone.now(),
             "exception": str(exception) if exception else None,

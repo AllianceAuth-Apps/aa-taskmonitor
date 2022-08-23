@@ -5,7 +5,32 @@
  {% block content %}
     <h1>Taskanalytics - Reports</h1>
 
-    <h2>Task runs per app</h2>
+    <h2>Task runs by state</h2>
+    <p>{{ total_runs|intcomma }} task executions within {{ oldest_date|timesince:youngest_date }}</p>
+    <table>
+        <thead>
+            <tr>
+                <th>State</th>
+                <th>Count</th>
+                <th>% total</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in task_totals_by_state %}
+                <tr>
+                    <td>{{ row.state }}</td>
+                    <td>{{ row.num_runs|intcomma }}</td>
+                    <td>{{ row.p_total|floatformat:0 }}</td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="3">No data</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <h2>Task runs by app</h2>
     <p>{{ total_runs|intcomma }} task executions within {{ oldest_date|timesince:youngest_date }}</p>
     <table>
         <thead>
@@ -30,7 +55,7 @@
         </tbody>
     </table>
 
-    <h2>Tasks top run</h2>
+    <h2>Top tasks by runs</h2>
     <p>{{ total_runs|intcomma }} task executions within {{ oldest_date|timesince:youngest_date }}</p>
     <table>
         <thead>
@@ -55,7 +80,7 @@
         </tbody>
     </table>
 
-    <h2>Tasks top runtime</h2>
+    <h2>Top tasks by runtime</h2>
     <p>{{ total_runtime_date|timesince }} total cumulative runtime within {{ oldest_date|timesince:youngest_date }}</p>
     <table>
         <thead>

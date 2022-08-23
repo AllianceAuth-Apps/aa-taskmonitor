@@ -61,7 +61,6 @@ def admin_taskanalytics_download_csv(request):
 def admin_taskanalytics_reports(request):
     oldest_date = TaskLog.objects.aggregate(oldest=Min("timestamp"))["oldest"]
     youngest_date = TaskLog.objects.aggregate(youngest=Max("timestamp"))["youngest"]
-    total_runs = TaskLog.objects.count()
     total_runtime = TaskLog.objects.aggregate(total_runtime=Sum("runtime"))[
         "total_runtime"
     ]
@@ -69,6 +68,15 @@ def admin_taskanalytics_reports(request):
         total_runtime_date = timezone.now() - dt.timedelta(seconds=total_runtime)
     except TypeError:
         total_runtime_date = None
+    total_runs = TaskLog.objects.count()
+    task_totals_by_state = [
+        {
+            "state": state.label,
+            "num_runs": (amount := TaskLog.objects.filter(state=state.value).count()),
+            "p_total": amount / total_runs * 100,
+        }
+        for state in TaskLog.State
+    ]
     task_runs_per_app = (
         TaskLog.objects.values("app_name")
         .annotate(num_runs=Count("pk"))
@@ -99,6 +107,7 @@ def admin_taskanalytics_reports(request):
         "youngest_date": youngest_date,
         "total_runs": total_runs,
         "total_runtime_date": total_runtime_date,
+        "task_totals_by_state": task_totals_by_state,
         "task_runs_per_app": task_runs_per_app,
         "tasks_top_runs": tasks_top_runs,
         "tasks_top_runtime": tasks_top_runtime,

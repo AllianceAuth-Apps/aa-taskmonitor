@@ -6,13 +6,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('taskanalytics', '0002_tasklogentry_delete_tasklog'),
+        ("taskanalytics", "0002_tasklogentry_delete_tasklog"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='tasklogentry',
-            name='runtime',
+            model_name="tasklogentry",
+            name="runtime",
             field=models.FloatField(db_index=True, default=None, null=True),
         ),
     ]

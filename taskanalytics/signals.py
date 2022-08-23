@@ -56,9 +56,7 @@ def task_success_handler(sender=None, **kw):
 
 
 @task_failure.connect
-def task_failure_handler(
-    sender=None, task_id=None, exception=None, traceback=None, **kw
-):
+def task_failure_handler(sender=None, task_id=None, exception=None, **kw):
     if sender and task_id:
         store_task_info(
             state=TaskLogEntry.State.FAILURE,
@@ -92,12 +90,18 @@ def store_task_info(
     task_id: str = None,
     exception=None,
 ) -> dict:
-    """Build args from a task request."""
+    """Extract info from task context and request and store it."""
     if request is None:
         request = sender.request
     if task_id is None:
         task_id = request.id
     task_name = request.task
+    if exception and (traceback := getattr(exception, "__traceback__")):
+        traceback_out = "".join(
+            tb.format_exception(None, value=exception, tb=traceback)
+        )
+    else:
+        traceback_out = None
     args = {
         "app_name": extract_app_name(task_name),
         "parent_id": request.parent_id,
@@ -110,6 +114,6 @@ def store_task_info(
         "task_name": task_name,
         "timestamp": timezone.now(),
         "exception": str(exception) if exception else None,
-        "traceback": str(tb.format_exc()) if exception else None,
+        "traceback": traceback_out,
     }
     return TaskLogEntry.objects.create(**args)

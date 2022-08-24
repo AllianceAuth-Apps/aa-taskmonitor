@@ -1,6 +1,6 @@
 from django.test import TestCase
 
-from taskanalytics.core.tasklogs import TaskRecords
+from taskanalytics.core.task_records import TaskRecords
 
 
 class TestTaskRecords(TestCase):

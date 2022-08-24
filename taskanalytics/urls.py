@@ -15,4 +15,9 @@ urlpatterns = [
         views.admin_taskanalytics_reports,
         name="admin_taskanalytics_reports",
     ),
+    path(
+        "admin_taskanalytics_reports_clear_cache",
+        views.admin_taskanalytics_reports_clear_cache,
+        name="admin_taskanalytics_reports_clear_cache",
+    ),
 ]

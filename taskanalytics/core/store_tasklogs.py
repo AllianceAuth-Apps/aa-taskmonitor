@@ -6,9 +6,9 @@ from typing import Any, Optional
 from django.core.cache import cache
 from django.utils import timezone
 
-from .app_settings import TASKANALYTICS_HOUSEKEEPING_FREQUENCY
-from .models import TaskLog
-from .tasks import DEFAULT_TASK_PRIORITY, run_housekeeping
+from ..app_settings import TASKANALYTICS_HOUSEKEEPING_FREQUENCY
+from ..models import TaskLog
+from ..tasks import DEFAULT_TASK_PRIORITY, run_housekeeping
 
 TASK_RECEIVED = "received"
 TASK_STARTED = "started"

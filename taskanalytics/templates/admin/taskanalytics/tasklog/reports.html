@@ -19,8 +19,8 @@
             {% for row in task_totals_by_state %}
                 <tr>
                     <td>{{ row.state }}</td>
-                    <td>{{ row.num_runs|intcomma }}</td>
-                    <td>{{ row.p_total|floatformat:0 }}</td>
+                    <td style="text-align: right;">{{ row.num_runs|intcomma }}</td>
+                    <td style="text-align: right;">{{ row.p_total|floatformat:0 }}</td>
                 </tr>
             {% empty %}
                 <tr>
@@ -36,16 +36,16 @@
         <thead>
             <tr>
                 <th>App Name</th>
-                <th>Count</th>
-                <th>% total</th>
+                <th style="text-align: right;">Count</th>
+                <th style="text-align: right;">% total</th>
             </tr>
         </thead>
         <tbody>
             {% for row in task_runs_per_app %}
                 <tr>
                     <td>{{ row.app_name }}</td>
-                    <td>{{ row.num_runs|intcomma }}</td>
-                    <td>{{ row.p_total|floatformat:0 }}</td>
+                    <td style="text-align: right;">{{ row.num_runs|intcomma }}</td>
+                    <td style="text-align: right;">{{ row.p_total|floatformat:0 }}</td>
                 </tr>
             {% empty %}
                 <tr>
@@ -61,16 +61,16 @@
         <thead>
             <tr>
                 <th>Task Name</th>
-                <th>Count</th>
-                <th>% total</th>
+                <th style="text-align: right;">Count</th>
+                <th style="text-align: right;">% total</th>
             </tr>
         </thead>
         <tbody>
             {% for row in tasks_top_runs %}
                 <tr>
                     <td>{{ row.task_name }}</td>
-                    <td>{{ row.num_runs|intcomma }}</td>
-                    <td>{{ row.p_total|floatformat:0 }}</td>
+                    <td style="text-align: right;">{{ row.num_runs|intcomma }}</td>
+                    <td style="text-align: right;">{{ row.p_total|floatformat:0 }}</td>
                 </tr>
             {% empty %}
                 <tr>
@@ -93,7 +93,7 @@
             {% for row in tasks_top_runtime %}
                 <tr>
                     <td>{{ row.task_name }}</td>
-                    <td>{{ row.max_runtime|floatformat:3 }}</td>
+                    <td style="text-align: right;">{{ row.max_runtime|floatformat:3 }}</td>
                 </tr>
             {% empty %}
                 <tr>
@@ -102,7 +102,12 @@
             {% endfor %}
         </tbody>
     </table>
-
     <br>
+
+    <p>
+        This data is cached. Last updated was {{ last_update_at|timesince }} ago. Next update approx. in {{ next_update_at|timeuntil }}.
+        <a href="{% url 'taskanalytics:admin_taskanalytics_reports_clear_cache' %}"><input type="button" value="Recalc now"></a>
+    </p>
+
     <a href="{% url 'admin:taskanalytics_tasklog_changelist' %}"><input type="button" value="Back"></a>
  {% endblock %}

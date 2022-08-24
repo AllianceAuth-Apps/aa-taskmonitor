@@ -1,6 +1,6 @@
 from django.test import TestCase
 
-from taskanalytics.core import TaskRecords, extract_app_name
+from taskanalytics.core.store_tasklogs import TaskRecords, extract_app_name
 
 
 class TestExtractAppName(TestCase):

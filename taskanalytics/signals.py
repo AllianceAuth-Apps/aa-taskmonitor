@@ -11,7 +11,7 @@ from celery.signals import (
     task_success,
 )
 
-from .core import (
+from .core.store_tasklogs import (
     task_failure_handler_2,
     task_internal_error_handler_2,
     task_prerun_handler_2,

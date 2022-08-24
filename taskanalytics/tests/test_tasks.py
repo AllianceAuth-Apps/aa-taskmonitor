@@ -5,7 +5,7 @@ from django.test import TestCase
 from django.utils import timezone
 
 from taskanalytics.models import TaskLog
-from taskanalytics.tasks import run_housekeeping
+from taskanalytics.tasks import delete_stale_tasklogs
 
 from .factories import TaskLogFactory
 
@@ -21,7 +21,7 @@ class TestTasks(TestCase):
         )
         current_entry = TaskLogFactory(timestamp=timezone.now())
         # when
-        run_housekeeping()
+        delete_stale_tasklogs()
         # then
         self.assertFalse(TaskLog.objects.filter(pk=stale_entry.pk).exists())
         self.assertTrue(TaskLog.objects.filter(pk=current_entry.pk).exists())

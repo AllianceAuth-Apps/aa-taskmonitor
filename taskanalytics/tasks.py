@@ -10,6 +10,7 @@ from app_utils.logging import LoggerAddTag
 
 from . import __title__
 from .app_settings import TASKANALYTICS_LOGS_AGE
+from .core import cached_reports
 from .models import TaskLog
 
 logger = LoggerAddTag(get_extension_logger(__name__), __title__)
@@ -19,11 +20,23 @@ DEFAULT_TASK_PRIORITY = 7
 
 @shared_task(base=QueueOnce)
 def run_housekeeping():
-    """Remove all old task log entries."""
+    """Run all housekeeping tasks."""
+    delete_stale_tasklogs.apply_async(priority=DEFAULT_TASK_PRIORITY)
+    refresh_reports_cache.apply_async(priority=DEFAULT_TASK_PRIORITY)
 
+
+@shared_task
+def delete_stale_tasklogs():
+    """Delete all stale tasklogs from the database."""
     old_entries = TaskLog.objects.filter(
         timestamp__lte=timezone.now() - dt.timedelta(days=TASKANALYTICS_LOGS_AGE)
     )
     old_entries_count = old_entries.count()
     old_entries._raw_delete(old_entries.db)
-    logger.info(f"House keeping deleted {old_entries_count:,} old entries from logs.")
+    logger.info(f"Deleted {old_entries_count:,} stale tasklogs.")
+
+
+@shared_task
+def refresh_reports_cache():
+    cached_reports.refresh_cache()
+    logger.info("Refreshed the reports cache.")

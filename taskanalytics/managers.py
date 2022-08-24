@@ -4,6 +4,8 @@ from uuid import UUID
 from django.db import models
 from django.utils import timezone
 
+from .helpers import extract_app_name
+
 
 class TaskLogManager(models.Manager):
     def create_from_task(
@@ -17,7 +19,7 @@ class TaskLogManager(models.Manager):
         exception=None,
     ) -> models.Model:
         """Create new objects from task infos."""
-        from .core.store_tasklogs import TASK_RECEIVED, TASK_STARTED, extract_app_name
+        from .core.tasklogs import TASK_RECEIVED, TASK_STARTED
 
         if request is None:
             request = sender.request

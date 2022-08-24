@@ -1,4 +1,4 @@
-"""Container for caching the reports data."""
+"""Container for caching the reports data used in views."""
 
 import datetime as dt
 from typing import Optional

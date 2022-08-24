@@ -3,7 +3,7 @@ from unittest.mock import patch
 from django.test import TestCase, override_settings
 from django.utils import timezone
 
-from taskanalytics.core.store_tasklogs import (
+from taskanalytics.core.tasklogs import (
     task_failure_handler_2,
     task_retry_handler_2,
     task_success_handler_2,
@@ -13,7 +13,7 @@ from taskanalytics.models import TaskLog
 from .factories import TaskLogFactory
 from .helpers import SenderStub
 
-CORE_PATH = "taskanalytics.core.store_tasklogs"
+CORE_PATH = "taskanalytics.core.tasklogs"
 
 
 @override_settings(CELERY_ALWAYS_EAGER=True, CELERY_EAGER_PROPAGATES_EXCEPTIONS=True)

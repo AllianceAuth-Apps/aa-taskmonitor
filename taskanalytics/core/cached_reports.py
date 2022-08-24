@@ -41,7 +41,7 @@ def _next_update_at(ttl) -> Optional[dt.datetime]:
 
 def refresh_cache() -> None:
     """Refresh the cache."""
-    cache.set(CACHE_KEY, _calc_data, timeout=TIMEOUT)
+    cache.set(CACHE_KEY, _calc_data(), timeout=TIMEOUT)
 
 
 def clear_cache() -> None:

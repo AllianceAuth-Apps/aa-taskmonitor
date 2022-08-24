@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.utils import html
 
 from .models import TaskLog
 
@@ -8,8 +9,8 @@ class TaskLogAdmin(admin.ModelAdmin):
     list_display = (
         "timestamp",
         "task_name",
+        "_state",
         "priority",
-        "state",
         "runtime",
         "app_name",
     )
@@ -29,6 +30,14 @@ class TaskLogAdmin(admin.ModelAdmin):
         if "delete_selected" in actions:
             del actions["delete_selected"]
         return actions
+
+    @admin.display(ordering="state")
+    def _state(self, obj) -> str:
+        color_map = {TaskLog.State.SUCCESS: "green", TaskLog.State.FAILURE: "red"}
+        color = color_map.get(obj.state, "")
+        return html.format_html(
+            '<span style="color:{};">{}</span>', color, obj.get_state_display()
+        )
 
     @admin.action(description="Delete selected entries (NO CONFIRMATION!")
     def delete_selected_2(self, request, queryset):

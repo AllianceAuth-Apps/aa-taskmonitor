@@ -55,7 +55,7 @@
         </tbody>
     </table>
 
-    <h2>Top tasks by runs</h2>
+    <h2>Top {{ MAX_TOP }} tasks by runs</h2>
     <p>{{ total_runs|intcomma }} task executions within {{ oldest_date|timesince:youngest_date }}</p>
     <table>
         <thead>
@@ -80,7 +80,7 @@
         </tbody>
     </table>
 
-    <h2>Top tasks by runtime</h2>
+    <h2>Top {{ MAX_TOP }} tasks by runtime</h2>
     <p>{{ total_runtime_date|timesince }} total cumulative runtime within {{ oldest_date|timesince:youngest_date }}</p>
     <table>
         <thead>

@@ -12,7 +12,7 @@ from .factories import TaskLogFactory
 TASKS_PATH = "taskanalytics.tasks"
 
 
-@patch(TASKS_PATH + ".TASKANALYTICS_LOGS_AGE", 3)
+@patch(TASKS_PATH + ".TASKANALYTICS_LOGS_MAX_AGE", 3)
 class TestTasks(TestCase):
     def test_should_delete_stale_entries_only(self):
         # given

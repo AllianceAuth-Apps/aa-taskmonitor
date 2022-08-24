@@ -9,7 +9,7 @@ from allianceauth.services.tasks import QueueOnce
 from app_utils.logging import LoggerAddTag
 
 from . import __title__
-from .app_settings import TASKANALYTICS_LOGS_AGE
+from .app_settings import TASKANALYTICS_LOGS_MAX_AGE
 from .core import cached_reports
 from .models import TaskLog
 
@@ -29,7 +29,7 @@ def run_housekeeping():
 def delete_stale_tasklogs():
     """Delete all stale tasklogs from the database."""
     old_entries = TaskLog.objects.filter(
-        timestamp__lte=timezone.now() - dt.timedelta(days=TASKANALYTICS_LOGS_AGE)
+        timestamp__lte=timezone.now() - dt.timedelta(days=TASKANALYTICS_LOGS_MAX_AGE)
     )
     old_entries_count = old_entries.count()
     old_entries._raw_delete(old_entries.db)

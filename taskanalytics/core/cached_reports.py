@@ -8,7 +8,10 @@ from django.db import models
 from django.db.models import Count, F, Max, Min, Sum, Value
 from django.utils import timezone
 
-from ..app_settings import TASKANALYTICS_HOUSEKEEPING_FREQUENCY
+from ..app_settings import (
+    TASKANALYTICS_HOUSEKEEPING_FREQUENCY,
+    TASKANALYTICS_REPORTS_MAX_TOP,
+)
 from ..models import TaskLog
 
 CACHE_KEY = "TASKANALYTICS_REPORTS_DATA"
@@ -87,12 +90,12 @@ def _calc_data() -> dict:
             / Value(total_runs, output_field=models.FloatField())
             * 100
         )
-        .order_by("-num_runs")[:10]
+        .order_by("-num_runs")[:TASKANALYTICS_REPORTS_MAX_TOP]
     )
     tasks_top_runtime = (
         TaskLog.objects.values("task_name")
         .annotate(max_runtime=Max("runtime"))
-        .order_by("-max_runtime")[:10]
+        .order_by("-max_runtime")[:TASKANALYTICS_REPORTS_MAX_TOP]
     )
     context = {
         "oldest_date": oldest_date,
@@ -103,5 +106,6 @@ def _calc_data() -> dict:
         "task_runs_per_app": task_runs_per_app,
         "tasks_top_runs": tasks_top_runs,
         "tasks_top_runtime": tasks_top_runtime,
+        "MAX_TOP": TASKANALYTICS_REPORTS_MAX_TOP,
     }
     return context

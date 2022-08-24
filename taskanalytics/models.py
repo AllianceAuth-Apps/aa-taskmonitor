@@ -14,7 +14,7 @@ class TaskLog(models.Model):
         FAILURE = 3, "failure"
 
     app_name = models.CharField(max_length=255, db_index=True)
-    exception = models.TextField(null=True, default=None)
+    exception = models.TextField()
     parent_id = models.UUIDField(null=True, default=None)
     priority = models.IntegerField(null=True, default=None)
     retries = models.IntegerField()
@@ -25,7 +25,7 @@ class TaskLog(models.Model):
     task_id = models.UUIDField(default=uuid.uuid4, db_index=True)
     task_name = models.CharField(max_length=255, db_index=True)
     timestamp = models.DateTimeField(db_index=True)
-    traceback = models.TextField(null=True, default=None)
+    traceback = models.TextField()
 
     objects = TaskLogManager()
 

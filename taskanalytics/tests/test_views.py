@@ -1,12 +1,13 @@
 import pytz
 
 from django.test import RequestFactory, TestCase
+from django.urls import reverse
 
 from app_utils.testdata_factories import UserFactory
 from app_utils.testing import response_text
 
+from taskanalytics import views
 from taskanalytics.models import TaskLog
-from taskanalytics.views import admin_taskanalytics_download_csv
 
 from .factories import TaskLogFactory
 
@@ -30,13 +31,18 @@ class TestViews(TestCase):
     def test_should_export_data_to_csv(self):
         # given
         user = UserFactory(is_staff=True)
-        request = self.request_factory.get("/")
+        request = self.request_factory.get(
+            reverse("taskanalytics:admin_taskanalytics_download_csv")
+        )
         request.user = user
         self.maxDiff = None
         # when
+        TaskLogFactory(state=TaskLog.State.SUCCESS)
+        TaskLogFactory(state=TaskLog.State.RETRY)
+        TaskLogFactory(state=TaskLog.State.FAILURE)
         for _ in range(50):
             TaskLogFactory()
-        response = admin_taskanalytics_download_csv(request)
+        response = views.admin_taskanalytics_download_csv(request)
         # then
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.headers["Content-Type"], "text/csv")

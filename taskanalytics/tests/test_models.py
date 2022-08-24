@@ -31,7 +31,7 @@ class TestManagerCreateFromTask(TestCase):
     def test_should_create_from_failed_task(self):
         # given
         expected = TaskLogFactory.build(
-            state=TaskLog.State.FAILURE, exception=None, traceback=None
+            state=TaskLog.State.FAILURE, exception="", traceback=""
         )
         sender = SenderStub.create_from_obj(expected)
         other_task = TaskLogFactory.build()
@@ -55,7 +55,7 @@ class TestManagerCreateFromTask(TestCase):
     def test_should_create_from_retried_task(self):
         # given
         expected = TaskLogFactory.build(
-            state=TaskLog.State.RETRY, exception=None, traceback=None
+            state=TaskLog.State.RETRY, exception="", traceback=""
         )
         sender = SenderStub.create_from_obj(expected)
         sender_no_request = SenderStub.create_from_obj(expected)

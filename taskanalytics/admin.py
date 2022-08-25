@@ -14,7 +14,6 @@ class TaskLogAdmin(admin.ModelAdmin):
         "runtime",
         "app_name",
     )
-    ordering = ["-timestamp"]
     list_filter = ("state", "timestamp", "app_name", "task_name")
     search_fields = ("task_name", "app_name", "task_id")
     actions = ["delete_selected_2"]

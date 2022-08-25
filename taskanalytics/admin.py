@@ -33,7 +33,10 @@ class TaskLogAdmin(admin.ModelAdmin):
 
     @admin.display(ordering="state")
     def _state(self, obj) -> str:
-        color_map = {TaskLog.State.SUCCESS: "green", TaskLog.State.FAILURE: "red"}
+        color_map = {
+            TaskLog.State.RETRY: "DeepSkyBlue",
+            TaskLog.State.FAILURE: "Crimson",
+        }
         color = color_map.get(obj.state, "")
         return html.format_html(
             '<span style="color:{};">{}</span>', color, obj.get_state_display()

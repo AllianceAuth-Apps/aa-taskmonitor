@@ -12,112 +12,33 @@
 {% endblock %}
 
 {% block content %}
+
+    <p>Total of {{ total_runs|intcomma }} task executions within {{ oldest_date|timesince:youngest_date }} and {{ total_runtime_date|timesince }} cumulative runtime.</p>
+
     <ul>
         <li><a href="#task-runs-by-app">Task runs by state</a></li>
         <li><a href="#task-runs-by-app">Task runs by app</a></li>
         <li><a href="#top-tasks-by-runs">Top tasks by runs</a></li>
         <li><a href="#top-tasks-by-runtime">Top tasks by runtime</a></li>
+        <li><a href="#top-failed-tasks">Top failed tasks</a></li>
     </ul>
 
     <h2 id="task-runs-by-app">Task runs by state</h2>
-    <p>{{ total_runs|intcomma }} task executions within {{ oldest_date|timesince:youngest_date }}</p>
-    <table>
-        <thead>
-            <tr>
-                <th>State</th>
-                <th>Count</th>
-                <th>% total</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for row in task_totals_by_state %}
-                <tr>
-                    <td>{{ row.state }}</td>
-                    <td style="text-align: right;">{{ row.num_runs|intcomma }}</td>
-                    <td style="text-align: right;">{{ row.p_total|floatformat:0 }}</td>
-                </tr>
-            {% empty %}
-                <tr>
-                    <td colspan="3">No data</td>
-                </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    {% include "admin/taskanalytics/tasklog/report_table_partial.html" with rows=task_totals_by_state %}
 
     <h2 id="task-runs-by-app">Task runs by app</h2>
-    <p>{{ total_runs|intcomma }} task executions within {{ oldest_date|timesince:youngest_date }}</p>
-    <table>
-        <thead>
-            <tr>
-                <th>App Name</th>
-                <th style="text-align: right;">Count</th>
-                <th style="text-align: right;">% total</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for row in task_runs_per_app %}
-                <tr>
-                    <td>{{ row.app_name }}</td>
-                    <td style="text-align: right;">{{ row.num_runs|intcomma }}</td>
-                    <td style="text-align: right;">{{ row.p_total|floatformat:0 }}</td>
-                </tr>
-            {% empty %}
-                <tr>
-                    <td colspan="3">No data</td>
-                </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    {% include "admin/taskanalytics/tasklog/report_table_partial.html" with rows=task_runs_per_app %}
 
     <h2 id="top-tasks-by-runs">Top {{ MAX_TOP }} tasks by runs</h2>
-    <p>{{ total_runs|intcomma }} task executions within {{ oldest_date|timesince:youngest_date }}</p>
-    <table>
-        <thead>
-            <tr>
-                <th>Task Name</th>
-                <th style="text-align: right;">Count</th>
-                <th style="text-align: right;">% total</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for row in tasks_top_runs %}
-                <tr>
-                    <td>{{ row.task_name }}</td>
-                    <td style="text-align: right;">{{ row.num_runs|intcomma }}</td>
-                    <td style="text-align: right;">{{ row.p_total|floatformat:0 }}</td>
-                </tr>
-            {% empty %}
-                <tr>
-                    <td colspan="3">No data</td>
-                </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    {% include "admin/taskanalytics/tasklog/report_table_partial.html" with rows=tasks_top_runs %}
 
     <h2 id="top-tasks-by-runtime">Top {{ MAX_TOP }} tasks by runtime</h2>
-    <p>{{ total_runtime_date|timesince }} total cumulative runtime within {{ oldest_date|timesince:youngest_date }}</p>
-    <table>
-        <thead>
-            <tr>
-                <th>Task Name</th>
-                <th>Runtime(s)</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for row in tasks_top_runtime %}
-                <tr>
-                    <td>{{ row.task_name }}</td>
-                    <td style="text-align: right;">{{ row.max_runtime|floatformat:3 }}</td>
-                </tr>
-            {% empty %}
-                <tr>
-                    <td colspan="3">No data</td>
-                </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-    <br>
+    {% include "admin/taskanalytics/tasklog/report_table_partial.html" with rows=tasks_top_runtime %}
 
+    <h2 id="top-failed-tasks">Top {{ MAX_TOP }} failed tasks by runs</h2>
+    {% include "admin/taskanalytics/tasklog/report_table_partial.html" with rows=tasks_top_failed %}
+
+    <br>
     <p>
         This data is cached. Last updated was {{ last_update_at|timesince }} ago. Next update approx. in {{ next_update_at|timeuntil }}.
         <a href="{% url 'taskanalytics:admin_taskanalytics_reports_clear_cache' %}"><input type="button" value="Recalc now"></a>

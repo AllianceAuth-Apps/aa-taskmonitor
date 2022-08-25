@@ -2,7 +2,7 @@ from unittest.mock import patch
 
 from django.test import TestCase
 
-from taskanalytics.core.tasklogs import TASK_RECEIVED, TASK_STARTED, TaskRecords
+from taskanalytics.core.task_logs import TASK_RECEIVED, TASK_STARTED, TaskRecords
 from taskanalytics.models import TaskLog
 
 from .factories import TaskLogFactory

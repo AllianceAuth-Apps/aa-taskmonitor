@@ -66,36 +66,53 @@ def _calc_data() -> dict:
     total_runs = TaskLog.objects.count()
     task_totals_by_state = [
         {
-            "state": state.label,
-            "num_runs": (amount := TaskLog.objects.filter(state=state.value).count()),
-            "p_total": amount / total_runs * 100,
+            "name": state.label,
+            "amount": (amount := TaskLog.objects.filter(state=state.value).count()),
+            "percent": amount / total_runs * 100,
         }
         for state in TaskLog.State
     ]
     task_runs_per_app = (
-        TaskLog.objects.values("app_name")
-        .annotate(num_runs=Count("pk"))
+        TaskLog.objects.values(name=F("app_name"))
+        .annotate(amount=Count("pk"))
         .annotate(
-            p_total=F("num_runs")
+            percent=F("amount")
             / Value(total_runs, output_field=models.FloatField())
             * 100
         )
-        .order_by("-num_runs")
+        .order_by("-amount")
     )
     tasks_top_runs = (
-        TaskLog.objects.values("task_name")
-        .annotate(num_runs=Count("pk"))
+        TaskLog.objects.values(name=F("task_name"))
+        .annotate(amount=Count("pk"))
         .annotate(
-            p_total=F("num_runs")
+            percent=F("amount")
             / Value(total_runs, output_field=models.FloatField())
             * 100
         )
-        .order_by("-num_runs")[:TASKANALYTICS_REPORTS_MAX_TOP]
+        .order_by("-amount")[:TASKANALYTICS_REPORTS_MAX_TOP]
     )
     tasks_top_runtime = (
-        TaskLog.objects.values("task_name")
-        .annotate(max_runtime=Max("runtime"))
-        .order_by("-max_runtime")[:TASKANALYTICS_REPORTS_MAX_TOP]
+        TaskLog.objects.values(name=F("task_name"))
+        .annotate(amount=Max("runtime"))
+        .annotate(
+            percent=F("amount")
+            / Value(total_runtime, output_field=models.FloatField())
+            * 100
+        )
+        .order_by("-amount")[:TASKANALYTICS_REPORTS_MAX_TOP]
+    )
+    total_failed = TaskLog.objects.filter(state=TaskLog.State.FAILURE).count()
+    tasks_top_failed = (
+        TaskLog.objects.filter(state=TaskLog.State.FAILURE)
+        .values(name=F("task_name"))
+        .annotate(amount=Count("pk"))
+        .annotate(
+            percent=F("amount")
+            / Value(total_failed, output_field=models.FloatField())
+            * 100
+        )
+        .order_by("-amount")[:TASKANALYTICS_REPORTS_MAX_TOP]
     )
     context = {
         "oldest_date": oldest_date,
@@ -106,6 +123,7 @@ def _calc_data() -> dict:
         "task_runs_per_app": task_runs_per_app,
         "tasks_top_runs": tasks_top_runs,
         "tasks_top_runtime": tasks_top_runtime,
+        "tasks_top_failed": tasks_top_failed,
         "MAX_TOP": TASKANALYTICS_REPORTS_MAX_TOP,
     }
     return context

@@ -44,7 +44,7 @@ class TaskLogManagerBase(models.Manager):
         exception=None,
     ) -> models.Model:
         """Create new objects from task infos."""
-        from .core.tasklogs import TASK_RECEIVED, TASK_STARTED
+        from .core.task_logs import TASK_RECEIVED, TASK_STARTED
 
         if request is None:
             request = sender.request

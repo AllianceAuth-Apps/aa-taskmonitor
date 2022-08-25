@@ -4,7 +4,7 @@ from unittest.mock import patch
 from django.test import TestCase, override_settings
 from django.utils import timezone
 
-from taskanalytics.core import tasklogs
+from taskanalytics.core import task_logs
 from taskanalytics.models import TaskLog
 
 from .factories import TaskLogFactory
@@ -13,7 +13,7 @@ from .helpers import SenderStub
 # from app_utils.testdata_factories import UserFactory
 
 
-CORE_PATH = "taskanalytics.core.tasklogs"
+CORE_PATH = "taskanalytics.core.task_logs"
 
 
 @override_settings(CELERY_ALWAYS_EAGER=True, CELERY_EAGER_PROPAGATES_EXCEPTIONS=True)
@@ -25,7 +25,7 @@ class TestSignalHandlingEnd2End(TestCase):
         expected = TaskLogFactory.build(state=TaskLog.State.SUCCESS)
         sender = SenderStub.create_from_obj(expected)
         # when
-        tasklogs.task_success_handler_2(sender=sender)
+        task_logs.task_success_handler_2(sender=sender)
         # then
         self.assertTrue(
             TaskLog.objects.filter(
@@ -43,7 +43,7 @@ class TestSignalHandlingEnd2End(TestCase):
         other_task = TaskLogFactory.build()
         sender.request.id = str(other_task.task_id)  # now different from expected
         # when
-        tasklogs.task_failure_handler_2(
+        task_logs.task_failure_handler_2(
             sender=sender, task_id=str(expected.task_id), exception=None
         )
         # then
@@ -63,7 +63,7 @@ class TestSignalHandlingEnd2End(TestCase):
         sender_no_request = SenderStub.create_from_obj(expected)
         sender_no_request.request = None
         # when
-        tasklogs.task_retry_handler_2(
+        task_logs.task_retry_handler_2(
             sender=sender_no_request, request=sender.request, reason=None
         )
         # then

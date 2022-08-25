@@ -15,12 +15,13 @@
 
     <p>Total of {{ total_runs|intcomma }} task executions within {{ oldest_date|timesince:youngest_date }} and {{ total_runtime_date|timesince }} cumulative runtime.</p>
 
+    <h2 id="contents">Conents</h2>
     <ul>
         <li><a href="#task-runs-by-app">Task runs by state</a></li>
         <li><a href="#task-runs-by-app">Task runs by app</a></li>
         <li><a href="#top-tasks-by-runs">Top tasks by runs</a></li>
         <li><a href="#top-tasks-by-runtime">Top tasks by runtime</a></li>
-        <li><a href="#top-failed-tasks">Top failed tasks</a></li>
+        <li><a href="#top-failed-tasks">Top tasks by failed runs</a></li>
     </ul>
 
     <h2 id="task-runs-by-app">Task runs by state</h2>
@@ -32,10 +33,10 @@
     <h2 id="top-tasks-by-runs">Top {{ MAX_TOP }} tasks by runs</h2>
     {% include "admin/taskanalytics/tasklog/report_table_partial.html" with rows=tasks_top_runs %}
 
-    <h2 id="top-tasks-by-runtime">Top {{ MAX_TOP }} tasks by runtime</h2>
+    <h2 id="top-tasks-by-runtime">Top {{ MAX_TOP }} tasks by runtime in seconds</h2>
     {% include "admin/taskanalytics/tasklog/report_table_partial.html" with rows=tasks_top_runtime %}
 
-    <h2 id="top-failed-tasks">Top {{ MAX_TOP }} failed tasks by runs</h2>
+    <h2 id="top-failed-tasks">Top {{ MAX_TOP }} tasks by failed runs</h2>
     {% include "admin/taskanalytics/tasklog/report_table_partial.html" with rows=tasks_top_failed %}
 
     <br>

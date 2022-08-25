@@ -13,7 +13,7 @@
             <tr>
                 <td>{{ row.name }}</td>
                 <td style="text-align: right;">{{ row.amount|floatformat:"0g" }}</td>
-                <td style="text-align: right;">{{ row.percent|floatformat:"0" }}</td>
+                <td style="text-align: right;">{{ row.percent|floatformat:"1" }}</td>
             </tr>
         {% empty %}
             <tr>
@@ -22,3 +22,5 @@
         {% endfor %}
     </tbody>
 </table>
+<br>
+[<a href="#contents">contents</a>]

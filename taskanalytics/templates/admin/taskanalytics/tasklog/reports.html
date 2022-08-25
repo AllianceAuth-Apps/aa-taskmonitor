@@ -1,11 +1,25 @@
- {% extends 'admin/base_site.html' %}
- {% load i18n %}
- {% load humanize %}
+{% extends 'admin/change_list.html' %}
+{% load i18n %}
+{% load humanize %}
 
- {% block content %}
-    <h1>Taskanalytics - Reports</h1>
 
-    <h2>Task runs by state</h2>
+{% block breadcrumbs %}
+    <div class="breadcrumbs">
+        <a href="{% url 'admin:index' %}">{% translate 'Home' %}</a>
+        &rsaquo; <a href="{% url 'admin:app_list' app_label=cl.opts.app_label %}">{{ cl.opts.app_config.verbose_name }}</a>
+        &rsaquo; <a href="{% url 'admin:taskanalytics_tasklog_changelist' %}">{{ cl.opts.verbose_name_plural|capfirst }}</a> - Reports
+    </div>
+{% endblock %}
+
+{% block content %}
+    <ul>
+        <li><a href="#task-runs-by-app">Task runs by state</a></li>
+        <li><a href="#task-runs-by-app">Task runs by app</a></li>
+        <li><a href="#top-tasks-by-runs">Top tasks by runs</a></li>
+        <li><a href="#top-tasks-by-runtime">Top tasks by runtime</a></li>
+    </ul>
+
+    <h2 id="task-runs-by-app">Task runs by state</h2>
     <p>{{ total_runs|intcomma }} task executions within {{ oldest_date|timesince:youngest_date }}</p>
     <table>
         <thead>
@@ -30,7 +44,7 @@
         </tbody>
     </table>
 
-    <h2>Task runs by app</h2>
+    <h2 id="task-runs-by-app">Task runs by app</h2>
     <p>{{ total_runs|intcomma }} task executions within {{ oldest_date|timesince:youngest_date }}</p>
     <table>
         <thead>
@@ -55,7 +69,7 @@
         </tbody>
     </table>
 
-    <h2>Top {{ MAX_TOP }} tasks by runs</h2>
+    <h2 id="top-tasks-by-runs">Top {{ MAX_TOP }} tasks by runs</h2>
     <p>{{ total_runs|intcomma }} task executions within {{ oldest_date|timesince:youngest_date }}</p>
     <table>
         <thead>
@@ -80,7 +94,7 @@
         </tbody>
     </table>
 
-    <h2>Top {{ MAX_TOP }} tasks by runtime</h2>
+    <h2 id="top-tasks-by-runtime">Top {{ MAX_TOP }} tasks by runtime</h2>
     <p>{{ total_runtime_date|timesince }} total cumulative runtime within {{ oldest_date|timesince:youngest_date }}</p>
     <table>
         <thead>
@@ -109,5 +123,4 @@
         <a href="{% url 'taskanalytics:admin_taskanalytics_reports_clear_cache' %}"><input type="button" value="Recalc now"></a>
     </p>
 
-    <a href="{% url 'admin:taskanalytics_tasklog_changelist' %}"><input type="button" value="Back"></a>
- {% endblock %}
+{% endblock %}

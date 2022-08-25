@@ -5,6 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import StreamingHttpResponse
 from django.shortcuts import redirect, render
 
+from allianceauth import NAME as site_header
 from allianceauth.services.hooks import get_extension_logger
 from app_utils.logging import LoggerAddTag
 
@@ -44,7 +45,12 @@ def admin_taskanalytics_download_csv(request) -> StreamingHttpResponse:
 @staff_member_required
 def admin_taskanalytics_reports(request):
     """Show the reports page."""
-    context = cached_reports.data()
+    context = {
+        "title": "Taskanalytics - Reports",
+        "site_header": site_header,
+        "cl": {"opts": TaskLog._meta},
+    }
+    context.update(cached_reports.data())
     return render(request, "admin/taskanalytics/tasklog/reports.html", context)
 
 

@@ -33,7 +33,7 @@
     <h2 id="top-tasks-by-runs">Top {{ MAX_TOP }} tasks by runs</h2>
     {% include "admin/taskanalytics/tasklog/report_table_partial.html" with rows=tasks_top_runs %}
 
-    <h2 id="top-tasks-by-runtime">Top {{ MAX_TOP }} tasks by runtime in seconds</h2>
+    <h2 id="top-tasks-by-runtime">Top {{ MAX_TOP }} tasks by instance runtime in seconds</h2>
     {% include "admin/taskanalytics/tasklog/report_table_partial.html" with rows=tasks_top_runtime %}
 
     <h2 id="top-failed-tasks">Top {{ MAX_TOP }} tasks by failed runs</h2>

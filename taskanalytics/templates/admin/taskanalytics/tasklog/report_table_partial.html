@@ -1,5 +1,7 @@
 {% load humanize %}
 
+{{ rows }}
+
 <table>
     <thead>
         <tr>
@@ -11,7 +13,13 @@
     <tbody>
         {% for row in rows %}
             <tr>
-                <td>{{ row.name }}</td>
+                <td>
+                    {% if row.url %}
+                        <a href="{{ row.url }}">{{ row.name }}</a>
+                    {% else %}
+                        {{ row.name }}
+                    {% endif %}
+                </td>
                 <td style="text-align: right;">{{ row.amount|floatformat:"0g" }}</td>
                 <td style="text-align: right;">{{ row.percent|floatformat:"1" }}</td>
             </tr>

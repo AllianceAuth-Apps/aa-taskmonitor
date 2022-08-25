@@ -6,6 +6,8 @@ from typing import Optional
 from django.core.cache import cache
 from django.db import models
 from django.db.models import Count, F, Max, Min, Sum, Value
+from django.db.models.functions import Concat
+from django.urls import reverse
 from django.utils import timezone
 
 from ..app_settings import (
@@ -64,11 +66,13 @@ def _calc_data() -> dict:
     except TypeError:
         total_runtime_date = None
     total_runs = TaskLog.objects.count()
+    changelist_url = reverse("admin:taskanalytics_tasklog_changelist")
     task_totals_by_state = [
         {
             "name": state.label,
             "amount": (amount := TaskLog.objects.filter(state=state.value).count()),
             "percent": amount / total_runs * 100,
+            "url": f"{changelist_url}?state__exact={state}",
         }
         for state in TaskLog.State
     ]
@@ -80,6 +84,7 @@ def _calc_data() -> dict:
             / Value(total_runs, output_field=models.FloatField())
             * 100
         )
+        .annotate(url=Concat(Value(f"{changelist_url}?app_name="), F("name")))
         .order_by("-amount")
     )
     tasks_top_runs = (
@@ -90,6 +95,7 @@ def _calc_data() -> dict:
             / Value(total_runs, output_field=models.FloatField())
             * 100
         )
+        .annotate(url=Concat(Value(f"{changelist_url}?task_name="), F("name")))
         .order_by("-amount")[:TASKANALYTICS_REPORTS_MAX_TOP]
     )
     tasks_top_runtime = (
@@ -100,6 +106,7 @@ def _calc_data() -> dict:
             / Value(total_runtime, output_field=models.FloatField())
             * 100
         )
+        .annotate(url=Concat(Value(f"{changelist_url}?o=5&task_name="), F("name")))
         .order_by("-amount")[:TASKANALYTICS_REPORTS_MAX_TOP]
     )
     total_failed = TaskLog.objects.filter(state=TaskLog.State.FAILURE).count()
@@ -111,6 +118,9 @@ def _calc_data() -> dict:
             percent=F("amount")
             / Value(total_failed, output_field=models.FloatField())
             * 100
+        )
+        .annotate(
+            url=Concat(Value(f"{changelist_url}?state__exact=3&task_name="), F("name"))
         )
         .order_by("-amount")[:TASKANALYTICS_REPORTS_MAX_TOP]
     )

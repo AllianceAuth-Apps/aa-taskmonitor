@@ -4,7 +4,6 @@ from django.test import RequestFactory, TestCase
 from django.urls import reverse
 
 from app_utils.testdata_factories import UserFactory
-from app_utils.testing import response_text
 
 from taskanalytics import views
 from taskanalytics.models import TaskLog
@@ -12,7 +11,7 @@ from taskanalytics.models import TaskLog
 from .factories import TaskLogFactory
 
 
-def format_dt(my_dt) -> str:
+def _format_dt(my_dt) -> str:
     """Format datetime into a format with a special timezone offset,
     which strtime() does not support.
     """
@@ -22,6 +21,11 @@ def format_dt(my_dt) -> str:
     minutes = int(offset / 60)
     offset_str = f"{sign}{hours:02}:{minutes:02}"
     return my_dt.strftime("%Y-%m-%d %H:%M:%S.%f") + offset_str
+
+
+def _streaming_content_to_string(response):
+    bytes = b"".join(response.streaming_content)
+    return bytes.decode("utf-8")
 
 
 class TestViews(TestCase):
@@ -46,7 +50,8 @@ class TestViews(TestCase):
         # then
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.headers["Content-Type"], "text/csv")
-        lines = response_text(response).splitlines()
+        content = _streaming_content_to_string(response)
+        lines = content.splitlines()
         lines.reverse()
         self.assertEqual(
             lines.pop(),
@@ -62,10 +67,10 @@ class TestViews(TestCase):
             self.assertEqual(values[3], "" if not entry.parent_id else entry.parent_id)
             self.assertEqual(values[4], str(entry.priority))
             self.assertEqual(values[5], str(entry.retries))
-            self.assertEqual(values[6], format_dt(entry.received))
+            self.assertEqual(values[6], _format_dt(entry.received))
             self.assertEqual(values[7], str(entry.runtime))
-            self.assertEqual(values[8], format_dt(entry.started))
+            self.assertEqual(values[8], _format_dt(entry.started))
             self.assertEqual(values[9], entry.get_state_display())
             self.assertEqual(values[10], str(entry.task_id))
             self.assertEqual(values[11], entry.task_name)
-            self.assertEqual(values[12], format_dt(entry.timestamp))
+            self.assertEqual(values[12], _format_dt(entry.timestamp))

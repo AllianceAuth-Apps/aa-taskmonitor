@@ -1,4 +1,5 @@
 import traceback as tb
+from typing import List
 from uuid import UUID
 
 from django.db import models
@@ -7,7 +8,31 @@ from django.utils import timezone
 from .helpers import extract_app_name
 
 
-class TaskLogManager(models.Manager):
+class TaskLogQuerySet(models.QuerySet):
+    def csv_line_generator(self, fields: List[str]):
+        """Return the tasklogs for a CSV file line by line.
+        And return the field names as first line.
+        """
+        yield [field.name for field in fields]
+        for obj in self.iterator():
+            values = []
+            for field in fields:
+                if field.choices:
+                    value = getattr(obj, f"get_{field.name}_display")()
+                else:
+                    value = getattr(obj, field.name)
+                if callable(value):
+                    try:
+                        value = value() or ""
+                    except Exception:
+                        value = "Error retrieving value"
+                if value is None:
+                    value = ""
+                values.append(value)
+            yield values
+
+
+class TaskLogManagerBase(models.Manager):
     def create_from_task(
         self,
         *,
@@ -51,3 +76,6 @@ class TaskLogManager(models.Manager):
         if traceback_out:
             args["traceback"] = traceback_out
         return self.create(**args)
+
+
+TaskLogManager = TaskLogManagerBase.from_queryset(TaskLogQuerySet)

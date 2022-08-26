@@ -13,6 +13,7 @@ class TaskLogAdmin(admin.ModelAdmin):
         "timestamp",
         "task_name",
         "_state",
+        "priority",
         "_runtime",
         "_exception",
     )
@@ -49,13 +50,14 @@ class TaskLogAdmin(admin.ModelAdmin):
 
     @admin.display(ordering="exception")
     def _exception(self, obj) -> str:
-        if obj.exception:
-            return html.format_html(
-                '<span class="truncate" title="{}">{}</span>',
-                obj.exception,
-                obj.exception,
-            )
-        return ""
+        return obj.exception
+        # if obj.exception:
+        #     return html.format_html(
+        #         '<span class="truncate" title="{}">{}</span>',
+        #         obj.exception,
+        #         obj.exception,
+        #     )
+        # return ""
 
     @admin.action(description="Delete selected entries (NO CONFIRMATION!")
     def delete_selected_2(self, request, queryset):

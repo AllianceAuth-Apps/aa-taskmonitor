@@ -1,3 +1,4 @@
+import datetime as dt
 import traceback as tb
 from typing import List
 from uuid import UUID
@@ -5,7 +6,6 @@ from uuid import UUID
 from django.db import models
 from django.utils import timezone
 
-from .core import task_records
 from .helpers import extract_app_name
 
 
@@ -41,11 +41,11 @@ class TaskLogManagerBase(models.Manager):
         sender=None,
         request: dict = None,
         task_id: str = None,
+        received: dt.datetime = None,
+        started: dt.datetime = None,
         exception=None,
     ) -> models.Model:
-        """Create new objects from task infos."""
-        from .core.task_logs import TASK_RECEIVED, TASK_STARTED
-
+        """Create new object from a celery task."""
         if request is None:
             request = sender.request
         if task_id is None:
@@ -59,9 +59,9 @@ class TaskLogManagerBase(models.Manager):
             traceback_out = ""
         args = {
             "app_name": extract_app_name(task_name),
-            "received": task_records.fetch(task_id, TASK_RECEIVED),
+            "received": received,
             "retries": request.retries,
-            "started": task_records.fetch(task_id, TASK_STARTED),
+            "started": started,
             "state": state,
             "task_id": UUID(task_id),
             "task_name": task_name,

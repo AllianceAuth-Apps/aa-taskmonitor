@@ -1,10 +1,8 @@
-from unittest.mock import patch
-
 from django.core.cache import cache
 from django.test import TestCase, override_settings
 from django.utils import timezone
 
-from taskanalytics.core import task_logs
+from taskanalytics.core import task_logs, task_records
 from taskanalytics.models import TaskLog
 
 from .factories import SenderStub, TaskLogFactory
@@ -16,15 +14,15 @@ TASK_LOGS_PATH = "taskanalytics.core.task_logs"
 
 
 @override_settings(CELERY_ALWAYS_EAGER=True, CELERY_EAGER_PROPAGATES_EXCEPTIONS=True)
-@patch(TASK_LOGS_PATH + ".task_records")
 class TestSignalHandlingEnd2End(TestCase):
     def setUp(self) -> None:
         cache.clear()
 
-    def test_should_create_entry_for_succeeded_task(self, mock_task_records):
+    def test_should_create_entry_for_succeeded_task(self):
         # given
-        mock_task_records.get.return_value = timezone.now()
         expected = TaskLogFactory.build(state=TaskLog.State.SUCCESS)
+        task_records.set(expected.task_id, task_logs.TASK_RECEIVED, timezone.now())
+        task_records.set(expected.task_id, task_logs.TASK_STARTED, timezone.now())
         sender = SenderStub.create_from_obj(expected)
         # when
         task_logs.task_success_handler_2(sender=sender)
@@ -35,12 +33,13 @@ class TestSignalHandlingEnd2End(TestCase):
             ).exists()
         )
 
-    def test_should_create_entry_for_failed_task(self, mock_task_records):
+    def test_should_create_entry_for_failed_task(self):
         # given
-        mock_task_records.get.return_value = timezone.now()
         expected = TaskLogFactory.build(
             state=TaskLog.State.FAILURE, exception="", traceback=""
         )
+        task_records.set(expected.task_id, task_logs.TASK_RECEIVED, timezone.now())
+        task_records.set(expected.task_id, task_logs.TASK_STARTED, timezone.now())
         sender = SenderStub.create_from_obj(expected)
         other_task = TaskLogFactory.build()
         sender.request.id = str(other_task.task_id)  # now different from expected
@@ -55,12 +54,13 @@ class TestSignalHandlingEnd2End(TestCase):
             ).exists()
         )
 
-    def test_should_create_entry_for_retried_task(self, mock_task_records):
+    def test_should_create_entry_for_retried_task(self):
         # given
-        mock_task_records.get.return_value = timezone.now()
         expected = TaskLogFactory.build(
             state=TaskLog.State.RETRY, exception="", traceback=""
         )
+        task_records.set(expected.task_id, task_logs.TASK_RECEIVED, timezone.now())
+        task_records.set(expected.task_id, task_logs.TASK_STARTED, timezone.now())
         sender = SenderStub.create_from_obj(expected)
         sender_no_request = SenderStub.create_from_obj(expected)
         sender_no_request.request = None

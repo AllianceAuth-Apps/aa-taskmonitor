@@ -40,10 +40,13 @@ def task_prerun_handler_2(task_id):
 def task_retry_handler_2(sender, request, reason):
     """Handle task retry signal."""
     if sender and request:
+        task_id = request.id
         TaskLog.objects.create_from_task(
             state=TaskLog.State.RETRY,
             sender=sender,
             request=request,
+            received=task_records.fetch(task_id, TASK_RECEIVED),
+            started=task_records.fetch(task_id, TASK_STARTED),
             exception=reason,
         )
     run_housekeeping_if_stale()
@@ -52,7 +55,13 @@ def task_retry_handler_2(sender, request, reason):
 def task_success_handler_2(sender):
     """Handle task success signal."""
     if sender and sender.request:
-        TaskLog.objects.create_from_task(state=TaskLog.State.SUCCESS, sender=sender)
+        task_id = sender.request.id
+        TaskLog.objects.create_from_task(
+            state=TaskLog.State.SUCCESS,
+            sender=sender,
+            received=task_records.fetch(task_id, TASK_RECEIVED),
+            started=task_records.fetch(task_id, TASK_STARTED),
+        )
     run_housekeeping_if_stale()
 
 
@@ -64,6 +73,8 @@ def task_failure_handler_2(sender, task_id, exception):
             sender=sender,
             task_id=task_id,
             exception=exception,
+            received=task_records.fetch(task_id, TASK_RECEIVED),
+            started=task_records.fetch(task_id, TASK_STARTED),
         )
     run_housekeeping_if_stale()
 
@@ -76,5 +87,7 @@ def task_internal_error_handler_2(task_id, request, exception):
             request=request,
             task_id=task_id,
             exception=exception,
+            received=task_records.fetch(task_id, TASK_RECEIVED),
+            started=task_records.fetch(task_id, TASK_STARTED),
         )
     run_housekeeping_if_stale()

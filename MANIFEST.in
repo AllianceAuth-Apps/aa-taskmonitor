@@ -1,7 +1,7 @@
 include LICENSE
 include README.md
-recursive-include taskanalytics/ *.py
-recursive-include taskanalytics/templates *
-recursive-include taskanalytics/static *
-recursive-include taskanalytics/tests *
+recursive-include taskmonitor/ *.py
+recursive-include taskmonitor/templates *
+recursive-include taskmonitor/static *
+recursive-include taskmonitor/tests *
 recursive-exclude testauth *

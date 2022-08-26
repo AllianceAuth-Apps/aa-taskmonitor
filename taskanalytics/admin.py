@@ -13,7 +13,7 @@ class TaskLogAdmin(admin.ModelAdmin):
         "timestamp",
         "task_name",
         "_state",
-        "runtime",
+        "_runtime",
         "_exception",
     )
     list_filter = ("state", "timestamp", "app_name", "task_name")
@@ -32,11 +32,15 @@ class TaskLogAdmin(admin.ModelAdmin):
             del actions["delete_selected"]
         return actions
 
+    @admin.display(ordering="runtime")
+    def _runtime(self, obj) -> str:
+        return f"{obj.runtime:.1f}"
+
     @admin.display(ordering="state")
     def _state(self, obj) -> str:
         css_class_map = {
-            TaskLog.State.RETRY: "stateRetry",
-            TaskLog.State.FAILURE: "stateFailure",
+            TaskLog.State.RETRY: "state-retry",
+            TaskLog.State.FAILURE: "state-failure",
         }
         css_class = css_class_map.get(obj.state, "")
         return html.format_html(
@@ -45,7 +49,13 @@ class TaskLogAdmin(admin.ModelAdmin):
 
     @admin.display(ordering="exception")
     def _exception(self, obj) -> str:
-        return html.format_html('<span class="exceptionText">{}</span>', obj.exception)
+        if obj.exception:
+            return html.format_html(
+                '<span class="truncate" title="{}">{}</span>',
+                obj.exception,
+                obj.exception,
+            )
+        return ""
 
     @admin.action(description="Delete selected entries (NO CONFIRMATION!")
     def delete_selected_2(self, request, queryset):

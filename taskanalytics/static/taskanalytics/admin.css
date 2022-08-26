@@ -1,4 +1,4 @@
-.exceptionText {
+.truncate {
     display: inline-block;
     width: 20em;
     white-space: nowrap;
@@ -6,10 +6,18 @@
     text-overflow: ellipsis;
 }
 
-.stateRetry {
+.state-retry {
     color: deepskyblue
 }
 
-.stateFailure {
+.state-failure {
     color: crimson
+}
+
+.field-_runtime {
+    text-align: right;
+}
+
+.text-right {
+    text-align: right;
 }

@@ -4,8 +4,8 @@
     <thead>
         <tr>
             <th>Name</th>
-            <th>Amount</th>
-            <th>% total</th>
+            <th class="text-right">Amount</th>
+            <th class="text-right">% total</th>
         </tr>
     </thead>
     <tbody>
@@ -18,8 +18,8 @@
                         {{ row.name }}
                     {% endif %}
                 </td>
-                <td style="text-align: right;">{{ row.amount|floatformat:"0g" }}</td>
-                <td style="text-align: right;">{{ row.percent|floatformat:"1" }}</td>
+                <td class="text-right">{{ row.amount|floatformat:"0g" }}</td>
+                <td class="text-right">{{ row.percent|floatformat:"1" }}</td>
             </tr>
         {% empty %}
             <tr>

@@ -1,7 +1,10 @@
 {% extends 'admin/change_list.html' %}
-{% load i18n %}
-{% load humanize %}
+{% load i18n humanize static %}
 
+{% block extrastyle %}
+    {{ block.super }}
+    <link rel="stylesheet" type="text/css" href="{% static 'taskanalytics/admin.css' %}">
+{% endblock %}
 
 {% block breadcrumbs %}
     <div class="breadcrumbs">

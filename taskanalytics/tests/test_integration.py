@@ -12,18 +12,18 @@ from .factories import SenderStub, TaskLogFactory
 # from app_utils.testdata_factories import UserFactory
 
 
-CORE_PATH = "taskanalytics.core.task_logs"
+TASK_LOGS_PATH = "taskanalytics.core.task_logs"
 
 
 @override_settings(CELERY_ALWAYS_EAGER=True, CELERY_EAGER_PROPAGATES_EXCEPTIONS=True)
-@patch(CORE_PATH + ".TaskRecords")
+@patch(TASK_LOGS_PATH + ".task_records")
 class TestSignalHandlingEnd2End(TestCase):
     def setUp(self) -> None:
         cache.clear()
 
-    def test_should_create_entry_for_succeeded_task(self, mock_TaskRecords):
+    def test_should_create_entry_for_succeeded_task(self, mock_task_records):
         # given
-        mock_TaskRecords.return_value.get.return_value = timezone.now()
+        mock_task_records.get.return_value = timezone.now()
         expected = TaskLogFactory.build(state=TaskLog.State.SUCCESS)
         sender = SenderStub.create_from_obj(expected)
         # when
@@ -35,9 +35,9 @@ class TestSignalHandlingEnd2End(TestCase):
             ).exists()
         )
 
-    def test_should_create_entry_for_failed_task(self, mock_TaskRecords):
+    def test_should_create_entry_for_failed_task(self, mock_task_records):
         # given
-        mock_TaskRecords.return_value.get.return_value = timezone.now()
+        mock_task_records.get.return_value = timezone.now()
         expected = TaskLogFactory.build(
             state=TaskLog.State.FAILURE, exception="", traceback=""
         )
@@ -55,9 +55,9 @@ class TestSignalHandlingEnd2End(TestCase):
             ).exists()
         )
 
-    def test_should_create_entry_for_retried_task(self, mock_TaskRecords):
+    def test_should_create_entry_for_retried_task(self, mock_task_records):
         # given
-        mock_TaskRecords.return_value.get.return_value = timezone.now()
+        mock_task_records.get.return_value = timezone.now()
         expected = TaskLogFactory.build(
             state=TaskLog.State.RETRY, exception="", traceback=""
         )

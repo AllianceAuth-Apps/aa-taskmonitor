@@ -5,6 +5,7 @@ from uuid import UUID
 from django.db import models
 from django.utils import timezone
 
+from .core import task_records
 from .helpers import extract_app_name
 
 
@@ -37,7 +38,6 @@ class TaskLogManagerBase(models.Manager):
         self,
         *,
         state: int,
-        records,
         sender=None,
         request: dict = None,
         task_id: str = None,
@@ -59,9 +59,9 @@ class TaskLogManagerBase(models.Manager):
             traceback_out = ""
         args = {
             "app_name": extract_app_name(task_name),
-            "received": records.fetch(task_id, TASK_RECEIVED),
+            "received": task_records.fetch(task_id, TASK_RECEIVED),
             "retries": request.retries,
-            "started": records.fetch(task_id, TASK_STARTED),
+            "started": task_records.fetch(task_id, TASK_STARTED),
             "state": state,
             "task_id": UUID(task_id),
             "task_name": task_name,

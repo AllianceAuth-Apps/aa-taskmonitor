@@ -1,8 +1,10 @@
 from unittest.mock import patch
 
+from django.core.cache import cache
 from django.test import TestCase
 
-from taskanalytics.core.task_logs import TASK_RECEIVED, TASK_STARTED, TaskRecords
+from taskanalytics.core import task_records
+from taskanalytics.core.task_logs import TASK_RECEIVED, TASK_STARTED
 from taskanalytics.models import TaskLog
 
 from .factories import SenderStub, TaskLogFactory
@@ -11,18 +13,20 @@ MODELS_PATH = "taskanalytics.models"
 
 
 class TestManagerCreateFromTask(TestCase):
+    def setUp(self) -> None:
+        cache.clear()
+
     def test_should_create_from_succeeded_task(self):
         # given
         expected = TaskLogFactory.build(state=TaskLog.State.SUCCESS, priority=3)
         sender = SenderStub.create_from_obj(expected)
-        records = TaskRecords()
-        records.set(expected.task_id, TASK_RECEIVED, expected.received)
-        records.set(expected.task_id, TASK_STARTED, expected.started)
+        task_records.set(expected.task_id, TASK_RECEIVED, expected.received)
+        task_records.set(expected.task_id, TASK_STARTED, expected.started)
         # when
         with patch("django.utils.timezone.now") as mock_now:
             mock_now.return_value = expected.timestamp
             result = TaskLog.objects.create_from_task(
-                state=expected.state, records=records, sender=sender
+                state=expected.state, sender=sender
             )
         # then
         self._assert_equal_objs(expected, result)
@@ -36,15 +40,13 @@ class TestManagerCreateFromTask(TestCase):
         other_task = TaskLogFactory.build()
         sender.request.id = str(other_task.task_id)  # now different from expected
         expected_task_id = str(expected.task_id)
-        records = TaskRecords()
-        records.set(expected_task_id, TASK_RECEIVED, expected.received)
-        records.set(expected_task_id, TASK_STARTED, expected.started)
+        task_records.set(expected_task_id, TASK_RECEIVED, expected.received)
+        task_records.set(expected_task_id, TASK_STARTED, expected.started)
         # when
         with patch("django.utils.timezone.now") as mock_now:
             mock_now.return_value = expected.timestamp
             result = TaskLog.objects.create_from_task(
                 state=expected.state,
-                records=records,
                 sender=sender,
                 task_id=expected_task_id,
             )
@@ -59,15 +61,13 @@ class TestManagerCreateFromTask(TestCase):
         sender = SenderStub.create_from_obj(expected)
         sender_no_request = SenderStub.create_from_obj(expected)
         sender_no_request.request = None
-        records = TaskRecords()
-        records.set(expected.task_id, TASK_RECEIVED, expected.received)
-        records.set(expected.task_id, TASK_STARTED, expected.started)
+        task_records.set(expected.task_id, TASK_RECEIVED, expected.received)
+        task_records.set(expected.task_id, TASK_STARTED, expected.started)
         # when
         with patch("django.utils.timezone.now") as mock_now:
             mock_now.return_value = expected.timestamp
             result = TaskLog.objects.create_from_task(
                 state=expected.state,
-                records=records,
                 sender=sender_no_request,
                 request=sender.request,
             )

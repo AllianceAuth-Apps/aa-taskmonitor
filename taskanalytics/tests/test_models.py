@@ -5,8 +5,7 @@ from django.test import TestCase
 from taskanalytics.core.task_logs import TASK_RECEIVED, TASK_STARTED, TaskRecords
 from taskanalytics.models import TaskLog
 
-from .factories import TaskLogFactory
-from .helpers import SenderStub
+from .factories import SenderStub, TaskLogFactory
 
 MODELS_PATH = "taskanalytics.models"
 
@@ -14,7 +13,7 @@ MODELS_PATH = "taskanalytics.models"
 class TestManagerCreateFromTask(TestCase):
     def test_should_create_from_succeeded_task(self):
         # given
-        expected = TaskLogFactory.build(state=TaskLog.State.SUCCESS)
+        expected = TaskLogFactory.build(state=TaskLog.State.SUCCESS, priority=3)
         sender = SenderStub.create_from_obj(expected)
         records = TaskRecords()
         records.set(expected.task_id, TASK_RECEIVED, expected.received)

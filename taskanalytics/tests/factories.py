@@ -1,4 +1,5 @@
 import datetime as dt
+from dataclasses import dataclass
 from random import choice, choices, randint
 from uuid import UUID
 
@@ -87,3 +88,37 @@ class TaskLogFactory(factory.django.DjangoModelFactory):
             start_dt=start_dt,
             end_dt=start_dt + dt.timedelta(seconds=max_duration),
         ).fuzz()
+
+
+@dataclass
+class ContextStub:
+    id: str
+    retries: int
+    delivery_info: dict
+    parent_id: str = None
+
+    @classmethod
+    def create_from_obj(cls, obj: TaskLog):
+        return cls(
+            parent_id=obj.parent_id,
+            retries=obj.retries,
+            id=str(obj.task_id),
+            delivery_info={
+                "is_eager": False,
+                "exchange": None,
+                "routing_key": None,
+                "priority": obj.priority,
+            },
+        )
+
+
+@dataclass
+class SenderStub:
+    name: str
+    request: ContextStub
+    priority: int
+
+    @classmethod
+    def create_from_obj(cls, obj: TaskLog):
+        request = ContextStub.create_from_obj(obj)
+        return cls(name=obj.task_name, request=request, priority=5)

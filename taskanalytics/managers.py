@@ -67,8 +67,8 @@ class TaskLogManagerBase(models.Manager):
             "task_name": task_name,
             "timestamp": timezone.now(),
         }
-        if sender:
-            args["priority"] = sender.priority
+        if request.delivery_info and "priority" in request.delivery_info:
+            args["priority"] = request.delivery_info["priority"]
         if request.parent_id:
             args["parent_id"] = UUID(request.parent_id)
         if exception:

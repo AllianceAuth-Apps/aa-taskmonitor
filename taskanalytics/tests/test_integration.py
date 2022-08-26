@@ -7,8 +7,7 @@ from django.utils import timezone
 from taskanalytics.core import task_logs
 from taskanalytics.models import TaskLog
 
-from .factories import TaskLogFactory
-from .helpers import SenderStub
+from .factories import SenderStub, TaskLogFactory
 
 # from app_utils.testdata_factories import UserFactory
 

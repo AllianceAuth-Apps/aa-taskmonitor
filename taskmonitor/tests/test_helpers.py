@@ -1,6 +1,6 @@
 from django.test import TestCase
 
-from taskanalytics.helpers import extract_app_name
+from taskmonitor.helpers import extract_app_name
 
 
 class TestExtractAppName(TestCase):

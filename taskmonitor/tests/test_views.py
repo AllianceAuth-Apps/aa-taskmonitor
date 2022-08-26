@@ -5,8 +5,8 @@ from django.urls import reverse
 
 from app_utils.testdata_factories import UserFactory
 
-from taskanalytics import views
-from taskanalytics.models import TaskLog
+from taskmonitor import views
+from taskmonitor.models import TaskLog
 
 from .factories import TaskLogFactory
 
@@ -36,7 +36,7 @@ class TestViews(TestCase):
         # given
         user = UserFactory(is_staff=True)
         request = self.request_factory.get(
-            reverse("taskanalytics:admin_taskanalytics_download_csv")
+            reverse("taskmonitor:admin_taskmonitor_download_csv")
         )
         request.user = user
         self.maxDiff = None
@@ -46,7 +46,7 @@ class TestViews(TestCase):
         TaskLogFactory(state=TaskLog.State.FAILURE)
         for _ in range(50):
             TaskLogFactory()
-        response = views.admin_taskanalytics_download_csv(request)
+        response = views.admin_taskmonitor_download_csv(request)
         # then
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.headers["Content-Type"], "text/csv")

@@ -2,11 +2,11 @@ from unittest.mock import patch
 
 from django.test import TestCase
 
-from taskanalytics.models import TaskLog
+from taskmonitor.models import TaskLog
 
 from .factories import SenderStub, TaskLogFactory
 
-MODELS_PATH = "taskanalytics.models"
+MODELS_PATH = "taskmonitor.models"
 
 
 class TestManagerCreateFromTask(TestCase):

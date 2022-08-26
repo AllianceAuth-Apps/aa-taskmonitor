@@ -1,4 +1,4 @@
-# Task Analytics
+# Task Monitor
 
 An Alliance Auth app for monitoring celery tasks.
 
@@ -23,7 +23,7 @@ An Alliance Auth app for monitoring celery tasks.
 
 ## Features
 
-Task Analytics gives administrators additional insights into the celery tasks that run on their system.
+Task Monitor gives administrators additional insights into the celery tasks that run on their system.
 
 - Full log with details of all recently executed tasks including failed and retried tasks.
 - Reports highlighting common aspects, e.g. Top most failed tasks
@@ -35,7 +35,7 @@ Note that all information incl. the reports is available exclusively through the
 
 ### Step 1 - Check prerequisites
 
-Task Analytics is a plugin for Alliance Auth. If you don't have Alliance Auth running already, please install it first before proceeding. (see the official [AA installation guide](https://allianceauth.readthedocs.io/en/latest/installation/auth/allianceauth/) for details)
+Task Monitor is a plugin for Alliance Auth. If you don't have Alliance Auth running already, please install it first before proceeding. (see the official [AA installation guide](https://allianceauth.readthedocs.io/en/latest/installation/auth/allianceauth/) for details)
 
 ### Step 2 - Install app
 
@@ -49,7 +49,7 @@ pip install git+https://gitlab.com/ErikKalkoken/task-analytics.git
 
 Configure your Auth settings (`local.py`) as follows:
 
-- Add `'taskanalytics'` to `INSTALLED_APPS`
+- Add `'taskmonitor'` to `INSTALLED_APPS`
 - Optional: Add additional settings if you want to change any defaults. See [Settings](#settings) for the full list.
 
 ### Step 4 - Finalize App installation
@@ -71,15 +71,15 @@ Note that all settings are optional and the app will use the documented default 
 
 Name | Description | Default
 -- | -- | --
-`TASKANALYTICS_DATA_MAX_AGE`| Max age of logged tasks in hours. Older logs be deleted automatically. | `24`
-`TASKANALYTICS_HOUSEKEEPING_FREQUENCY`| Frequency of house keeping runs in minutes. | `15`
-`TASKANALYTICS_REPORTS_MAX_AGE`| Max age of cached reports in minutes. | `15`
-`TASKANALYTICS_REPORTS_MAX_TOP`| Max items to show in the top reports. e.g. 10 will shop the top ten items. | `15`
+`TASKMONITOR_DATA_MAX_AGE`| Max age of logged tasks in hours. Older logs be deleted automatically. | `24`
+`TASKMONITOR_HOUSEKEEPING_FREQUENCY`| Frequency of house keeping runs in minutes. | `15`
+`TASKMONITOR_REPORTS_MAX_AGE`| Max age of cached reports in minutes. | `15`
+`TASKMONITOR_REPORTS_MAX_TOP`| Max items to show in the top reports. e.g. 10 will shop the top ten items. | `15`
 
 ## FAQ
 
 - Q: How is this app different from celery analytics?
-- A: Celery Analytics appears to be mainly designed as data source for reports on Grafana. So you also need to install and setup Grafana to make use of it. Task Analytics on the other hand aims to be fully functional standalone, e.g. it provides reports and many useful features for analyzing the raw data directly on the admin site.
+- A: Celery Analytics appears to be mainly designed as data source for reports on Grafana. So you also need to install and setup Grafana to make use of it. Task Monitor on the other hand aims to be fully functional standalone, e.g. it provides reports and many useful features for analyzing the raw data directly on the admin site.
 
 - Q: How is this app different from flower?
 - A: Flower offers more detailed and technical information about task runs and might be therefore more suitable for developers. However, it not designed to store a larger number of task logs (default is 10K) and is therefore less suited to monitor tasks with Alliance Auth, where you typically have many 100K tasks per day.

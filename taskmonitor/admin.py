@@ -7,7 +7,7 @@ from .models import TaskLog
 @admin.register(TaskLog)
 class TaskLogAdmin(admin.ModelAdmin):
     class Media:
-        css = {"all": ("taskanalytics/admin.css",)}
+        css = {"all": ("taskmonitor/admin.css",)}
 
     list_display = (
         "timestamp",

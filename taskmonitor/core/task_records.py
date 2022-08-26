@@ -7,14 +7,14 @@ from typing import Any, Optional
 
 from django.core.cache import cache
 
-from ..app_settings import TASKANALYTICS_DATA_MAX_AGE
+from ..app_settings import TASKMONITOR_DATA_MAX_AGE
 
-CACHE_KEY = "TASKANALYTICS_RECORDS"
+CACHE_KEY = "TASKMONITOR_RECORDS"
 
 
 def set(task_id: str, key: str, value: Any):
     """Set a key/value for a task."""
-    timeout = TASKANALYTICS_DATA_MAX_AGE * 3600
+    timeout = TASKMONITOR_DATA_MAX_AGE * 3600
     cache.set(_build_key(task_id, key), value, timeout=timeout)
 
 

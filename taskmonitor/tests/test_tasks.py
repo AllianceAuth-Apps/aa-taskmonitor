@@ -4,15 +4,15 @@ from unittest.mock import patch
 from django.test import TestCase
 from django.utils import timezone
 
-from taskanalytics.models import TaskLog
-from taskanalytics.tasks import delete_stale_tasklogs
+from taskmonitor.models import TaskLog
+from taskmonitor.tasks import delete_stale_tasklogs
 
 from .factories import TaskLogFactory
 
-TASKS_PATH = "taskanalytics.tasks"
+TASKS_PATH = "taskmonitor.tasks"
 
 
-@patch(TASKS_PATH + ".TASKANALYTICS_DATA_MAX_AGE", 3)
+@patch(TASKS_PATH + ".TASKMONITOR_DATA_MAX_AGE", 3)
 class TestTasks(TestCase):
     def test_should_delete_stale_entries_only(self):
         # given

@@ -2,15 +2,15 @@ from django.core.cache import cache
 from django.test import TestCase, override_settings
 from django.utils import timezone
 
-from taskanalytics.core import task_logs, task_records
-from taskanalytics.models import TaskLog
+from taskmonitor.core import task_logs, task_records
+from taskmonitor.models import TaskLog
 
 from .factories import SenderStub, TaskLogFactory
 
 # from app_utils.testdata_factories import UserFactory
 
 
-TASK_LOGS_PATH = "taskanalytics.core.task_logs"
+TASK_LOGS_PATH = "taskmonitor.core.task_logs"
 
 
 @override_settings(CELERY_ALWAYS_EAGER=True, CELERY_EAGER_PROPAGATES_EXCEPTIONS=True)
@@ -86,6 +86,6 @@ class TestSignalHandlingEnd2End(TestCase):
 #         TaskLogFactory()
 #         TaskLogFactory()
 #         # when
-#         response = self.client.get("/taskanalytics/admin_taskanalytics_reports")
+#         response = self.client.get("/taskmonitor/admin_taskmonitor_reports")
 #         # then
 #         self.assertEqual(response.status_code, 200)

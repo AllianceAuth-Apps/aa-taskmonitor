@@ -9,7 +9,7 @@ from factory.faker import faker
 
 from django.utils import timezone
 
-from taskanalytics.models import TaskLog
+from taskmonitor.models import TaskLog
 
 # generate fake apps and task names
 faker = faker.Faker()

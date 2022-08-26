@@ -2,7 +2,7 @@ import os
 
 from setuptools import find_packages, setup
 
-from taskanalytics import __version__
+from taskmonitor import __version__
 
 with open(os.path.join(os.path.dirname(__file__), "README.md")) as readme:
     README = readme.read()
@@ -10,12 +10,12 @@ with open(os.path.join(os.path.dirname(__file__), "README.md")) as readme:
 os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
 
 setup(
-    name="aa-taskanalytics",
+    name="aa-taskmonitor",
     version=__version__,
     packages=find_packages(),
     include_package_data=True,
     license="MIT",
-    description="Alliance Auth Plugin for analysing task usuage",
+    description="Alliance Auth plugin for monitoring celery tasks",
     long_description=README,
     long_description_content_type="text/markdown",
     url="",

@@ -1,5 +1,5 @@
-appname = aa-taskanalytics
-package = taskanalytics
+appname = aa-taskmonitor
+package = taskmonitor
 
 help:
 	@echo "Makefile for $(appname)"

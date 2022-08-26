@@ -16,8 +16,8 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "myauth.settings.local")
 django.setup()
 
 """MAIN"""
-from taskanalytics.models import TaskLog
-from taskanalytics.tests.factories import TaskLogFactory
+from taskmonitor.models import TaskLog
+from taskmonitor.tests.factories import TaskLogFactory
 
 MAX_ENTRIES = 100_000
 

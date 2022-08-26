@@ -3,7 +3,7 @@
 from django.core.cache import cache
 from django.utils import timezone
 
-from ..app_settings import TASKANALYTICS_HOUSEKEEPING_FREQUENCY
+from ..app_settings import TASKMONITOR_HOUSEKEEPING_FREQUENCY
 from ..models import TaskLog
 from ..tasks import DEFAULT_TASK_PRIORITY, run_housekeeping
 from . import task_records
@@ -11,7 +11,7 @@ from . import task_records
 TASK_RECEIVED = "received"
 TASK_STARTED = "started"
 
-CACHE_KEY = "TASKANALYTICS_LAST_HOUSEKEEPING"
+CACHE_KEY = "TASKMONITOR_LAST_HOUSEKEEPING"
 
 
 def run_housekeeping_if_stale():
@@ -19,7 +19,7 @@ def run_housekeeping_if_stale():
     was_expired = cache.add(
         key=CACHE_KEY,
         value="no-value",
-        timeout=TASKANALYTICS_HOUSEKEEPING_FREQUENCY * 60,
+        timeout=TASKMONITOR_HOUSEKEEPING_FREQUENCY * 60,
     )
     if was_expired:
         run_housekeeping.apply_async(priority=DEFAULT_TASK_PRIORITY)

@@ -3,14 +3,14 @@
 
 {% block extrastyle %}
     {{ block.super }}
-    <link rel="stylesheet" type="text/css" href="{% static 'taskanalytics/admin.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'taskmonitor/admin.css' %}">
 {% endblock %}
 
 {% block breadcrumbs %}
     <div class="breadcrumbs">
         <a href="{% url 'admin:index' %}">{% translate 'Home' %}</a>
         &rsaquo; <a href="{% url 'admin:app_list' app_label=cl.opts.app_label %}">{{ cl.opts.app_config.verbose_name }}</a>
-        &rsaquo; <a href="{% url 'admin:taskanalytics_tasklog_changelist' %}">{{ cl.opts.verbose_name_plural|capfirst }}</a> - Reports
+        &rsaquo; <a href="{% url 'admin:taskmonitor_tasklog_changelist' %}">{{ cl.opts.verbose_name_plural|capfirst }}</a> - Reports
     </div>
 {% endblock %}
 
@@ -28,24 +28,24 @@
     </ul>
 
     <h2 id="task-runs-by-app">Task runs by state</h2>
-    {% include "admin/taskanalytics/tasklog/report_table_partial.html" with rows=task_totals_by_state %}
+    {% include "admin/taskmonitor/tasklog/report_table_partial.html" with rows=task_totals_by_state %}
 
     <h2 id="task-runs-by-app">Task runs by app</h2>
-    {% include "admin/taskanalytics/tasklog/report_table_partial.html" with rows=task_runs_per_app %}
+    {% include "admin/taskmonitor/tasklog/report_table_partial.html" with rows=task_runs_per_app %}
 
     <h2 id="top-tasks-by-runs">Top {{ MAX_TOP }} tasks by runs</h2>
-    {% include "admin/taskanalytics/tasklog/report_table_partial.html" with rows=tasks_top_runs %}
+    {% include "admin/taskmonitor/tasklog/report_table_partial.html" with rows=tasks_top_runs %}
 
     <h2 id="top-tasks-by-runtime">Top {{ MAX_TOP }} tasks by instance runtime in seconds</h2>
-    {% include "admin/taskanalytics/tasklog/report_table_partial.html" with rows=tasks_top_runtime %}
+    {% include "admin/taskmonitor/tasklog/report_table_partial.html" with rows=tasks_top_runtime %}
 
     <h2 id="top-failed-tasks">Top {{ MAX_TOP }} tasks by failed runs</h2>
-    {% include "admin/taskanalytics/tasklog/report_table_partial.html" with rows=tasks_top_failed %}
+    {% include "admin/taskmonitor/tasklog/report_table_partial.html" with rows=tasks_top_failed %}
 
     <br>
     <p>
         This data is cached. Last updated was {{ last_update_at|timesince }} ago. Next update approx. in {{ next_update_at|timeuntil }}.
-        <a href="{% url 'taskanalytics:admin_taskanalytics_reports_clear_cache' %}"><input type="button" value="Recalc now"></a>
+        <a href="{% url 'taskmonitor:admin_taskmonitor_reports_clear_cache' %}"><input type="button" value="Recalc now"></a>
     </p>
     <p>
         All data of this app is stored for a maxmimum of {{ data_max_age }} hours.

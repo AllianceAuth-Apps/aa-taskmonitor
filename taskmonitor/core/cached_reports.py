@@ -11,13 +11,13 @@ from django.urls import reverse
 from django.utils import timezone
 
 from ..app_settings import (
-    TASKANALYTICS_HOUSEKEEPING_FREQUENCY,
-    TASKANALYTICS_REPORTS_MAX_AGE,
-    TASKANALYTICS_REPORTS_MAX_TOP,
+    TASKMONITOR_HOUSEKEEPING_FREQUENCY,
+    TASKMONITOR_REPORTS_MAX_AGE,
+    TASKMONITOR_REPORTS_MAX_TOP,
 )
 from ..models import TaskLog
 
-CACHE_KEY = "TASKANALYTICS_REPORTS_DATA"
+CACHE_KEY = "TASKMONITOR_REPORTS_DATA"
 
 
 def data() -> dict:
@@ -31,7 +31,7 @@ def data() -> dict:
 
 def _timeout() -> int:
     """Timeout in seconds."""
-    return TASKANALYTICS_REPORTS_MAX_AGE * 60
+    return TASKMONITOR_REPORTS_MAX_AGE * 60
 
 
 def _last_update_at(ttl) -> Optional[dt.datetime]:
@@ -45,7 +45,7 @@ def _next_update_at(ttl) -> Optional[dt.datetime]:
     """When the cache will be updated next (earliest) or None if no cache."""
     if not ttl:
         return None
-    duration = TASKANALYTICS_HOUSEKEEPING_FREQUENCY * 60 / 2 + ttl
+    duration = TASKMONITOR_HOUSEKEEPING_FREQUENCY * 60 / 2 + ttl
     return timezone.now() + dt.timedelta(seconds=duration)
 
 
@@ -71,7 +71,7 @@ def _calc_data() -> dict:
     except TypeError:
         total_runtime_date = None
     total_runs = TaskLog.objects.count()
-    changelist_url = reverse("admin:taskanalytics_tasklog_changelist")
+    changelist_url = reverse("admin:taskmonitor_tasklog_changelist")
     task_totals_by_state = [
         {
             "name": state.label,
@@ -101,7 +101,7 @@ def _calc_data() -> dict:
             * 100
         )
         .annotate(url=Concat(Value(f"{changelist_url}?task_name="), F("name")))
-        .order_by("-amount")[:TASKANALYTICS_REPORTS_MAX_TOP]
+        .order_by("-amount")[:TASKMONITOR_REPORTS_MAX_TOP]
     )
     tasks_top_runtime = (
         TaskLog.objects.values(name=F("task_name"))
@@ -112,7 +112,7 @@ def _calc_data() -> dict:
             * 100
         )
         .annotate(url=Concat(Value(f"{changelist_url}?o=5&task_name="), F("name")))
-        .order_by("-amount")[:TASKANALYTICS_REPORTS_MAX_TOP]
+        .order_by("-amount")[:TASKMONITOR_REPORTS_MAX_TOP]
     )
     total_failed = TaskLog.objects.filter(state=TaskLog.State.FAILURE).count()
     tasks_top_failed = (
@@ -127,7 +127,7 @@ def _calc_data() -> dict:
         .annotate(
             url=Concat(Value(f"{changelist_url}?state__exact=3&task_name="), F("name"))
         )
-        .order_by("-amount")[:TASKANALYTICS_REPORTS_MAX_TOP]
+        .order_by("-amount")[:TASKMONITOR_REPORTS_MAX_TOP]
     )
     context = {
         "oldest_date": oldest_date,
@@ -139,6 +139,6 @@ def _calc_data() -> dict:
         "tasks_top_runs": tasks_top_runs,
         "tasks_top_runtime": tasks_top_runtime,
         "tasks_top_failed": tasks_top_failed,
-        "MAX_TOP": TASKANALYTICS_REPORTS_MAX_TOP,
+        "MAX_TOP": TASKMONITOR_REPORTS_MAX_TOP,
     }
     return context

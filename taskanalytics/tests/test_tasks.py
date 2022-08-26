@@ -17,7 +17,7 @@ class TestTasks(TestCase):
     def test_should_delete_stale_entries_only(self):
         # given
         stale_entry = TaskLogFactory(
-            timestamp=timezone.now() - dt.timedelta(days=3, seconds=1)
+            timestamp=timezone.now() - dt.timedelta(hours=3, seconds=1)
         )
         current_entry = TaskLogFactory(timestamp=timezone.now())
         # when

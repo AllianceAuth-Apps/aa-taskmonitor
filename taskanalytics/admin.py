@@ -12,8 +12,8 @@ class TaskLogAdmin(admin.ModelAdmin):
     list_display = (
         "timestamp",
         "task_name",
-        "_state",
         "priority",
+        "_state",
         "_runtime",
         "_exception",
     )

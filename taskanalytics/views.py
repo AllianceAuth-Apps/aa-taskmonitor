@@ -10,6 +10,7 @@ from allianceauth.services.hooks import get_extension_logger
 from app_utils.logging import LoggerAddTag
 
 from . import __title__
+from .app_settings import TASKANALYTICS_DATA_MAX_AGE
 from .core import cached_reports
 from .helpers import Echo
 from .models import TaskLog
@@ -49,6 +50,7 @@ def admin_taskanalytics_reports(request):
         "title": "Taskanalytics - Reports",
         "site_header": site_header,
         "cl": {"opts": TaskLog._meta},
+        "data_max_age": TASKANALYTICS_DATA_MAX_AGE,
     }
     context.update(cached_reports.data())
     return render(request, "admin/taskanalytics/tasklog/reports.html", context)

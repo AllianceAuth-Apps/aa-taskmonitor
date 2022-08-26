@@ -29,7 +29,7 @@ def run_housekeeping():
 def delete_stale_tasklogs():
     """Delete all stale tasklogs from the database."""
     old_entries = TaskLog.objects.filter(
-        timestamp__lte=timezone.now() - dt.timedelta(days=TASKANALYTICS_DATA_MAX_AGE)
+        timestamp__lte=timezone.now() - dt.timedelta(hours=TASKANALYTICS_DATA_MAX_AGE)
     )
     old_entries_count = old_entries.count()
     old_entries._raw_delete(old_entries.db)

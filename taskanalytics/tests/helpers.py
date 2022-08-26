@@ -7,12 +7,12 @@ from taskanalytics.models import TaskLog
 class RequestStub:
     id: str
     retries: int
-    task: str
     parent_id: str = None
 
 
 @dataclass
 class SenderStub:
+    name: str
     request: RequestStub
     priority: int
 
@@ -21,7 +21,6 @@ class SenderStub:
         request = RequestStub(
             parent_id=obj.parent_id,
             retries=obj.retries,
-            task=obj.task_name,
             id=str(obj.task_id),
         )
-        return cls(request=request, priority=obj.priority)
+        return cls(name=obj.task_name, request=request, priority=obj.priority)

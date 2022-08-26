@@ -50,7 +50,7 @@ class TaskLogManagerBase(models.Manager):
             request = sender.request
         if task_id is None:
             task_id = request.id
-        task_name = request.task
+        task_name = sender.name if sender else "?"
         if exception and (traceback := getattr(exception, "__traceback__")):
             traceback_out = "".join(
                 tb.format_exception(None, value=exception, tb=traceback)

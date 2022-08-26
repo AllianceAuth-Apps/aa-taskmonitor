@@ -1,6 +1,6 @@
 from app_utils.django import clean_setting
 
-TASKANALYTICS_LOGS_MAX_AGE = clean_setting("TASKANALYTICS_LOGS_MAX_AGE", 24)
+TASKANALYTICS_DATA_MAX_AGE = clean_setting("TASKANALYTICS_DATA_MAX_AGE", 24)
 """Max age of logs in hours. Older logs be deleted automatically."""
 
 TASKANALYTICS_HOUSEKEEPING_FREQUENCY = clean_setting(

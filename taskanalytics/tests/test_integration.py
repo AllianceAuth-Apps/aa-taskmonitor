@@ -1,6 +1,6 @@
 from unittest.mock import patch
 
-# from django.core.cache import cache
+from django.core.cache import cache
 from django.test import TestCase, override_settings
 from django.utils import timezone
 
@@ -19,6 +19,9 @@ CORE_PATH = "taskanalytics.core.task_logs"
 @override_settings(CELERY_ALWAYS_EAGER=True, CELERY_EAGER_PROPAGATES_EXCEPTIONS=True)
 @patch(CORE_PATH + ".TaskRecords")
 class TestSignalHandlingEnd2End(TestCase):
+    def setUp(self) -> None:
+        cache.clear()
+
     def test_should_create_entry_for_succeeded_task(self, mock_TaskRecords):
         # given
         mock_TaskRecords.return_value.get.return_value = timezone.now()

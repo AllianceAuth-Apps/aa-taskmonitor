@@ -1,0 +1,15 @@
+.exceptionText {
+    display: inline-block;
+    width: 20em;
+    white-space: nowrap;
+    overflow: hidden !important;
+    text-overflow: ellipsis;
+}
+
+.stateRetry {
+    color: deepskyblue
+}
+
+.stateFailure {
+    color: crimson
+}

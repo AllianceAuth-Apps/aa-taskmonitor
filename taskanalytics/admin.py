@@ -6,13 +6,15 @@ from .models import TaskLog
 
 @admin.register(TaskLog)
 class TaskLogAdmin(admin.ModelAdmin):
+    class Media:
+        css = {"all": ("taskanalytics/admin.css",)}
+
     list_display = (
         "timestamp",
         "task_name",
         "_state",
-        "priority",
         "runtime",
-        "app_name",
+        "_exception",
     )
     list_filter = ("state", "timestamp", "app_name", "task_name")
     search_fields = ("task_name", "app_name", "task_id")
@@ -32,14 +34,18 @@ class TaskLogAdmin(admin.ModelAdmin):
 
     @admin.display(ordering="state")
     def _state(self, obj) -> str:
-        color_map = {
-            TaskLog.State.RETRY: "DeepSkyBlue",
-            TaskLog.State.FAILURE: "Crimson",
+        css_class_map = {
+            TaskLog.State.RETRY: "stateRetry",
+            TaskLog.State.FAILURE: "stateFailure",
         }
-        color = color_map.get(obj.state, "")
+        css_class = css_class_map.get(obj.state, "")
         return html.format_html(
-            '<span style="color:{};">{}</span>', color, obj.get_state_display()
+            '<span class="{}">{}</span>', css_class, obj.get_state_display()
         )
+
+    @admin.display(ordering="exception")
+    def _exception(self, obj) -> str:
+        return html.format_html('<span class="exceptionText">{}</span>', obj.exception)
 
     @admin.action(description="Delete selected entries (NO CONFIRMATION!")
     def delete_selected_2(self, request, queryset):

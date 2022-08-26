@@ -4,7 +4,7 @@ TASKANALYTICS_LOGS_MAX_AGE = clean_setting("TASKANALYTICS_LOGS_MAX_AGE", 24)
 """Max age of logs in hours. Older logs be deleted automatically."""
 
 TASKANALYTICS_HOUSEKEEPING_FREQUENCY = clean_setting(
-    "TASKANALYTICS_HOUSEKEEPING_FREQUENCY", 60
+    "TASKANALYTICS_HOUSEKEEPING_FREQUENCY", 15
 )
 """Frequency of house keeping runs in minutes."""
 

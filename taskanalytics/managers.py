@@ -22,11 +22,11 @@ class TaskLogQuerySet(models.QuerySet):
                     value = getattr(obj, f"get_{field.name}_display")()
                 else:
                     value = getattr(obj, field.name)
-                if callable(value):
-                    try:
-                        value = value() or ""
-                    except Exception:
-                        value = "Error retrieving value"
+                # if callable(value):
+                #     try:
+                #         value = value() or ""
+                #     except Exception:
+                #         value = "Error retrieving value"
                 if value is None:
                     value = ""
                 values.append(value)

@@ -16,7 +16,7 @@
 
 {% block content %}
 
-    <p>Total of {{ total_runs|intcomma }} task executions within {{ oldest_date|timesince:youngest_date }} and {{ total_runtime_date|timesince }} cumulative runtime.</p>
+    <p>Total of {{ total_runs|intcomma }} task executions starting {{ oldest_date|naturaltime }} until {{ youngest_date|naturaltime }} with a cumulative runtime of {{ total_runtime_date|timesince }}.</p>
 
     <h2 id="contents">Conents</h2>
     <ul>

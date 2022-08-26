@@ -12,28 +12,33 @@ from django.utils import timezone
 
 from ..app_settings import (
     TASKANALYTICS_HOUSEKEEPING_FREQUENCY,
+    TASKANALYTICS_REPORTS_MAX_AGE,
     TASKANALYTICS_REPORTS_MAX_TOP,
 )
 from ..models import TaskLog
 
 CACHE_KEY = "TASKANALYTICS_REPORTS_DATA"
-TIMEOUT = 3600
 
 
 def data() -> dict:
     """Return the cached reports data."""
-    context = cache.get_or_set(CACHE_KEY, _calc_data, timeout=TIMEOUT)
+    context = cache.get_or_set(CACHE_KEY, _calc_data, timeout=_timeout())
     ttl = cache.ttl(CACHE_KEY)
     context["last_update_at"] = _last_update_at(ttl)
     context["next_update_at"] = _next_update_at(ttl)
     return context
 
 
+def _timeout() -> int:
+    """Timeout in seconds."""
+    return TASKANALYTICS_REPORTS_MAX_AGE * 60
+
+
 def _last_update_at(ttl) -> Optional[dt.datetime]:
     """When the cache was last updated or None if there is no cache."""
     if not ttl:
         return None
-    return timezone.now() - dt.timedelta(seconds=max(0, TIMEOUT - ttl))
+    return timezone.now() - dt.timedelta(seconds=max(0, _timeout() - ttl))
 
 
 def _next_update_at(ttl) -> Optional[dt.datetime]:
@@ -46,7 +51,7 @@ def _next_update_at(ttl) -> Optional[dt.datetime]:
 
 def refresh_cache() -> None:
     """Refresh the cache."""
-    cache.set(CACHE_KEY, _calc_data(), timeout=TIMEOUT)
+    cache.set(CACHE_KEY, _calc_data(), timeout=_timeout())
 
 
 def clear_cache() -> None:

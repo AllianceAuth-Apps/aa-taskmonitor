@@ -8,5 +8,8 @@ TASKANALYTICS_HOUSEKEEPING_FREQUENCY = clean_setting(
 )
 """Frequency of house keeping runs in minutes."""
 
+TASKANALYTICS_REPORTS_MAX_AGE = clean_setting("TASKANALYTICS_REPORTS_MAX_AGE", 15)
+"""Max age of reports in minutes."""
+
 TASKANALYTICS_REPORTS_MAX_TOP = clean_setting("TASKANALYTICS_REPORTS_MAX_TOP", 20)
 """Max items to show in the top reports. e.g. 10 will shop the top ten items."""

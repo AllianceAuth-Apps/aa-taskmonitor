@@ -15,6 +15,7 @@ An Alliance Auth app for monitoring celery tasks.
 ## Contents
 
 - [Features](#features)
+- [Screenshots](#screenshots)
 - [Installation](#installation)
 - [User manual](#user-manual)
 - [Settings](#settings)
@@ -63,7 +64,7 @@ Task Monitor is a plugin for Alliance Auth. If you don't have Alliance Auth runn
 Make sure you are in the virtual environment (venv) of your Alliance Auth installation. Then install the newest release from PyPI:
 
 ```bash
-pip install git+https://gitlab.com/ErikKalkoken/task-analytics.git
+pip install aa-taskmonitor
 ```
 
 ### Step 3 - Configure Auth settings

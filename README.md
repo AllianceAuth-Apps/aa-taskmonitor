@@ -27,6 +27,7 @@ Task Monitor enables administrators to monitor celery tasks running on their sys
 
 - Stores full log with details of all recently executed celery tasks including failed and retried tasks.
 - Keeps the storage needs in check by automatically deleting older task logs
+
 - Admins can investigate task log with search & filters
 - Admins can view details for each task incl. exceptions and trace logs
 - Admins can review reports providing answers to common questions, e.g:
@@ -98,11 +99,16 @@ Name | Description | Default
 
 ## FAQ
 
-- Q: How is this app different from celery analytics?
-- A: Celery Analytics appears to be mainly designed as data source for reports on Grafana. So you also need to install and setup Grafana to make use of it. Task Monitor on the other hand aims to be fully functional standalone, e.g. it provides reports and many useful features for analyzing the raw data directly on the admin site.
+### Is it possible to store task logs longer then for just 24 hours?
 
-- Q: How is this app different from flower?
-- A: Flower offers more detailed and technical information about task runs and might be therefore more suitable for developers. However, it not designed to store a larger number of task logs (default is 10K) and is therefore less suited to monitor tasks with Alliance Auth, where you typically have many 100K tasks per day.
+Yes, there is a setting, which you can increase according to your needs. However, please keep in mind that your storage needs will increase accordingly. The current approx. usage is 0.5 KB per entry, so e.g. you need approx. 500 MB to store 1.000.000 task logs.
 
-- Q: Is it possible to store tasks longer then for just 24 hours?
-- A: Yes, there is a setting, which you can increase according to your needs. However, please keep in mind that your storage needs will increase accordingly. The current approx. usage is 0.5 KB per entry, so e.g. you need 200MB for 400.000 entries. At some point you also might run into performance issues, e.g. long page load times. Nevertheless, we want this app to work with very large data sets. So if you run into any issues, please let us know.
+### How is this app different from celery analytics?
+
+Celery Analytics seams to be designed mainly as data source for reports on Grafana. It apparently works great if you want to integrate analysis about your task executions into a Grafana dashboards. But it's usability without Grafana is limited.
+
+Task Monitor on the other hand aims to be fully functional standalone by providing reports and many useful features for analyzing your task logs directly on the admin site. It also provides a more complete picture, since Celery Analytics ignores retried tasks.
+
+## How is this app different from celery's flower?
+
+Flower offers more detailed and technical information about task runs and might  therefore be more most for developers. However, it not designed to store a larger number of task logs (default is only 10K) and is appears therefore to be less suited for Alliance Auth, where you typically have 100K+ tasks per day.

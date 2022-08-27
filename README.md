@@ -6,7 +6,7 @@ An Alliance Auth app for monitoring celery tasks.
 [![python](https://img.shields.io/pypi/pyversions/aa-analytics)](https://pypi.org/project/aa-analytics/)
 [![django](https://img.shields.io/pypi/djversions/aa-analytics?label=django)](https://pypi.org/project/aa-analytics/)
 [![pipeline](https://gitlab.com/ErikKalkoken/aa-analytics/badges/master/pipeline.svg)](https://gitlab.com/ErikKalkoken/aa-analytics/-/pipelines)
-[![codecov](https://codecov.io/gl/ErikKalkoken/aa-analytics/branch/master/graph/badge.svg?token=3tY1AOIp4B)](https://codecov.io/gl/ErikKalkoken/aa-analytics)
+[![codecov](https://codecov.io/gl/ErikKalkoken/aa-taskmonitor/branch/master/graph/badge.svg?token=MNEUWD6X4Q)](https://codecov.io/gl/ErikKalkoken/aa-taskmonitor)
 [![license](https://img.shields.io/badge/license-MIT-green)](https://gitlab.com/ErikKalkoken/aa-analytics/-/blob/master/LICENSE)
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
@@ -23,13 +23,33 @@ An Alliance Auth app for monitoring celery tasks.
 
 ## Features
 
-Task Monitor gives administrators additional insights into the celery tasks that run on their system.
+Task Monitor enables administrators to monitor celery tasks running on their system.
 
-- Full log with details of all recently executed tasks including failed and retried tasks.
-- Reports highlighting common aspects, e.g. Top most failed tasks
-- Export task logs to CSV for further analysis with 3rd party tools (e.g. Google sheets)
+- Stores full log with details of all recently executed celery tasks including failed and retried tasks.
+- Keeps the storage needs in check by automatically deleting older task logs
+- Admins can investigate task log with search & filters
+- Admins can view details for each task incl. exceptions and trace logs
+- Admins can review reports providing answers to common questions, e.g:
+  - How many tasks have failed/retried?
+  - How many tasks where run by each of my apps?
+  - Which are the most frequent tasks?
+  - Which tasks have the longest runtime?
+  - Which tasks failed the most?
+- Admins can export all task logs to a CSV file for further analysis with 3rd party tools (e.g. Google sheets)
 
-Note that all information incl. the reports is available exclusively through the admin site.
+## Screenshots
+
+### Full log of all recently executed tasks
+
+![tasklog](https://i.imgur.com/jo1McnJ.png)
+
+### View details for each task incl. exception tracelogs
+
+![tasklog](https://i.imgur.com/3XMc8Zi.png)
+
+### The start of the reports page
+
+![tasklog](https://i.imgur.com/hSX5Qsb.png)
 
 ## Installation
 
@@ -84,5 +104,5 @@ Name | Description | Default
 - Q: How is this app different from flower?
 - A: Flower offers more detailed and technical information about task runs and might be therefore more suitable for developers. However, it not designed to store a larger number of task logs (default is 10K) and is therefore less suited to monitor tasks with Alliance Auth, where you typically have many 100K tasks per day.
 
-- Q: Is it possible to store tasks longer then for 24 hours?
+- Q: Is it possible to store tasks longer then for just 24 hours?
 - A: Yes, there is a setting, which you can increase according to your needs. However, please keep in mind that your storage needs will increase accordingly. The current approx. usage is 0.5 KB per entry, so e.g. you need 200MB for 400.000 entries. At some point you also might run into performance issues, e.g. long page load times. Nevertheless, we want this app to work with very large data sets. So if you run into any issues, please let us know.

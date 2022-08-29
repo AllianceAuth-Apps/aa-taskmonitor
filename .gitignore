@@ -2,6 +2,7 @@
 *.tmp
 *.bak
 *.old
+*.pyc
 __pycache__
 .vscode/
 dist/

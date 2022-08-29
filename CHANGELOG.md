@@ -13,7 +13,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Fixed
 
-## [0.1.0a1] - 2022-08-27
+## [0.1.0a3] - 2022-08-29
+
+### Fixed
+
+- Logging of task with internal errors does not work
+
+## [0.1.0a2] - 2022-08-27
 
 ### Added
 

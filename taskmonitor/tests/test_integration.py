@@ -75,6 +75,28 @@ class TestSignalHandlingEnd2End(TestCase):
             ).exists()
         )
 
+    def test_should_create_entry_for_internal_error_task(self):
+        # given
+        expected = TaskLogFactory.build(
+            state=TaskLog.State.FAILURE, exception="", traceback=""
+        )
+        task_records.set(expected.task_id, task_logs.TASK_RECEIVED, timezone.now())
+        task_records.set(expected.task_id, task_logs.TASK_STARTED, timezone.now())
+        sender = SenderStub.create_from_obj(expected)
+        # when
+        task_logs.task_internal_error_handler_2(
+            sender=sender,
+            task_id=str(expected.task_id),
+            request=sender.request.asdict(),
+            exception=None,
+        )
+        # then
+        self.assertTrue(
+            TaskLog.objects.filter(
+                task_id=expected.task_id, state=TaskLog.State.FAILURE
+            ).exists()
+        )
+
 
 # class TestUIEnd2End(TestCase):
 #     def test_should_show_reports(self):

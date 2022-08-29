@@ -37,44 +37,35 @@ class TaskLogManagerBase(models.Manager):
     def create_from_task(
         self,
         *,
+        task_id: str,
+        task_name: str,
         state: int,
-        sender=None,
-        request: dict = None,
-        task_id: str = None,
+        retries: int,
+        priority: int,
         received: dt.datetime = None,
         started: dt.datetime = None,
+        parent_id: str = None,
         exception=None,
     ) -> models.Model:
         """Create new object from a celery task."""
-        if request is None:
-            request = sender.request
-        if task_id is None:
-            task_id = request.id
-        task_name = sender.name if sender else "?"
-        if exception and (traceback := getattr(exception, "__traceback__")):
-            traceback_out = "".join(
-                tb.format_exception(None, value=exception, tb=traceback)
-            )
-        else:
-            traceback_out = ""
         args = {
             "app_name": extract_app_name(task_name),
+            "priority": priority,
+            "parent_id": UUID(parent_id) if parent_id else None,
             "received": received,
-            "retries": request.retries,
+            "retries": retries,
             "started": started,
             "state": state,
             "task_id": UUID(task_id),
             "task_name": task_name,
             "timestamp": timezone.now(),
         }
-        if request.delivery_info and "priority" in request.delivery_info:
-            args["priority"] = request.delivery_info["priority"]
-        if request.parent_id:
-            args["parent_id"] = UUID(request.parent_id)
         if exception:
             args["exception"] = str(exception)
-        if traceback_out:
-            args["traceback"] = traceback_out
+            if traceback := getattr(exception, "__traceback__"):
+                args["traceback"] = "".join(
+                    tb.format_exception(None, value=exception, tb=traceback)
+                )
         return self.create(**args)
 
 

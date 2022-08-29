@@ -33,5 +33,7 @@ def task_failure_handler(sender=None, task_id=None, exception=None, **kw):
 
 
 @signals.task_internal_error.connect
-def task_internal_error_handler(task_id=None, request=None, exception=None, **kw):
-    task_logs.task_internal_error_handler_2(task_id, request, exception)
+def task_internal_error_handler(
+    sender=None, task_id=None, request=None, exception=None, **kw
+):
+    task_logs.task_internal_error_handler_2(sender, task_id, request, exception)

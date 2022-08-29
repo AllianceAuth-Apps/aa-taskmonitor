@@ -1,5 +1,5 @@
 import datetime as dt
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from random import choice, choices, randint
 from uuid import UUID
 
@@ -96,6 +96,9 @@ class ContextStub:
     retries: int
     delivery_info: dict
     parent_id: str = None
+
+    def asdict(self) -> dict:
+        return asdict(self)
 
     @classmethod
     def create_from_obj(cls, obj: TaskLog):

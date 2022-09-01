@@ -129,6 +129,21 @@ def _calc_data() -> dict:
         )
         .order_by("-amount")[:TASKMONITOR_REPORTS_MAX_TOP]
     )
+    total_retried = TaskLog.objects.filter(state=TaskLog.State.RETRY).count()
+    tasks_top_retried = (
+        TaskLog.objects.filter(state=TaskLog.State.RETRY)
+        .values(name=F("task_name"))
+        .annotate(amount=Count("pk"))
+        .annotate(
+            percent=F("amount")
+            / Value(total_retried, output_field=models.FloatField())
+            * 100
+        )
+        .annotate(
+            url=Concat(Value(f"{changelist_url}?state__exact=2&task_name="), F("name"))
+        )
+        .order_by("-amount")[:TASKMONITOR_REPORTS_MAX_TOP]
+    )
     context = {
         "oldest_date": oldest_date,
         "youngest_date": youngest_date,
@@ -139,6 +154,7 @@ def _calc_data() -> dict:
         "tasks_top_runs": tasks_top_runs,
         "tasks_top_runtime": tasks_top_runtime,
         "tasks_top_failed": tasks_top_failed,
+        "tasks_top_retried": tasks_top_retried,
         "MAX_TOP": TASKMONITOR_REPORTS_MAX_TOP,
     }
     return context

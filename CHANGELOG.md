@@ -13,6 +13,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Fixed
 
+## [0.1.0a4] - 2022-09-01
+
+### Added
+
+- Report for top retried tasks
+
 ## [0.1.0a3] - 2022-08-29
 
 ### Fixed

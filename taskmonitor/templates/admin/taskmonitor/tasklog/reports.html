@@ -16,7 +16,7 @@
 
 {% block content %}
 
-    <p>Total of {{ total_runs|intcomma }} task logs from {{ oldest_date }} to {{ youngest_date }} ({{ youngest_date|timeuntil:oldest_date }}) with a cumulative runtime of {{ total_runtime_date|timesince }}.</p>
+    <p>Total of {% if total_runs > 1000000 %}{{ total_runs|intword }}{% else %}{{ total_runs|intcomma }}{% endif %} task logs spanning {{ youngest_date|timeuntil:oldest_date }} with a cumulative runtime of {{ total_runtime_date|timesince }}.</p>
 
     <h2 id="contents">Conents</h2>
     <ul>
@@ -25,6 +25,7 @@
         <li><a href="#top-tasks-by-runs">Top tasks by runs</a></li>
         <li><a href="#top-tasks-by-runtime">Top tasks by runtime</a></li>
         <li><a href="#top-failed-tasks">Top tasks by failed runs</a></li>
+        <li><a href="#top-retried-tasks">Top tasks by retried runs</a></li>
     </ul>
 
     <h2 id="task-runs-by-app">Task runs by state</h2>
@@ -41,6 +42,9 @@
 
     <h2 id="top-failed-tasks">Top {{ MAX_TOP }} tasks by failed runs</h2>
     {% include "admin/taskmonitor/tasklog/report_table_partial.html" with rows=tasks_top_failed %}
+
+    <h2 id="top-retried-tasks">Top {{ MAX_TOP }} tasks by retried runs</h2>
+    {% include "admin/taskmonitor/tasklog/report_table_partial.html" with rows=tasks_top_retried %}
 
     <br>
     <p>

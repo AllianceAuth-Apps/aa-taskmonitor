@@ -1,3 +1,5 @@
+from typing import Optional
+
 from django.contrib import admin
 from django.utils import html
 
@@ -34,8 +36,8 @@ class TaskLogAdmin(admin.ModelAdmin):
         return actions
 
     @admin.display(ordering="runtime")
-    def _runtime(self, obj) -> str:
-        return f"{obj.runtime:.1f}"
+    def _runtime(self, obj) -> Optional[str]:
+        return f"{obj.runtime:.1f}" if obj.runtime else None
 
     @admin.display(ordering="state")
     def _state(self, obj) -> str:

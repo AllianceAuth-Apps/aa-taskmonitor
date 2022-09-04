@@ -47,7 +47,7 @@ def admin_taskmonitor_download_csv(request) -> StreamingHttpResponse:
 def admin_taskmonitor_reports(request):
     """Show the reports page."""
     context = {
-        "title": f"{__title__} - Reports",
+        "title": "Reports",
         "site_header": site_header,
         "cl": {"opts": TaskLog._meta},
         "data_max_age": TASKMONITOR_DATA_MAX_AGE,

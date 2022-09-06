@@ -5,6 +5,16 @@ from django.db import models
 from .managers import TaskLogManager
 
 
+class TaskReport(models.Model):
+    """Dummy model to fake a 'Reports' entry on the admin index page."""
+
+    id = models.BigIntegerField(primary_key=True)
+
+    class Meta:
+        managed = False
+        verbose_name = "report"
+
+
 class TaskLog(models.Model):
     """Log entry for an executed celery task."""
 

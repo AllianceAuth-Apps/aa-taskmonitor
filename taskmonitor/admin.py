@@ -1,9 +1,25 @@
 from typing import Optional
 
 from django.contrib import admin
+from django.shortcuts import redirect
 from django.utils import html
 
-from .models import TaskLog
+from .models import TaskLog, TaskReport
+
+
+@admin.register(TaskReport)
+class TaskReportAdmin(admin.ModelAdmin):
+    def has_add_permission(self, *args, **kwargs):
+        return False
+
+    def has_change_permission(self, *args, **kwargs):
+        return False
+
+    def has_delete_permission(self, *args, **kwargs):
+        return False
+
+    def changelist_view(self, request, extra_context=None):
+        return redirect("taskmonitor:admin_taskmonitor_reports")
 
 
 @admin.register(TaskLog)

@@ -24,3 +24,9 @@ class TestCachedReports(TestCase):
         newest = max(log_1.timestamp, log_2.timestamp, log_3.timestamp)
         self.assertEqual(result["youngest_date"], newest)
         self.assertEqual(result["total_runs"], 3)
+
+    def test_should_create_empty_report(self):
+        # when
+        result = cached_reports._calc_data()
+        # then
+        self.assertTrue(result)

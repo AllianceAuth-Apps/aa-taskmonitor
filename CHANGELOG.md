@@ -13,6 +13,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Fixed
 
+## [0.2.1] - 2022-09-12
+
+### Fixed
+
+- ZeroDivisionError when showing reports with no data (#3)
+
 ## [0.2.0] - 2022-09-06
 
 ### Added

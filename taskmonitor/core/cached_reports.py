@@ -72,78 +72,96 @@ def _calc_data() -> dict:
         total_runtime_date = None
     total_runs = TaskLog.objects.count()
     changelist_url = reverse("admin:taskmonitor_tasklog_changelist")
-    task_totals_by_state = [
-        {
-            "name": state.label,
-            "amount": (amount := TaskLog.objects.filter(state=state.value).count()),
-            "percent": amount / total_runs * 100,
-            "url": f"{changelist_url}?state__exact={state}",
-        }
-        for state in TaskLog.State
-    ]
-    task_runs_per_app = (
-        TaskLog.objects.values(name=F("app_name"))
-        .annotate(amount=Count("pk"))
-        .annotate(
-            percent=F("amount")
-            / Value(total_runs, output_field=models.FloatField())
-            * 100
+    if not total_runs:
+        task_totals_by_state = None
+        task_runs_per_app = None
+        tasks_top_runs = None
+    else:
+        task_totals_by_state = [
+            {
+                "name": state.label,
+                "amount": (amount := TaskLog.objects.filter(state=state.value).count()),
+                "percent": amount / total_runs * 100,
+                "url": f"{changelist_url}?state__exact={state}",
+            }
+            for state in TaskLog.State
+        ]
+        task_runs_per_app = (
+            TaskLog.objects.values(name=F("app_name"))
+            .annotate(amount=Count("pk"))
+            .annotate(
+                percent=F("amount")
+                / Value(total_runs, output_field=models.FloatField())
+                * 100
+            )
+            .annotate(url=Concat(Value(f"{changelist_url}?app_name="), F("name")))
+            .order_by("-amount")
         )
-        .annotate(url=Concat(Value(f"{changelist_url}?app_name="), F("name")))
-        .order_by("-amount")
-    )
-    tasks_top_runs = (
-        TaskLog.objects.values(name=F("task_name"))
-        .annotate(amount=Count("pk"))
-        .annotate(
-            percent=F("amount")
-            / Value(total_runs, output_field=models.FloatField())
-            * 100
+        tasks_top_runs = (
+            TaskLog.objects.values(name=F("task_name"))
+            .annotate(amount=Count("pk"))
+            .annotate(
+                percent=F("amount")
+                / Value(total_runs, output_field=models.FloatField())
+                * 100
+            )
+            .annotate(url=Concat(Value(f"{changelist_url}?task_name="), F("name")))
+            .order_by("-amount")[:TASKMONITOR_REPORTS_MAX_TOP]
         )
-        .annotate(url=Concat(Value(f"{changelist_url}?task_name="), F("name")))
-        .order_by("-amount")[:TASKMONITOR_REPORTS_MAX_TOP]
-    )
-    tasks_top_runtime = (
-        TaskLog.objects.values(name=F("task_name"))
-        .annotate(amount=Max("runtime"))
-        .annotate(
-            percent=F("amount")
-            / Value(total_runtime, output_field=models.FloatField())
-            * 100
+    if not total_runtime:
+        tasks_top_runtime = None
+    else:
+        tasks_top_runtime = (
+            TaskLog.objects.values(name=F("task_name"))
+            .annotate(amount=Max("runtime"))
+            .annotate(
+                percent=F("amount")
+                / Value(total_runtime, output_field=models.FloatField())
+                * 100
+            )
+            .annotate(url=Concat(Value(f"{changelist_url}?o=5&task_name="), F("name")))
+            .order_by("-amount")[:TASKMONITOR_REPORTS_MAX_TOP]
         )
-        .annotate(url=Concat(Value(f"{changelist_url}?o=5&task_name="), F("name")))
-        .order_by("-amount")[:TASKMONITOR_REPORTS_MAX_TOP]
-    )
     total_failed = TaskLog.objects.filter(state=TaskLog.State.FAILURE).count()
-    tasks_top_failed = (
-        TaskLog.objects.filter(state=TaskLog.State.FAILURE)
-        .values(name=F("task_name"))
-        .annotate(amount=Count("pk"))
-        .annotate(
-            percent=F("amount")
-            / Value(total_failed, output_field=models.FloatField())
-            * 100
+    if not total_failed:
+        tasks_top_failed = None
+    else:
+        tasks_top_failed = (
+            TaskLog.objects.filter(state=TaskLog.State.FAILURE)
+            .values(name=F("task_name"))
+            .annotate(amount=Count("pk"))
+            .annotate(
+                percent=F("amount")
+                / Value(total_failed, output_field=models.FloatField())
+                * 100
+            )
+            .annotate(
+                url=Concat(
+                    Value(f"{changelist_url}?state__exact=3&task_name="), F("name")
+                )
+            )
+            .order_by("-amount")[:TASKMONITOR_REPORTS_MAX_TOP]
         )
-        .annotate(
-            url=Concat(Value(f"{changelist_url}?state__exact=3&task_name="), F("name"))
-        )
-        .order_by("-amount")[:TASKMONITOR_REPORTS_MAX_TOP]
-    )
     total_retried = TaskLog.objects.filter(state=TaskLog.State.RETRY).count()
-    tasks_top_retried = (
-        TaskLog.objects.filter(state=TaskLog.State.RETRY)
-        .values(name=F("task_name"))
-        .annotate(amount=Count("pk"))
-        .annotate(
-            percent=F("amount")
-            / Value(total_retried, output_field=models.FloatField())
-            * 100
+    if not total_retried:
+        tasks_top_retried = None
+    else:
+        tasks_top_retried = (
+            TaskLog.objects.filter(state=TaskLog.State.RETRY)
+            .values(name=F("task_name"))
+            .annotate(amount=Count("pk"))
+            .annotate(
+                percent=F("amount")
+                / Value(total_retried, output_field=models.FloatField())
+                * 100
+            )
+            .annotate(
+                url=Concat(
+                    Value(f"{changelist_url}?state__exact=2&task_name="), F("name")
+                )
+            )
+            .order_by("-amount")[:TASKMONITOR_REPORTS_MAX_TOP]
         )
-        .annotate(
-            url=Concat(Value(f"{changelist_url}?state__exact=2&task_name="), F("name"))
-        )
-        .order_by("-amount")[:TASKMONITOR_REPORTS_MAX_TOP]
-    )
     context = {
         "oldest_date": oldest_date,
         "youngest_date": youngest_date,

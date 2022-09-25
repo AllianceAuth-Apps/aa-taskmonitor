@@ -8,7 +8,72 @@ from django.db.models import Avg, Count, Max
 from django.db.models.functions import TruncMinute
 from django.utils import timezone
 
+from .core import celery_queues
 from .helpers import extract_app_name
+
+
+class QuerySetQueryStub:
+    def __init__(self) -> None:
+        self.select_related = None
+        self.order_by = []
+
+
+class ListAsQuerySet(list):
+    def __init__(self, *args, model, **kwargs):
+        self.model = model
+        self.query = QuerySetQueryStub()
+        super().__init__(*args, **kwargs)
+        self._id_mapper = {obj.id: n for n, obj in enumerate(self)}
+
+    def get(self, *args, **kwargs):
+        if "id" in kwargs:
+            try:
+                return self[self._id_mapper[kwargs["id"]]]
+            except KeyError:
+                raise self.model.DoesNotExist from None
+        raise self.model.DoesNotExist
+
+    def filter(self, *args, **kwargs):
+        return self  # filter ignoring, but you can impl custom filter
+
+    def order_by(self, *args, **kwargs):
+        return self
+
+    def count(self):
+        return len(self)
+
+    def _clone(self):
+        return self
+
+
+class TaskQueueQuerySet(models.QuerySet):
+    def count(self):
+        return celery_queues.queue_length()
+
+
+class TaskQueueManagerBase(models.Manager):
+    def get_queryset(self):
+        from .models import TaskQueue
+
+        objs = []
+        for n, obj in enumerate(celery_queues.fetch_tasks(), start=1):
+            if "headers" in obj:
+                headers = obj["headers"]
+                properties = obj["properties"] if "properties" in obj else {}
+                task_name = headers["task"]
+                objs.append(
+                    TaskQueue(
+                        id=n,
+                        app_name=extract_app_name(task_name),
+                        task_id=headers["id"],
+                        task_name=task_name,
+                        priority=properties.get("priority"),
+                    )
+                )
+        return ListAsQuerySet(objs, model=TaskQueue)
+
+
+TaskQueueManager = TaskQueueManagerBase.from_queryset(TaskQueueQuerySet)
 
 
 class TaskLogQuerySet(models.QuerySet):

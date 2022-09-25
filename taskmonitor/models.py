@@ -2,17 +2,36 @@ import uuid
 
 from django.db import models
 
-from .managers import TaskLogManager
+from .managers import TaskLogManager, TaskQueueManager
+
+
+class TaskQueue(models.Model):
+    """Dummy model to fake a 'Queues' entry on the admin index page."""
+
+    class Meta:
+        managed = False
+        verbose_name = "queue"
+
+    app_name = models.CharField(max_length=255)
+    id = models.BigIntegerField(primary_key=True)
+    priority = models.IntegerField(null=True, default=None)
+    task_id = models.UUIDField(default=uuid.uuid4)
+    task_name = models.CharField(max_length=255)
+
+    objects = TaskQueueManager()
+
+    def __str__(self):
+        return f"{self.task_name}:{self.pk}"
 
 
 class TaskReport(models.Model):
     """Dummy model to fake a 'Reports' entry on the admin index page."""
 
-    id = models.BigIntegerField(primary_key=True)
-
     class Meta:
         managed = False
         verbose_name = "report"
+
+    id = models.BigIntegerField(primary_key=True)
 
 
 class TaskLog(models.Model):

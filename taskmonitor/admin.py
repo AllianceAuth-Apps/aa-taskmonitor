@@ -4,7 +4,22 @@ from django.contrib import admin
 from django.shortcuts import redirect
 from django.utils import html
 
-from .models import TaskLog, TaskReport
+from .models import TaskLog, TaskQueue, TaskReport
+
+
+@admin.register(TaskQueue)
+class TaskQueueAdmin(admin.ModelAdmin):
+
+    list_display = ("id", "task_name", "task_id", "priority", "app_name")
+
+    def has_add_permission(self, *args, **kwargs):
+        return False
+
+    def has_change_permission(self, *args, **kwargs):
+        return False
+
+    def has_delete_permission(self, *args, **kwargs):
+        return False
 
 
 @admin.register(TaskReport)

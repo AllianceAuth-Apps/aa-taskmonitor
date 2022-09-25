@@ -4,6 +4,8 @@ from typing import List
 from uuid import UUID
 
 from django.db import models
+from django.db.models import Avg, Count, Max
+from django.db.models.functions import TruncMinute
 from django.utils import timezone
 
 from .helpers import extract_app_name
@@ -31,6 +33,24 @@ class TaskLogQuerySet(models.QuerySet):
                     value = ""
                 values.append(value)
             yield values
+
+    def aggregate_timestamp_trunc(self):
+        """Aggregate timestamp trunc."""
+        return (
+            self.annotate(timestamp_trunc=TruncMinute("timestamp"))
+            .values("timestamp_trunc")
+            .annotate(task_runs=Count("id"))
+        )
+
+    def max_throughput(self) -> int:
+        """Calculate the maximum throughput in task executions per minute."""
+        qs = self.aggregate_timestamp_trunc().aggregate(Max("task_runs"))
+        return qs["task_runs__max"]
+
+    def avg_throughput(self) -> float:
+        """Calculate the average throughput in task executions per minute."""
+        qs = self.aggregate_timestamp_trunc().aggregate(Avg("task_runs"))
+        return qs["task_runs__avg"]
 
 
 class TaskLogManagerBase(models.Manager):

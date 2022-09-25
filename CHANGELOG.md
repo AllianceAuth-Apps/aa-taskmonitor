@@ -13,6 +13,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Fixed
 
+## [0.3.0] - 2022-09-25
+
+### Added
+
+- Show maximum and average task throughput in report
+
 ## [0.2.1] - 2022-09-12
 
 ### Fixed

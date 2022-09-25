@@ -162,6 +162,11 @@ def _calc_data() -> dict:
             )
             .order_by("-amount")[:TASKMONITOR_REPORTS_MAX_TOP]
         )
+    tasklogs_not_failed = TaskLog.objects.exclude(state=TaskLog.State.FAILURE)
+    tasks_throughput = [
+        {"name": "Maximum", "amount": tasklogs_not_failed.max_throughput()},
+        {"name": "Average", "amount": tasklogs_not_failed.avg_throughput()},
+    ]
     context = {
         "oldest_date": oldest_date,
         "youngest_date": youngest_date,
@@ -173,6 +178,7 @@ def _calc_data() -> dict:
         "tasks_top_runtime": tasks_top_runtime,
         "tasks_top_failed": tasks_top_failed,
         "tasks_top_retried": tasks_top_retried,
+        "tasks_throughput": tasks_throughput,
         "MAX_TOP": TASKMONITOR_REPORTS_MAX_TOP,
     }
     return context

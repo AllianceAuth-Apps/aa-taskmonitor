@@ -1,6 +1,8 @@
+import datetime as dt
 from unittest.mock import patch
 
 from django.test import TestCase
+from django.utils import timezone
 
 from taskmonitor.models import TaskLog
 
@@ -39,3 +41,25 @@ class TestManagerCreateFromTask(TestCase):
                 self.assertEqual(
                     getattr(expected, field_name), getattr(result, field_name)
                 )
+
+
+class TestCalcThroughput(TestCase):
+    def test_should_calc_max(self):
+        # given
+        start = timezone.now()
+        TaskLogFactory(timestamp=start)
+        TaskLogFactory(timestamp=start + dt.timedelta(minutes=0, seconds=2))
+        TaskLogFactory(timestamp=start + dt.timedelta(minutes=0, seconds=3))
+        TaskLogFactory(timestamp=start + dt.timedelta(minutes=1, seconds=1))
+        # when
+        self.assertEqual(TaskLog.objects.all().max_throughput(), 3)
+
+    def test_should_calc_avg(self):
+        # given
+        start = timezone.now()
+        TaskLogFactory(timestamp=start)
+        TaskLogFactory(timestamp=start + dt.timedelta(minutes=0, seconds=2))
+        TaskLogFactory(timestamp=start + dt.timedelta(minutes=0, seconds=3))
+        TaskLogFactory(timestamp=start + dt.timedelta(minutes=1, seconds=1))
+        # when
+        self.assertEqual(TaskLog.objects.all().avg_throughput(), 2)

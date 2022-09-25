@@ -22,6 +22,7 @@
     <h2 id="contents">Conents</h2>
     <ul>
         <li><a href="#task-runs-by-app">Task runs by state</a></li>
+        <li><a href="#top-througput">Task througput</a></li>
         <li><a href="#task-runs-by-app">Task runs by app</a></li>
         <li><a href="#top-tasks-by-runs">Top tasks by runs</a></li>
         <li><a href="#top-tasks-by-runtime">Top tasks by runtime</a></li>
@@ -31,6 +32,9 @@
 
     <h2 id="task-runs-by-app">Task runs by state</h2>
     {% include "admin/taskmonitor/tasklog/report_table_partial.html" with rows=task_totals_by_state %}
+
+    <h2 id="top-througput">Throughput in task executions per minute</h2>
+    {% include "admin/taskmonitor/tasklog/report_table_partial.html" with rows=tasks_throughput disable_percent=True %}
 
     <h2 id="task-runs-by-app">Task runs by app</h2>
     {% include "admin/taskmonitor/tasklog/report_table_partial.html" with rows=task_runs_per_app %}

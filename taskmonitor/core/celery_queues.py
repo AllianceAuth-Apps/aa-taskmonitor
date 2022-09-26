@@ -34,8 +34,8 @@ def fetch_tasks() -> list:
     """Fetch tasks in queue."""
     r = _redis_client()
     elements_raw = list(
-        itertools.chain(*[r.lrange(queue_name, 0, -1) for queue_name in _queue_names()])
+        itertools.chain(
+            *[reversed(r.lrange(queue_name, 0, -1)) for queue_name in _queue_names()]
+        )
     )
-    result = [json.loads(obj.decode("utf8")) for obj in elements_raw]
-    result.reverse()
-    return result
+    return [json.loads(obj.decode("utf8")) for obj in elements_raw]

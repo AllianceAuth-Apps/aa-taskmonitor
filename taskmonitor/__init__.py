@@ -1,4 +1,4 @@
 default_app_config = "taskmonitor.apps.TaskMonitorConfig"
 
-__version__ = "0.3.0"
+__version__ = "0.4.0a1"
 __title__ = "Task Monitor"

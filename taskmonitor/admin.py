@@ -10,8 +10,15 @@ from .models import QueuedTask, TaskLog, TaskReport
 @admin.register(QueuedTask)
 class QueuedTaskAdmin(admin.ModelAdmin):
 
-    list_display = ("id", "name", "priority", "app_name", "position")
-    list_filter = ["app_name"]
+    list_display = (
+        "position",
+        "id",
+        "name",
+        "priority",
+        "app_name",
+    )
+    list_display_links = None
+    list_filter = ["app_name", "name"]
     ordering = ["position"]
 
     def has_add_permission(self, *args, **kwargs):
@@ -55,6 +62,7 @@ class TaskLogAdmin(admin.ModelAdmin):
     list_filter = ("state", "timestamp", "app_name", "task_name")
     search_fields = ("task_name", "app_name", "task_id")
     actions = ["delete_selected_2"]
+    show_full_result_count = False
 
     def has_add_permission(self, *args, **kwargs) -> bool:
         return False

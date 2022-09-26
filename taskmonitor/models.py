@@ -2,26 +2,41 @@ import uuid
 
 from django.db import models
 
-from .managers import TaskLogManager, TaskQueueManager
+from .helpers import extract_app_name
+from .managers import QueuedTaskManager, TaskLogManager
 
 
-class TaskQueue(models.Model):
-    """Dummy model to fake a 'Queues' entry on the admin index page."""
+class QueuedTask(models.Model):
+    """A task that has been queued for later execution."""
 
     class Meta:
         managed = False
-        verbose_name = "queue"
 
     app_name = models.CharField(max_length=255)
-    id = models.BigIntegerField(primary_key=True)
-    priority = models.IntegerField(null=True, default=None)
-    task_id = models.UUIDField(default=uuid.uuid4)
-    task_name = models.CharField(max_length=255)
+    id = models.UUIDField(default=uuid.uuid4, primary_key=True)
+    name = models.CharField(max_length=255)
+    priority = models.PositiveIntegerField(null=True, default=None)
+    position = models.PositiveIntegerField()
 
-    objects = TaskQueueManager()
+    objects = QueuedTaskManager()
 
     def __str__(self):
-        return f"{self.task_name}:{self.pk}"
+        return self.id
+
+    @classmethod
+    def create_from_dict(cls, obj: dict, position: int) -> "QueuedTask":
+        if "headers" not in obj:
+            raise ValueError("headers missing in obj")
+        headers = obj["headers"]
+        properties = obj["properties"] if "properties" in obj else {}
+        task_name = headers["task"]
+        return cls(
+            app_name=extract_app_name(task_name),
+            id=headers["id"],
+            name=task_name,
+            priority=properties.get("priority"),
+            position=position,
+        )
 
 
 class TaskReport(models.Model):

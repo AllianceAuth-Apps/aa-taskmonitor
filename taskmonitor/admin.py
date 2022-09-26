@@ -4,13 +4,15 @@ from django.contrib import admin
 from django.shortcuts import redirect
 from django.utils import html
 
-from .models import TaskLog, TaskQueue, TaskReport
+from .models import QueuedTask, TaskLog, TaskReport
 
 
-@admin.register(TaskQueue)
-class TaskQueueAdmin(admin.ModelAdmin):
+@admin.register(QueuedTask)
+class QueuedTaskAdmin(admin.ModelAdmin):
 
-    list_display = ("id", "task_name", "task_id", "priority", "app_name")
+    list_display = ("id", "name", "priority", "app_name", "position")
+    list_filter = ["app_name"]
+    ordering = ["position"]
 
     def has_add_permission(self, *args, **kwargs):
         return False

@@ -216,14 +216,14 @@ def _calc_tasks_top_retried(changelist_url):
 def _calc_tasks_throughput(now):
     tasklogs_not_failed = TaskLog.objects.exclude(state=TaskLog.State.FAILURE)
     tasks_throughput = []
-    average_last_minutes = dict()
-    for minutes in [5, 15, 60]:
-        average_last_minutes[minutes] = tasklogs_not_failed.filter(
-            timestamp__gt=now - dt.timedelta(minutes=minutes)
+    average_last_hours = dict()
+    for hours in [1, 3, 6, 12, 24]:
+        average_last_hours[hours] = tasklogs_not_failed.filter(
+            timestamp__gt=now - dt.timedelta(hours=hours)
         ).avg_throughput()
-    for minutes, amount in average_last_minutes.items():
+    for hours, amount in average_last_hours.items():
         tasks_throughput.append(
-            {"name": f"Average last {minutes} minutes", "amount": amount}
+            {"name": f"Average last {hours} hours", "amount": amount}
         )
     average_overall = tasklogs_not_failed.avg_throughput()
     tasks_throughput.append({"name": "Average overall", "amount": average_overall})

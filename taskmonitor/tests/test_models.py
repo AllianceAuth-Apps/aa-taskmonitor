@@ -197,8 +197,8 @@ class TestQueuedTaskManager(TestCase):
 
     def test_values(self, mock_celery_queues):
         # given
-        raw_1 = QueuedTaskRawFactory(headers__task="alpha")
-        raw_2 = QueuedTaskRawFactory(headers__task="bravo")
+        raw_1 = QueuedTaskRawFactory(headers__task="alpha", properties__priority=5)
+        raw_2 = QueuedTaskRawFactory(headers__task="bravo", properties__priority=5)
         mock_celery_queues.fetch_tasks.return_value = [raw_1, raw_2]
         # when
         result = QueuedTask.objects.values("name", "priority")
@@ -209,8 +209,8 @@ class TestQueuedTaskManager(TestCase):
 
     def test_values_list_1(self, mock_celery_queues):
         # given
-        raw_1 = QueuedTaskRawFactory(headers__task="alpha")
-        raw_2 = QueuedTaskRawFactory(headers__task="bravo")
+        raw_1 = QueuedTaskRawFactory(headers__task="alpha", properties__priority=5)
+        raw_2 = QueuedTaskRawFactory(headers__task="bravo", properties__priority=5)
         mock_celery_queues.fetch_tasks.return_value = [raw_1, raw_2]
         # when
         result = QueuedTask.objects.values_list("name", "priority")

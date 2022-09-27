@@ -149,7 +149,7 @@ class QueuedTaskRawFactory(factory.DictFactory):
             "parent_id": factory.LazyAttribute(lambda o: o.id),
         }
     )
-    properties = factory.Dict({"priority": 5})
+    properties = factory.Dict({"priority": factory.fuzzy.FuzzyInteger(0, 9)})
 
     class Meta:
         rename = {

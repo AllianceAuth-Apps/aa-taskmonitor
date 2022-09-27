@@ -1,4 +1,5 @@
 import datetime as dt
+import itertools
 from dataclasses import asdict, dataclass
 from random import choice, choices, randint
 from uuid import UUID
@@ -19,6 +20,9 @@ for app_name in {faker.first_name().lower() for _ in range(10)}:
         app_name + ".tasks." + "_".join(faker.words(3)).lower()
         for _ in range(randint(3, 20))
     ]
+fake_tasks_all = list(
+    itertools.chain(*[fake_tasks[app_name] for app_name in fake_tasks])
+)
 
 
 class TaskLogFactory(factory.django.DjangoModelFactory):
@@ -125,3 +129,64 @@ class SenderStub:
     def create_from_obj(cls, obj: TaskLog):
         request = ContextStub.create_from_obj(obj)
         return cls(name=obj.task_name, request=request, priority=5)
+
+
+class QueuedTaskRawFactory(factory.DictFactory):
+    body = (
+        "W1tdLCB7fSwgeyJjYWxsYmFja3MiOiBudWxsLCAiZXJyYmFja3MiOi"
+        "BudWxsLCAiY2hhaW4iOiBudWxsLCAiY2hvcmQiOiBudWxsfV0="
+    )
+    content_encoding = "utf-8"
+    content_type = "application/json"
+    headers = factory.Dict(
+        {
+            "lang": "py",
+            "task": factory.LazyAttribute(lambda o: choice(fake_tasks_all)),
+            "id": factory.Faker("uuid4"),
+            "retries": 0,
+            "origin": "dummy@QueuedTaskRawFactory",
+            "root_id": None,
+            "parent_id": factory.LazyAttribute(lambda o: o.id),
+        }
+    )
+    properties = factory.Dict({"priority": factory.fuzzy.FuzzyInteger(0, 9)})
+
+    class Meta:
+        rename = {
+            "content_encoding": "content-encoding",
+            "content_type": "content-type",
+        }
+
+    #     {
+    #         "body": "W1tdLCB7fSwgeyJjYWxsYmFja3MiOiBudWxsLCAiZXJyYmFja3MiOiBudWxsLCAiY2hhaW4iOiBudWxsLCAiY2hvcmQiOiBudWxsfV0=",
+    #         "content-encoding": "utf-8",
+    #         "content-type": "application/json",
+    #         "headers": {
+    #             "lang": "py",
+    #             "task": "taskmonitor.tasks.run_housekeeping",
+    #             "id": "7b2416f0-1ff5-4c77-8403-8aafac05b298",
+    #             "shadow": None,
+    #             "eta": None,
+    #             "expires": None,
+    #             "group": None,
+    #             "group_index": None,
+    #             "retries": 0,
+    #             "timelimit": [None, None],
+    #             "root_id": "7b2416f0-1ff5-4c77-8403-8aafac05b298",
+    #             "parent_id": None,
+    #             "argsrepr": "()",
+    #             "kwargsrepr": "{}",
+    #             "origin": "gen9996@bji74-PC",
+    #             "ignore_result": False,
+    #         },
+    #         "properties": {
+    #             "correlation_id": "7b2416f0-1ff5-4c77-8403-8aafac05b298",
+    #             "reply_to": "853ed4b4-2c52-32cd-be57-4086564ac31e",
+    #             "delivery_mode": 2,
+    #             "delivery_info": {"exchange": "", "routing_key": "celery"},
+    #             "priority": 0,
+    #             "body_encoding": "base64",
+    #             "delivery_tag": "84f0b41d-c8fc-4dab-88e8-a89afddb1deb",
+    #         },
+    #     }
+    # ]

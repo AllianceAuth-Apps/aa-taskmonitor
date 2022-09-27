@@ -15,13 +15,13 @@ from .models import TaskLog
 
 logger = LoggerAddTag(get_extension_logger(__name__), __title__)
 
-DEFAULT_TASK_PRIORITY = 7
+DEFAULT_TASK_PRIORITY = 4
 
 
 @shared_task(base=QueueOnce)
 def run_housekeeping():
     """Run all housekeeping tasks."""
-    delete_stale_tasklogs.apply_async(priority=DEFAULT_TASK_PRIORITY)
+    delete_stale_tasklogs.apply_async(priority=7)
     refresh_reports_cache.apply_async(priority=DEFAULT_TASK_PRIORITY)
 
 

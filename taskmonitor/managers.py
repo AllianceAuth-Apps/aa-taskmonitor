@@ -8,7 +8,100 @@ from django.db.models import Avg, Count, Max
 from django.db.models.functions import TruncMinute
 from django.utils import timezone
 
+from .core import celery_queues
 from .helpers import extract_app_name
+
+
+class QuerySetQueryStub:
+    def __init__(self) -> None:
+        self.select_related = None
+        self.order_by = []
+
+
+class ListAsQuerySet(list):
+    def __init__(self, *args, model, distinct=False, **kwargs):
+        self.model = model
+        self.query = QuerySetQueryStub()
+        self.distinct_enabled = distinct
+        super().__init__(*args, **kwargs)
+        self._id_mapper = {str(obj.id): n for n, obj in enumerate(self)}
+
+    def get(self, *args, **kwargs):
+        if "id" in kwargs:
+            try:
+                return self[self._id_mapper[str(kwargs["id"])]]
+            except KeyError:
+                raise self.model.DoesNotExist from None
+        raise self.model.DoesNotExist
+
+    def distinct(self):
+        return ListAsQuerySet(list(set(self)), model=self.model, distinct=True)
+
+    def values(self, *args):
+        result = [
+            {k: v for k, v in obj.__dict__.items() if not args or k in args}
+            for obj in self
+        ]
+        return result
+
+    def values_list(self, *args, **kwargs):
+        items = [tuple(obj.values()) for obj in self.values(*args)]
+        if kwargs.get("flat"):
+            items = [obj[0] for obj in items]
+            if self.distinct_enabled:
+                return list(dict.fromkeys(items))
+            return items
+        return items
+
+    def first(self):
+        return self[0] if self else None
+
+    def filter(self, *args, **kwargs):
+        if kwargs:
+            new_list = []
+            for obj in self:
+                if all([getattr(obj, key) == value for key, value in kwargs.items()]):
+                    new_list.append(obj)
+            return ListAsQuerySet(new_list, model=self.model)
+        return self
+
+    def order_by(self, *args, **kwargs):
+        if args:
+            for prop in reversed(args):
+                if prop[0:1] == "-":
+                    reverse = True
+                    prop = prop[1:]
+                else:
+                    reverse = False
+                self.sort(key=lambda d: getattr(d, prop), reverse=reverse)
+        return self
+
+    def count(self):
+        return len(self)
+
+    def _clone(self):
+        return self
+
+
+class QueuedTaskQuerySet(models.QuerySet):
+    def count(self):
+        return celery_queues.queue_length()
+
+
+class QueuedTaskManagerBase(models.Manager):
+    def get_queryset(self):
+        from .models import QueuedTask
+
+        objs = []
+        for position, obj in enumerate(celery_queues.fetch_tasks()):
+            try:
+                objs.append(QueuedTask.create_from_dict(obj, position))
+            except ValueError:
+                pass
+        return ListAsQuerySet(objs, model=QueuedTask)
+
+
+QueuedTaskManager = QueuedTaskManagerBase.from_queryset(QueuedTaskQuerySet)
 
 
 class TaskLogQuerySet(models.QuerySet):

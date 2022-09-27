@@ -61,21 +61,43 @@ def clear_cache() -> None:
 
 def _calc_data() -> dict:
     """Calculate the report data."""
+    now = timezone.now()
     oldest_date = TaskLog.objects.aggregate(oldest=Min("timestamp"))["oldest"]
     youngest_date = TaskLog.objects.aggregate(youngest=Max("timestamp"))["youngest"]
+    total_runtime, total_runtime_date = _calc_total_runtime(now)
+    total_runs = TaskLog.objects.count()
+    changelist_url = reverse("admin:taskmonitor_tasklog_changelist")
+    context = {
+        "oldest_date": oldest_date,
+        "youngest_date": youngest_date,
+        "total_runs": total_runs,
+        "total_runtime_date": total_runtime_date,
+        "task_totals_by_state": _calc_task_totals_by_state(total_runs, changelist_url),
+        "task_runs_per_app": _calc_task_runs_per_app(total_runs, changelist_url),
+        "tasks_top_runs": _calc_tasks_top_runs(total_runs, changelist_url),
+        "tasks_top_runtime": _calc_tasks_top_runtime(total_runtime, changelist_url),
+        "tasks_top_failed": _calc_tasks_top_failed(changelist_url),
+        "tasks_top_retried": _calc_tasks_top_retried(changelist_url),
+        "tasks_throughput": _calc_tasks_throughput(now),
+        "MAX_TOP": TASKMONITOR_REPORTS_MAX_TOP,
+    }
+    return context
+
+
+def _calc_total_runtime(now):
     total_runtime = TaskLog.objects.aggregate(total_runtime=Sum("runtime"))[
         "total_runtime"
     ]
     try:
-        total_runtime_date = timezone.now() - dt.timedelta(seconds=total_runtime)
+        total_runtime_date = now - dt.timedelta(seconds=total_runtime)
     except TypeError:
         total_runtime_date = None
-    total_runs = TaskLog.objects.count()
-    changelist_url = reverse("admin:taskmonitor_tasklog_changelist")
+    return total_runtime, total_runtime_date
+
+
+def _calc_task_totals_by_state(total_runs, changelist_url):
     if not total_runs:
         task_totals_by_state = None
-        task_runs_per_app = None
-        tasks_top_runs = None
     else:
         task_totals_by_state = [
             {
@@ -86,28 +108,46 @@ def _calc_data() -> dict:
             }
             for state in TaskLog.State
         ]
-        task_runs_per_app = (
-            TaskLog.objects.values(name=F("app_name"))
-            .annotate(amount=Count("pk"))
-            .annotate(
-                percent=F("amount")
-                / Value(total_runs, output_field=models.FloatField())
-                * 100
-            )
-            .annotate(url=Concat(Value(f"{changelist_url}?app_name="), F("name")))
-            .order_by("-amount")
+
+    return task_totals_by_state
+
+
+def _calc_task_runs_per_app(total_runs, changelist_url):
+    if not total_runs:
+        return None
+    task_runs_per_app = (
+        TaskLog.objects.values(name=F("app_name"))
+        .annotate(amount=Count("pk"))
+        .annotate(
+            percent=F("amount")
+            / Value(total_runs, output_field=models.FloatField())
+            * 100
         )
-        tasks_top_runs = (
-            TaskLog.objects.values(name=F("task_name"))
-            .annotate(amount=Count("pk"))
-            .annotate(
-                percent=F("amount")
-                / Value(total_runs, output_field=models.FloatField())
-                * 100
-            )
-            .annotate(url=Concat(Value(f"{changelist_url}?task_name="), F("name")))
-            .order_by("-amount")[:TASKMONITOR_REPORTS_MAX_TOP]
+        .annotate(url=Concat(Value(f"{changelist_url}?app_name="), F("name")))
+        .order_by("-amount")
+    )
+
+    return task_runs_per_app
+
+
+def _calc_tasks_top_runs(total_runs, changelist_url):
+    if not total_runs:
+        return None
+    tasks_top_runs = (
+        TaskLog.objects.values(name=F("task_name"))
+        .annotate(amount=Count("pk"))
+        .annotate(
+            percent=F("amount")
+            / Value(total_runs, output_field=models.FloatField())
+            * 100
         )
+        .annotate(url=Concat(Value(f"{changelist_url}?task_name="), F("name")))
+        .order_by("-amount")[:TASKMONITOR_REPORTS_MAX_TOP]
+    )
+    return tasks_top_runs
+
+
+def _calc_tasks_top_runtime(total_runtime, changelist_url):
     if not total_runtime:
         tasks_top_runtime = None
     else:
@@ -122,6 +162,10 @@ def _calc_data() -> dict:
             .annotate(url=Concat(Value(f"{changelist_url}?o=5&task_name="), F("name")))
             .order_by("-amount")[:TASKMONITOR_REPORTS_MAX_TOP]
         )
+    return tasks_top_runtime
+
+
+def _calc_tasks_top_failed(changelist_url):
     total_failed = TaskLog.objects.filter(state=TaskLog.State.FAILURE).count()
     if not total_failed:
         tasks_top_failed = None
@@ -142,6 +186,10 @@ def _calc_data() -> dict:
             )
             .order_by("-amount")[:TASKMONITOR_REPORTS_MAX_TOP]
         )
+    return tasks_top_failed
+
+
+def _calc_tasks_top_retried(changelist_url):
     total_retried = TaskLog.objects.filter(state=TaskLog.State.RETRY).count()
     if not total_retried:
         tasks_top_retried = None
@@ -162,23 +210,23 @@ def _calc_data() -> dict:
             )
             .order_by("-amount")[:TASKMONITOR_REPORTS_MAX_TOP]
         )
+    return tasks_top_retried
+
+
+def _calc_tasks_throughput(now):
     tasklogs_not_failed = TaskLog.objects.exclude(state=TaskLog.State.FAILURE)
-    tasks_throughput = [
-        {"name": "Maximum", "amount": tasklogs_not_failed.max_throughput()},
-        {"name": "Average", "amount": tasklogs_not_failed.avg_throughput()},
-    ]
-    context = {
-        "oldest_date": oldest_date,
-        "youngest_date": youngest_date,
-        "total_runs": total_runs,
-        "total_runtime_date": total_runtime_date,
-        "task_totals_by_state": task_totals_by_state,
-        "task_runs_per_app": task_runs_per_app,
-        "tasks_top_runs": tasks_top_runs,
-        "tasks_top_runtime": tasks_top_runtime,
-        "tasks_top_failed": tasks_top_failed,
-        "tasks_top_retried": tasks_top_retried,
-        "tasks_throughput": tasks_throughput,
-        "MAX_TOP": TASKMONITOR_REPORTS_MAX_TOP,
-    }
-    return context
+    tasks_throughput = []
+    average_last_hours = dict()
+    for hours in [1, 3, 6, 12, 24]:
+        average_last_hours[hours] = tasklogs_not_failed.filter(
+            timestamp__gt=now - dt.timedelta(hours=hours)
+        ).avg_throughput()
+    for hours, amount in average_last_hours.items():
+        tasks_throughput.append(
+            {"name": f"Average last {hours} hours", "amount": amount}
+        )
+    average_overall = tasklogs_not_failed.avg_throughput()
+    tasks_throughput.append({"name": "Average overall", "amount": average_overall})
+    peak_overall = tasklogs_not_failed.max_throughput()
+    tasks_throughput.append({"name": "Peak overall", "amount": peak_overall})
+    return tasks_throughput

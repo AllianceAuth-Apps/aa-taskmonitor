@@ -19,7 +19,7 @@
 
     <p>Total of {% if total_runs > 1000000 %}{{ total_runs|intword }}{% else %}{{ total_runs|intcomma }}{% endif %} task logs spanning {{ youngest_date|timeuntil:oldest_date }} with a cumulative runtime of {{ total_runtime_date|timesince }}.</p>
 
-    <h2 id="contents">Conents</h2>
+    <h2 id="contents">Contents</h2>
     <ul>
         <li><a href="#task-runs-by-app">Task runs by state</a></li>
         <li><a href="#top-througput">Task througput</a></li>
@@ -54,7 +54,10 @@
     <br>
     <p>
         This data is cached. Last updated {{ last_update_at|naturaltime }}.
-        <a href="{% url 'taskmonitor:admin_taskmonitor_reports_clear_cache' %}"><input type="button" value="Recalc now"></a>
+        <a href="{% url 'taskmonitor:admin_taskmonitor_reports_recalculation' %}"><input type="button" value="Recalc now"></a>
+        {% if debug_mode %}
+            <a href="{% url 'taskmonitor:admin_taskmonitor_reports_clear_cache' %}"><input type="button" value="Clear cache"></a>
+        {% endif %}
     </p>
     <p>
         All data of this app is stored for a maxmimum of {{ data_max_age }} hours.

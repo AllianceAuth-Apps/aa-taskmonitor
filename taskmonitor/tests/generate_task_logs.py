@@ -1,5 +1,5 @@
 # flake8: noqa
-"""Script for creating generated notifications for testing."""
+"""Script for creating generated task logs for testing."""
 
 import os
 import sys

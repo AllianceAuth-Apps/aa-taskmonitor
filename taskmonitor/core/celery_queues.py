@@ -1,3 +1,5 @@
+import concurrent.futures
+import functools
 import itertools
 import json
 
@@ -15,6 +17,7 @@ def _redis_client():
 
 
 def _queue_base_name() -> str:
+    """Base name of celery queue."""
     return getattr(settings, "CELERY_DEFAULT_QUEUE", "celery")
 
 
@@ -35,16 +38,21 @@ def queue_length() -> list:
     return sum(r.llen(queue_name) for queue_name in _queue_names())
 
 
-def _fetch_tasks_from_queue(redis_client, queue_name: str) -> list:
-    tasks_raw = redis_client.lrange(queue_name, 0, -1)
+def _fetch_tasks_from_queue(r: redis.Redis, queue_name: str) -> list:
+    """Fetch tasks from given queue and return ordered
+    with oldest task in first position.
+    """
+    tasks_raw = r.lrange(queue_name, 0, -1)
     tasks = [json.loads(obj.decode("utf8")) for obj in tasks_raw]
     return reversed(tasks)
 
 
 def fetch_tasks() -> list:
-    """Fetch tasks in queue."""
-    r = _redis_client()
-    tasks_raw = [
-        _fetch_tasks_from_queue(r, queue_name) for queue_name in _queue_names()
-    ]
+    """Fetch all tasks from queues and return as combined list."""
+    _fetch_func = functools.partial(_fetch_tasks_from_queue, _redis_client())
+    queue_names = _queue_names()
+    with concurrent.futures.ThreadPoolExecutor(
+        max_workers=len(queue_names)
+    ) as executor:
+        tasks_raw = executor.map(_fetch_func, queue_names)
     return list(itertools.chain(*tasks_raw))

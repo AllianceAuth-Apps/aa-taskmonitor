@@ -30,6 +30,11 @@ class QueuedTaskAdmin(admin.ModelAdmin):
     def has_delete_permission(self, *args, **kwargs):
         return False
 
+    def changelist_view(self, request, extra_context=None):
+        extra_context = extra_context or {}
+        extra_context["title"] = "Currently queued tasks"
+        return super().changelist_view(request, extra_context)
+
 
 @admin.register(TaskReport)
 class TaskReportAdmin(admin.ModelAdmin):

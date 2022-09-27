@@ -219,7 +219,7 @@ def _calc_tasks_throughput(now):
     average_last_minutes = dict()
     for minutes in [5, 15, 60]:
         average_last_minutes[minutes] = tasklogs_not_failed.filter(
-            timestamp__lt=now - dt.timedelta(minutes=minutes)
+            timestamp__gt=now - dt.timedelta(minutes=minutes)
         ).avg_throughput()
     for minutes, amount in average_last_minutes.items():
         tasks_throughput.append(

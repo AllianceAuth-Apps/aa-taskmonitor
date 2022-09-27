@@ -20,4 +20,9 @@ urlpatterns = [
         views.admin_taskmonitor_reports_clear_cache,
         name="admin_taskmonitor_reports_clear_cache",
     ),
+    path(
+        "admin_taskmonitor_reports_recalculation",
+        views.admin_taskmonitor_reports_recalculation,
+        name="admin_taskmonitor_reports_recalculation",
+    ),
 ]

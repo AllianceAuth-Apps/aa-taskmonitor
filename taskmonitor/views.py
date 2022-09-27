@@ -1,5 +1,6 @@
 import csv
 
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.decorators import login_required
@@ -52,6 +53,7 @@ def admin_taskmonitor_reports(request):
         "site_header": site_header,
         "cl": {"opts": TaskLog._meta},
         "data_max_age": TASKMONITOR_DATA_MAX_AGE,
+        "debug_mode": settings.DEBUG,
     }
     context.update(cached_reports.data())
     return render(request, "admin/taskmonitor/tasklog/reports.html", context)
@@ -61,6 +63,14 @@ def admin_taskmonitor_reports(request):
 @staff_member_required
 def admin_taskmonitor_reports_clear_cache(request):
     """Reload the reports page with cleared cache."""
+    cached_reports.clear_cache()
+    return redirect("taskmonitor:admin_taskmonitor_reports")
+
+
+@login_required
+@staff_member_required
+def admin_taskmonitor_reports_recalculation(request):
+    """Start the reports recalculation."""
     tasks.refresh_reports_cache.apply_async(priority=tasks.DEFAULT_TASK_PRIORITY)
     messages.info(
         request,

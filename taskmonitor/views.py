@@ -1,5 +1,6 @@
 import csv
 
+from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.decorators import login_required
 from django.http import StreamingHttpResponse
@@ -9,7 +10,7 @@ from allianceauth import NAME as site_header
 from allianceauth.services.hooks import get_extension_logger
 from app_utils.logging import LoggerAddTag
 
-from . import __title__
+from . import __title__, tasks
 from .app_settings import TASKMONITOR_DATA_MAX_AGE
 from .core import cached_reports
 from .helpers import Echo
@@ -60,5 +61,12 @@ def admin_taskmonitor_reports(request):
 @staff_member_required
 def admin_taskmonitor_reports_clear_cache(request):
     """Reload the reports page with cleared cache."""
-    cached_reports.clear_cache()
+    tasks.refresh_reports_cache.apply_async(priority=tasks.DEFAULT_TASK_PRIORITY)
+    messages.info(
+        request,
+        (
+            "Reports are being recalculated, which can take a while. "
+            "Please reload this page in a minute to see the update."
+        ),
+    )
     return redirect("taskmonitor:admin_taskmonitor_reports")

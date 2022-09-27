@@ -8,7 +8,7 @@ TASKMONITOR_HOUSEKEEPING_FREQUENCY = clean_setting(
 )
 """Frequency of house keeping runs in minutes."""
 
-TASKMONITOR_REPORTS_MAX_AGE = clean_setting("TASKMONITOR_REPORTS_MAX_AGE", 15)
+TASKMONITOR_REPORTS_MAX_AGE = clean_setting("TASKMONITOR_REPORTS_MAX_AGE", 30)
 """Max age of cached reports in minutes."""
 
 TASKMONITOR_REPORTS_MAX_TOP = clean_setting("TASKMONITOR_REPORTS_MAX_TOP", 20)

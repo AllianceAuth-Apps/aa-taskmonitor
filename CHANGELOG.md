@@ -13,6 +13,17 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Fixed
 
+## [0.4.0] - 2022-09-27
+
+### Added
+
+- Ability to see list of currently queued tasks
+- Average task throughput for different time spans
+
+### Changed
+
+- Clicking "Recalc now" now start the tasks instead of clearing the cache
+
 ## [0.3.0] - 2022-09-25
 
 ### Added

@@ -1,0 +1,8 @@
+{% extends "admin/change_list.html" %}
+{% load i18n %}
+{% load humanize %}
+
+{% block object-tools %}
+    <p>Snapshot at {{ now }} with {{ task_count|intcomma }} tasks.</p>
+    {{ block.super }}
+{% endblock %}

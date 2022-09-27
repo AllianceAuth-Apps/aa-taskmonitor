@@ -2,7 +2,7 @@ from typing import Optional
 
 from django.contrib import admin
 from django.shortcuts import redirect
-from django.utils import html
+from django.utils import html, timezone
 
 from .models import QueuedTask, TaskLog, TaskReport
 
@@ -32,7 +32,12 @@ class QueuedTaskAdmin(admin.ModelAdmin):
 
     def changelist_view(self, request, extra_context=None):
         extra_context = extra_context or {}
-        extra_context["title"] = "Currently queued tasks"
+        context = {
+            "title": "Currently queued tasks",
+            "now": timezone.now(),
+            "task_count": QueuedTask.objects.count(),
+        }
+        extra_context.update(context)
         return super().changelist_view(request, extra_context)
 
 

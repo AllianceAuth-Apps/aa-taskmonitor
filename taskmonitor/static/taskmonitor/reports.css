@@ -5,3 +5,8 @@
 .float-right {
     float: right
 }
+
+/* we need to overwrite this rule from changelist.css */
+#changelist table thead th {
+    padding: 5px 10px;
+}

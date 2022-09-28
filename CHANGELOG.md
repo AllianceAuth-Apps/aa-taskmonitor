@@ -13,6 +13,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Fixed
 
+## [0.4.1] - 2022-09-28
+
+### Changed
+
+- Show one report at a time and provide navigation sidebar to select report
+- Reworked reports layout and style to fit better with admin site
+
 ## [0.4.0] - 2022-09-27
 
 ### Added

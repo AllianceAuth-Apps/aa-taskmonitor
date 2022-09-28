@@ -14,7 +14,6 @@
                     plotBorderWidth: null,
                     plotShadow: false,
                     type: 'pie',
-                    backgroundColor: null,
                 },
                 credits: {
                     enabled: false
@@ -42,6 +41,14 @@
                 series: [{
                     name: 'Tasks',
                     colorByPoint: true,
+                    cursor: 'pointer',
+                        point: {
+                            events: {
+                                click: function () {
+                                    location.href = this.options.url;
+                                }
+                            }
+                        },
                     data: data
                     }]
                 });

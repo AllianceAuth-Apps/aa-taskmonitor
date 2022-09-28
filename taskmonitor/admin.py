@@ -59,7 +59,7 @@ class TaskReportAdmin(admin.ModelAdmin):
 @admin.register(TaskLog)
 class TaskLogAdmin(admin.ModelAdmin):
     class Media:
-        css = {"all": ("taskmonitor/admin.css",)}
+        css = {"all": ("taskmonitor/css/admin.css",)}
 
     list_display = (
         "timestamp",

@@ -3,13 +3,13 @@
 
 {% block extrastyle %}
     {{ block.super }}
-    <link rel="stylesheet" type="text/css" href="{% static 'taskmonitor/admin.css' %}">
-    <link rel="stylesheet" type="text/css" href="{% static 'taskmonitor/reports.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'taskmonitor/css/admin.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'taskmonitor/css/reports.css' %}">
 {% endblock %}
 
 {% block extrahead %}
     {{ block.super }}
-    <script src="https://code.highcharts.com/highcharts.js"></script>
+    <script src="{% static 'taskmonitor/vendor/highcharts/highcharts.js' %}"></script>
 {% endblock %}
 
 {% block breadcrumbs %}

@@ -20,7 +20,7 @@
                         {{ row.name }}
                     {% endif %}
                 </td>
-                <td class="text-right">{{ row.amount|floatformat:"0g" }}</td>
+                <td class="text-right">{{ row.y|floatformat:"0g" }}</td>
                 {% if not disable_percent %}
                     <td class="text-right">{{ row.percent|floatformat:"1" }}</td>
                 {% endif %}

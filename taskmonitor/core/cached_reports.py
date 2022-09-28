@@ -102,11 +102,11 @@ def _calc_task_totals_by_state(total_runs, changelist_url):
         task_totals_by_state = [
             {
                 "name": state.label,
-                "amount": (amount := TaskLog.objects.filter(state=state.value).count()),
+                "y": (amount := TaskLog.objects.filter(state=state.value).count()),
                 "percent": amount / total_runs * 100,
                 "url": f"{changelist_url}?state__exact={state}",
             }
-            for state in TaskLog.State
+            for state in reversed(TaskLog.State)
         ]
 
     return task_totals_by_state
@@ -115,102 +115,89 @@ def _calc_task_totals_by_state(total_runs, changelist_url):
 def _calc_task_runs_per_app(total_runs, changelist_url):
     if not total_runs:
         return None
-    task_runs_per_app = (
+    return list(
         TaskLog.objects.values(name=F("app_name"))
-        .annotate(amount=Count("pk"))
+        .annotate(y=Count("pk"))
         .annotate(
-            percent=F("amount")
-            / Value(total_runs, output_field=models.FloatField())
-            * 100
+            percent=F("y") / Value(total_runs, output_field=models.FloatField()) * 100
         )
         .annotate(url=Concat(Value(f"{changelist_url}?app_name="), F("name")))
-        .order_by("-amount")
+        .order_by("-y")
     )
-
-    return task_runs_per_app
 
 
 def _calc_tasks_top_runs(total_runs, changelist_url):
     if not total_runs:
         return None
-    tasks_top_runs = (
+    result = list(
         TaskLog.objects.values(name=F("task_name"))
-        .annotate(amount=Count("pk"))
-        .annotate(
-            percent=F("amount")
-            / Value(total_runs, output_field=models.FloatField())
-            * 100
-        )
-        .annotate(url=Concat(Value(f"{changelist_url}?task_name="), F("name")))
-        .order_by("-amount")[:TASKMONITOR_REPORTS_MAX_TOP]
+        .annotate(y=Count("pk"))
+        .order_by("-y")[:TASKMONITOR_REPORTS_MAX_TOP]
     )
-    return tasks_top_runs
+    return result
+    # return list(
+    #     TaskLog.objects.values(name=F("task_name"))
+    #     .annotate(y=Count("pk"))
+    #     .annotate(
+    #         percent=F("y") / Value(total_runs, output_field=models.FloatField()) * 100
+    #     )
+    #     .annotate(url=Concat(Value(f"{changelist_url}?task_name="), F("name")))
+    #     .order_by("-y")[:TASKMONITOR_REPORTS_MAX_TOP]
+    # )
 
 
 def _calc_tasks_top_runtime(total_runtime, changelist_url):
     if not total_runtime:
-        tasks_top_runtime = None
-    else:
-        tasks_top_runtime = (
-            TaskLog.objects.values(name=F("task_name"))
-            .annotate(amount=Max("runtime"))
-            .annotate(
-                percent=F("amount")
-                / Value(total_runtime, output_field=models.FloatField())
-                * 100
-            )
-            .annotate(url=Concat(Value(f"{changelist_url}?o=5&task_name="), F("name")))
-            .order_by("-amount")[:TASKMONITOR_REPORTS_MAX_TOP]
+        return None
+    return list(
+        TaskLog.objects.values(name=F("task_name"))
+        .annotate(y=Max("runtime"))
+        .annotate(
+            percent=F("y")
+            / Value(total_runtime, output_field=models.FloatField())
+            * 100
         )
-    return tasks_top_runtime
+        .annotate(url=Concat(Value(f"{changelist_url}?o=5&task_name="), F("name")))
+        .order_by("-y")[:TASKMONITOR_REPORTS_MAX_TOP]
+    )
 
 
 def _calc_tasks_top_failed(changelist_url):
     total_failed = TaskLog.objects.filter(state=TaskLog.State.FAILURE).count()
     if not total_failed:
-        tasks_top_failed = None
-    else:
-        tasks_top_failed = (
-            TaskLog.objects.filter(state=TaskLog.State.FAILURE)
-            .values(name=F("task_name"))
-            .annotate(amount=Count("pk"))
-            .annotate(
-                percent=F("amount")
-                / Value(total_failed, output_field=models.FloatField())
-                * 100
-            )
-            .annotate(
-                url=Concat(
-                    Value(f"{changelist_url}?state__exact=3&task_name="), F("name")
-                )
-            )
-            .order_by("-amount")[:TASKMONITOR_REPORTS_MAX_TOP]
+        return None
+    return list(
+        TaskLog.objects.filter(state=TaskLog.State.FAILURE)
+        .values(name=F("task_name"))
+        .annotate(y=Count("pk"))
+        .annotate(
+            percent=F("y") / Value(total_failed, output_field=models.FloatField()) * 100
         )
-    return tasks_top_failed
+        .annotate(
+            url=Concat(Value(f"{changelist_url}?state__exact=3&task_name="), F("name"))
+        )
+        .order_by("-y")[:TASKMONITOR_REPORTS_MAX_TOP]
+    )
 
 
 def _calc_tasks_top_retried(changelist_url):
     total_retried = TaskLog.objects.filter(state=TaskLog.State.RETRY).count()
     if not total_retried:
-        tasks_top_retried = None
-    else:
-        tasks_top_retried = (
-            TaskLog.objects.filter(state=TaskLog.State.RETRY)
-            .values(name=F("task_name"))
-            .annotate(amount=Count("pk"))
-            .annotate(
-                percent=F("amount")
-                / Value(total_retried, output_field=models.FloatField())
-                * 100
-            )
-            .annotate(
-                url=Concat(
-                    Value(f"{changelist_url}?state__exact=2&task_name="), F("name")
-                )
-            )
-            .order_by("-amount")[:TASKMONITOR_REPORTS_MAX_TOP]
+        return None
+    return list(
+        TaskLog.objects.filter(state=TaskLog.State.RETRY)
+        .values(name=F("task_name"))
+        .annotate(y=Count("pk"))
+        .annotate(
+            percent=F("y")
+            / Value(total_retried, output_field=models.FloatField())
+            * 100
         )
-    return tasks_top_retried
+        .annotate(
+            url=Concat(Value(f"{changelist_url}?state__exact=2&task_name="), F("name"))
+        )
+        .order_by("-y")[:TASKMONITOR_REPORTS_MAX_TOP]
+    )
 
 
 def _calc_tasks_throughput(now):

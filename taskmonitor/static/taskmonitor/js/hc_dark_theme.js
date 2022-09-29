@@ -91,6 +91,7 @@ if (matchesDarkMode.matches) {
 			},
 			bar: {
 				animation: false,
+				borderColor: backgroundColor,
 				dataLabels: {
 					format: "{y}",
 					style: {
@@ -107,6 +108,7 @@ if (matchesDarkMode.matches) {
 				}
 			},
 			pie: {
+				animation: false,
 				borderColor: backgroundColor
 			},
 			boxplot: {

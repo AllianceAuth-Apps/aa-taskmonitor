@@ -13,6 +13,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Fixed
 
+## [0.5.0] - 2022-09-29
+
+### Added
+
+- Reports are now shown as charts (when applicable)
+- Has automatic dark/light mode for charts
+
 ## [0.4.1] - 2022-09-28
 
 ### Changed

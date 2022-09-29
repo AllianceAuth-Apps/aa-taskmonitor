@@ -3,15 +3,14 @@
 
 {% block extrastyle %}
     {{ block.super }}
-    <link rel="stylesheet" type="text/css" href="{% static 'taskmonitor/vendor/highcharts/highcharts.css' %}">
     <link rel="stylesheet" type="text/css" href="{% static 'taskmonitor/css/admin.css' %}">
     <link rel="stylesheet" type="text/css" href="{% static 'taskmonitor/css/reports.css' %}">
-    <link rel="stylesheet" type="text/css" href="{% static 'taskmonitor/css/highcharts-darkmode.css' %}">
 {% endblock %}
 
 {% block extrahead %}
     {{ block.super }}
     <script src="{% static 'taskmonitor/vendor/highcharts/highcharts.js' %}"></script>
+    <script src="{% static 'taskmonitor/js/hc_dark_theme.js' %}"></script>
 {% endblock %}
 
 {% block breadcrumbs %}

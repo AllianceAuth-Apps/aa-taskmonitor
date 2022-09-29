@@ -104,7 +104,7 @@ def _calc_task_totals_by_state(total_runs, changelist_url):
             "y": TaskLog.objects.filter(state=state.value).count(),
             "url": f"{changelist_url}?state__exact={state}",
         }
-        for state in reversed(TaskLog.State)
+        for state in TaskLog.State
     ]
 
 

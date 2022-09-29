@@ -16,7 +16,7 @@ if (matchesDarkMode.matches) {
 	let normalTextColor = '#eeeeee'; //'#9F9F9F'
 	let backgroundColor = '#121212';
 	Highcharts.theme = {
-		colors: ['#8ab92d', '#7ccae9', '#e69500', 'SlateBlue', 'maroon', 'DarkGreen', 'purple', 'peru', 'lavender', 'salmon'],
+		colors: ['#00bc8c', '#375a7f', '#e74c3c', '#f39c12', '#444444', '#3498db', '#adb5bd', '#303030'],
 		chart: {
 			backgroundColor: backgroundColor,
 			style: {

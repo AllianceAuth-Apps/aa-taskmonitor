@@ -1,0 +1,57 @@
+{% load taskmonitor %}
+
+{% random_id as data_id %}
+
+{{ data|json_script:data_id }}
+<figure class="highcharts-figure">
+    <div id="{{ data_id }}-container" style="width: 100%;"></div>
+    <script>
+        ( () => {
+            const data = JSON.parse(document.getElementById("{{ data_id }}").textContent);
+            Highcharts.chart('{{ data_id }}-container', {
+                chart: {
+                    plotBackgroundColor: null,
+                    plotBorderWidth: null,
+                    plotShadow: false,
+                    type: 'pie',
+                },
+                credits: {
+                    enabled: false
+                },
+                title: null,
+                tooltip: {
+                    pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
+                },
+                accessibility: {
+                    point: {
+                    valueSuffix: '%'
+                    }
+                },
+                plotOptions: {
+                    pie: {
+                    allowPointSelect: true,
+                    cursor: 'pointer',
+                    animation: false,
+                    dataLabels: {
+                            enabled: true,
+                            format: '<b>{point.name}</b>: {point.percentage:.1f} %'
+                        }
+                    }
+                },
+                series: [{
+                    name: 'Tasks',
+                    colorByPoint: true,
+                    cursor: 'pointer',
+                        point: {
+                            events: {
+                                click: function () {
+                                    location.href = this.options.url;
+                                }
+                            }
+                        },
+                    data: data
+                    }]
+                });
+        } )();
+    </script>
+</figure>

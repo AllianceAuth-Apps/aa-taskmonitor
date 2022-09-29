@@ -1,0 +1,48 @@
+{% load taskmonitor %}
+
+{% random_id as data_id %}
+
+{{ data|json_script:data_id }}
+<figure class="highcharts-figure">
+    <div id="{{ data_id }}-container" style="width: 100%;"></div>
+    <script>
+        ( () => {
+            const data = JSON.parse(document.getElementById("{{ data_id }}").textContent);
+            Highcharts.chart('{{ data_id }}-container', {
+                chart: {
+                    type: 'bar',
+                },
+                credits: {
+                    enabled: false
+                },
+                title: null,
+                legend: false,
+                plotOptions: {
+                    bar: {
+                        dataLabels: {
+                            enabled: true
+                        }
+                    }
+                },
+                xAxis: {
+                    type: 'category',
+                },
+                series: [{
+                        name: 'Tasks',
+                        dataLabels: {
+                            format: '{point.y:,.0f}'
+                        },
+                        cursor: 'pointer',
+                        point: {
+                            events: {
+                                click: function () {
+                                    location.href = this.options.url;
+                                }
+                            }
+                        },
+                        data: data
+                    }]
+                });
+        } )();
+    </script>
+</figure>

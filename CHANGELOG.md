@@ -13,6 +13,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Fixed
 
+## [0.5.1] - 2022-09-30
+
+### Fixed
+
+- Values in throughput report not showing
+
 ## [0.5.0] - 2022-09-29
 
 ### Added

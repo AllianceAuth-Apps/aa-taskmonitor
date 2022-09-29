@@ -179,14 +179,12 @@ def _calc_tasks_throughput(now):
         average_last_hours[hours] = tasklogs_not_failed.filter(
             timestamp__gt=now - dt.timedelta(hours=hours)
         ).avg_throughput()
-    for hours, amount in average_last_hours.items():
-        tasks_throughput.append(
-            {"name": f"Average last {hours} hours", "amount": amount}
-        )
+    for hours, y in average_last_hours.items():
+        tasks_throughput.append({"name": f"Average last {hours} hours", "y": y})
     average_overall = tasklogs_not_failed.avg_throughput()
-    tasks_throughput.append({"name": "Average overall", "amount": average_overall})
+    tasks_throughput.append({"name": "Average overall", "y": average_overall})
     peak_overall = tasklogs_not_failed.max_throughput()
-    tasks_throughput.append({"name": "Peak overall", "amount": peak_overall})
+    tasks_throughput.append({"name": "Peak overall", "y": peak_overall})
     return tasks_throughput
 
 

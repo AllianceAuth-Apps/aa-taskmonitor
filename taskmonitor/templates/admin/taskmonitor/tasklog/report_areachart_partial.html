@@ -2,12 +2,12 @@
 
 {% random_id as data_id %}
 
-{{ data|json_script:data_id }}
+{{ series|json_script:data_id }}
 <figure class="highcharts-figure">
     <div id="{{ data_id }}-container" style="width: 100%;"></div>
     <script>
         ( () => {
-            const data = JSON.parse(document.getElementById("{{ data_id }}").textContent);
+            const series = JSON.parse(document.getElementById("{{ data_id }}").textContent);
             Highcharts.chart('{{ data_id }}-container', {
                 chart: {
                     type: 'area',
@@ -25,15 +25,9 @@
                     }
                 },
                 xAxis: {
-                    type: 'category',
+                    type: 'datetime',
                 },
-                series: [{
-                    name: 'Tasks',
-                    dataLabels: {
-                        format: '{point.y:,.0f}'
-                    },
-                    data: data
-                    }]
+                series: series,
                 });
         } )();
     </script>

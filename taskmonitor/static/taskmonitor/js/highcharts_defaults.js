@@ -1,21 +1,25 @@
 /*
- * hc_dark_theme.js
- *
- * Global style theme definition for all highcharts
- * based on "dark-unica" theme from Torstein Honsi
+ * Global defaults incl. a dark mode theme
+ * Dark mode theme is automatically activated based on media query
  *
 **/
 
 'use strict';
-/* global document */
-// Load the fonts
-// import Highcharts from '../parts/Globals.js';
+
+// Shared defaults
+Highcharts.theme = {
+	credits: {
+		enabled: false
+	},
+}
 
 let matchesDarkMode = window.matchMedia("(prefers-color-scheme: dark)");
 if (matchesDarkMode.matches) {
+	// Dark mode styling
 	let normalTextColor = '#eeeeee'; //'#9F9F9F'
 	let backgroundColor = '#121212';
-	Highcharts.theme = {
+	Object.assign(
+		Highcharts.theme, {
 		colors: ['#00bc8c', '#375a7f', '#e74c3c', '#f39c12', '#444444', '#3498db', '#adb5bd', '#303030'],
 		chart: {
 			backgroundColor: backgroundColor,
@@ -52,7 +56,6 @@ if (matchesDarkMode.matches) {
 			title: {
 				style: {
 					color: normalTextColor
-
 				}
 			}
 		},
@@ -131,11 +134,6 @@ if (matchesDarkMode.matches) {
 			},
 			itemHiddenStyle: {
 				color: '#606063'
-			}
-		},
-		credits: {
-			style: {
-				color: '#666'
 			}
 		},
 		labels: {
@@ -231,8 +229,15 @@ if (matchesDarkMode.matches) {
 		textColor: '#C0C0C0',
 		contrastTextColor: '#F0F0F3',
 		maskColor: 'rgba(255,255,255,0.3)'
-	};
-
-	// Apply the theme
-	Highcharts.setOptions(Highcharts.theme);
+	});
 }
+else {
+	// Light mode styling
+	Object.assign(
+		Highcharts.theme, {
+		colors: ['#18bc9c', '#2c3e5a', '#e74c3c', '#f39c12', '#95a5a6', '#3498db', '#ecf0f1', '#7b8a8b'],
+	});
+}
+
+// Apply the theme
+Highcharts.setOptions(Highcharts.theme);

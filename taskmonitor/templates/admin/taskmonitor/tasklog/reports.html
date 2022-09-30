@@ -10,7 +10,7 @@
 {% block extrahead %}
     {{ block.super }}
     <script src="{% static 'taskmonitor/vendor/highcharts/highcharts.js' %}"></script>
-    <script src="{% static 'taskmonitor/js/hc_dark_theme.js' %}"></script>
+    <script src="{% static 'taskmonitor/js/highcharts_defaults.js' %}"></script>
 {% endblock %}
 
 {% block breadcrumbs %}
@@ -58,6 +58,10 @@
                     <li><a class="tabLinks" href="#" onclick="openTab(event, 'top-failed-tasks')">Top tasks by failed runs</a></li>
                     <li><a class="tabLinks" href="#" onclick="openTab(event, 'top-retried-tasks')">Top tasks by retried runs</a></li>
                 </ul>
+                <h3>Throughput</h3>
+                <ul>
+                    <li><a class="tabLinks" href="#" onclick="openTab(event, 'throughput-all')">Throughput</a></li>
+                </ul>
             </div>
 
             <div class="changelist-form-container">
@@ -94,6 +98,11 @@
                 <div id="top-retried-tasks" class="tabContent">
                     <h2>Top {{ MAX_TOP }} tasks by retried runs</h2>
                     {% include "admin/taskmonitor/tasklog/report_barchart_partial.html" with data=tasks_top_retried %}
+                </div>
+
+                <div id="throughput-all" class="tabContent">
+                    <h2>Task throughput</h2>
+                    {% include "admin/taskmonitor/tasklog/report_areachart_partial.html" with series=tasks_throughput_2 %}
                 </div>
 
                 <br>

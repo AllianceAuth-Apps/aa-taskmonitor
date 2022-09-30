@@ -4,7 +4,7 @@ import datetime as dt
 from typing import Optional
 
 from django.core.cache import cache
-from django.db.models import Count, F, Max, Min, Q, Sum, Value
+from django.db.models import Count, F, Max, Min, Sum, Value
 from django.db.models.functions import Concat, TruncMinute
 from django.urls import reverse
 from django.utils import timezone
@@ -78,7 +78,7 @@ def _calc_data() -> dict:
         "tasks_top_failed": _calc_tasks_top_failed(changelist_url),
         "tasks_top_retried": _calc_tasks_top_retried(changelist_url),
         "tasks_throughput": _calc_tasks_throughput(now),
-        "tasks_throughput_2": _calc_tasks_throughput_2(now),
+        "tasks_throughput_2": _calc_tasks_throughput_2(),
         "MAX_TOP": TASKMONITOR_REPORTS_MAX_TOP,
     }
     return context
@@ -188,12 +188,15 @@ def _calc_tasks_throughput(now):
     return tasks_throughput
 
 
-def _calc_tasks_throughput_2(now):
-    result = (
-        TaskLog.objects.annotate(x=TruncMinute("timestamp"))
-        .values("x")
-        .annotate(succeeded=Count("id", filter=Q(state=TaskLog.State.SUCCESS)))
-        .annotate(retried=Count("id", filter=Q(state=TaskLog.State.RETRY)))
-        .annotate(failed=Count("id", filter=Q(state=TaskLog.State.FAILURE)))
-    )
-    return list(result)
+def _calc_tasks_throughput_2():
+    series = []
+    for state in TaskLog.State:
+        result = (
+            TaskLog.objects.filter(state=state)
+            .annotate(x=TruncMinute("timestamp"))
+            .values("x")
+            .annotate(y=Count("id"))
+        )
+        data = [[int(obj["x"].timestamp() * 1000), obj["y"]] for obj in result]
+        series.append({"name": state.label, "data": data})
+    return series

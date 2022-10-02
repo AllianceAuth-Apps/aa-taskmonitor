@@ -17,7 +17,7 @@ class TestCachedReports(TestCase):
         log_2 = TaskLogFactory(state=TaskLog.State.FAILURE)
         log_3 = TaskLogFactory(state=TaskLog.State.RETRY)
         # when
-        result = cached_reports._calc_data()
+        result = cached_reports.report_data("basic_information")
         # then
         oldest = min(log_1.timestamp, log_2.timestamp, log_3.timestamp)
         self.assertEqual(result["oldest_date"], oldest)
@@ -25,8 +25,8 @@ class TestCachedReports(TestCase):
         self.assertEqual(result["youngest_date"], newest)
         self.assertEqual(result["total_runs"], 3)
 
-    def test_should_create_empty_report(self):
-        # when
-        result = cached_reports._calc_data()
-        # then
-        self.assertTrue(result)
+    # def test_should_create_empty_report(self):
+    #     # when
+    #     result = cached_reports.report_data("basic_information")
+    #     # then
+    #     self.assertTrue(result)

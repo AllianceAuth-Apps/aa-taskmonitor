@@ -2,8 +2,7 @@
 
 import datetime as dt
 import inspect
-
-# import re
+import re
 import sys
 from typing import List, Optional
 
@@ -26,8 +25,11 @@ CACHE_KEY = "taskmonitor_reports_data"
 class _CachedReport:
     """Base class for a cached report."""
 
-    # def __init__(self) -> None:
-    #     self.name = re.sub(r"(?<!^)(?=[A-Z])", "_", self.__class__.__name__).lower()
+    is_included = True  # whether a report is included in the main group
+
+    def __init__(self) -> None:
+        # Set name as Class name in snake case
+        self.name = re.sub(r"(?<!^)(?=[A-Z])", "_", self.__class__.__name__).lower()
 
     @functional.cached_property
     def changelist_url(self) -> str:
@@ -103,18 +105,20 @@ class _CachedReport:
         ]
 
 
-class TaskDates(_CachedReport):
-    name = "task_dates"
-
+class BasicInformation(_CachedReport):
     def _calc_data(self):
         oldest_date = TaskLog.objects.aggregate(oldest=Min("timestamp"))["oldest"]
         youngest_date = TaskLog.objects.aggregate(youngest=Max("timestamp"))["youngest"]
-        return oldest_date, youngest_date
+        return {
+            "oldest_date": oldest_date,
+            "youngest_date": youngest_date,
+            "total_runs": self.total_runs,
+            "total_runtime_date": self.total_runtime_date,
+            "MAX_TOP": TASKMONITOR_REPORTS_MAX_TOP,
+        }
 
 
 class TaskRunsByState(_CachedReport):
-    name = "task_runs_by_state"
-
     def _calc_data(self):
         if not self.total_runs:
             return None
@@ -129,8 +133,6 @@ class TaskRunsByState(_CachedReport):
 
 
 class TaskRunsByApp(_CachedReport):
-    name = "task_runs_by_app"
-
     def _calc_data(self):
         if not self.total_runs:
             return None
@@ -143,8 +145,6 @@ class TaskRunsByApp(_CachedReport):
 
 
 class TasksTopRuns(_CachedReport):
-    name = "tasks_top_runs"
-
     def _calc_data(self):
         if not self.total_runs:
             return None
@@ -157,8 +157,6 @@ class TasksTopRuns(_CachedReport):
 
 
 class TasksTopRuntime(_CachedReport):
-    name = "tasks_top_runtime"
-
     def _calc_data(self):
         if not self.total_runtime:
             return None
@@ -173,10 +171,7 @@ class TasksTopRuntime(_CachedReport):
 
 
 class TasksTopFailed(_CachedReport):
-    name = "tasks_top_failed"
-
     def _calc_data(self):
-        # def _calc_tasks_top_failed(changelist_url):
         total_failed = TaskLog.objects.filter(state=TaskLog.State.FAILURE).count()
         if not total_failed:
             return None
@@ -194,8 +189,6 @@ class TasksTopFailed(_CachedReport):
 
 
 class TasksTopRetried(_CachedReport):
-    name = "tasks_top_retried"
-
     def _calc_data(self):
         total_retried = TaskLog.objects.filter(state=TaskLog.State.RETRY).count()
         if not total_retried:
@@ -214,8 +207,6 @@ class TasksTopRetried(_CachedReport):
 
 
 class TasksThroughput(_CachedReport):
-    name = "tasks_throughput"
-
     def _calc_data(self):
         tasklogs_not_failed = TaskLog.objects.exclude(state=TaskLog.State.FAILURE)
         tasks_throughput = []
@@ -234,7 +225,7 @@ class TasksThroughput(_CachedReport):
 
 
 class TasksThroughputByState(_CachedReport):
-    name = "tasks_throughput_by_state"
+    is_included = False
 
     def _calc_data(self):
         series = []
@@ -251,7 +242,7 @@ class TasksThroughputByState(_CachedReport):
 
 
 class TasksThroughputByApp(_CachedReport):
-    name = "tasks_throughput_by_app"
+    is_included = False
 
     def _calc_data(self):
         series = []
@@ -274,47 +265,33 @@ class TasksThroughputByApp(_CachedReport):
 
 def refresh_cache() -> None:
     """Refresh the cache."""
-    for report in _reports.values():
+    for report in reports():
         report.refresh_cache()
 
 
 def clear_cache() -> None:
     """Clear the cache."""
-    for report in _reports.values():
+    for report in reports():
         report.clear_cache()
 
 
 def data() -> dict:
     """Calculate the report data."""
-    oldest_date, youngest_date = _reports["task_dates"].data()
-    context = {
-        "oldest_date": oldest_date,
-        "youngest_date": youngest_date,
-        "total_runs": _reports["task_runs_by_state"].total_runs,
-        "total_runtime_date": _reports["task_runs_by_state"].total_runtime_date,
-        "task_totals_by_state": _reports["task_runs_by_state"].data(),
-        "task_runs_per_app": _reports["task_runs_by_app"].data(),
-        "tasks_top_runs": _reports["tasks_top_runs"].data(),
-        "tasks_top_runtime": _reports["tasks_top_runtime"].data(),
-        "tasks_top_failed": _reports["tasks_top_failed"].data(),
-        "tasks_top_retried": _reports["tasks_top_retried"].data(),
-        "tasks_throughput": _reports["tasks_throughput"].data(),
-        "tasks_throughput_by_state": _reports["tasks_throughput_by_state"].data(),
-        "tasks_throughput_by_app": _reports["tasks_throughput_by_app"].data(),
-        "MAX_TOP": TASKMONITOR_REPORTS_MAX_TOP,
+    return {
+        report.name: report_data(report.name)
+        for report in reports()
+        if report.is_included
     }
-    return context
 
 
 def report_data(key):
     """Data of an cached report."""
-    data = _reports[key].data()
-    return data
+    return _reports[key].data()
 
 
 def reports() -> List[_CachedReport]:
     """List of all cached reports."""
-    return _reports.keys()
+    return _reports.values()
 
 
 # Instantiation of all cached reports

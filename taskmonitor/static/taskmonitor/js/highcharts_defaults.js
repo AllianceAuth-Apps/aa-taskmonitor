@@ -7,10 +7,46 @@
 'use strict';
 
 // Shared defaults
+let colors = {
+	primary: '#375a7f',
+	secondary: '#444444',
+	success: '#00bc8c',
+	info: '#3498db',
+	warning: '#f39c12',
+	danger: '#e74c3c',
+	light: '#adb5bd',
+	dark: '#303030',
+	primary_2: '#37530465e',
+	secondary_2: '#383838',
+	success_2: '#0c8667',
+	info_2: '#2e6f9a',
+	warning_2: '#aa7118',
+	danger_2: '#a23d33',
+	light_2: '#7c8287',
+	dark_2: '#2b2b2b',
+}
 Highcharts.theme = {
 	credits: {
 		enabled: false
 	},
+	colors: [
+		colors.success,
+		colors.primary,
+		colors.danger,
+		colors.warning,
+		colors.secondary,
+		colors.info,
+		colors.light,
+		colors.dark,
+		colors.success_2,
+		colors.primary_2,
+		colors.danger_2,
+		colors.warning_2,
+		colors.secondary_2,
+		colors.info_2,
+		colors.light_2,
+		colors.dark_2,
+	],
 }
 
 let matchesDarkMode = window.matchMedia("(prefers-color-scheme: dark)");
@@ -20,7 +56,6 @@ if (matchesDarkMode.matches) {
 	let backgroundColor = '#121212';
 	Object.assign(
 		Highcharts.theme, {
-		colors: ['#00bc8c', '#375a7f', '#e74c3c', '#f39c12', '#444444', '#3498db', '#adb5bd', '#303030'],
 		chart: {
 			backgroundColor: backgroundColor,
 			style: {
@@ -237,10 +272,10 @@ if (matchesDarkMode.matches) {
 }
 else {
 	// Light mode styling
-	Object.assign(
-		Highcharts.theme, {
-		colors: ['#18bc9c', '#2c3e5a', '#e74c3c', '#f39c12', '#95a5a6', '#3498db', '#ecf0f1', '#7b8a8b'],
-	});
+	// Object.assign(
+	// 	Highcharts.theme, {
+	// 	colors: ['#18bc9c', '#2c3e5a', '#e74c3c', '#f39c12', '#95a5a6', '#3498db', '#ecf0f1', '#7b8a8b'],
+	// });
 }
 
 // Apply the theme

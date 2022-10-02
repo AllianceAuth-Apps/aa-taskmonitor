@@ -10,15 +10,15 @@
             const series = JSON.parse(document.getElementById("{{ data_id }}").textContent);
             Highcharts.chart('{{ data_id }}-container', {
                 chart: {
-                    type: 'area',
+                    type: 'column',
                 },
                 credits: {
                     enabled: false
                 },
                 title: null,
-                legend: false,
                 plotOptions: {
                     bar: {
+                        stacking: 'normal',
                         dataLabels: {
                             enabled: true
                         }

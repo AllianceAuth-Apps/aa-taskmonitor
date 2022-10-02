@@ -45,7 +45,7 @@
 
                 <h2>Contents</h2>
 
-                <h3>All tasks</h3>
+                <h3>Distributions</h3>
                 <ul>
                     <li class="selected"><a class="tabLinks" href="#" onclick="openTab(event, 'task-runs-by-state')" id="defaultTab">Task runs by state</a></li>
                     <li><a class="tabLinks" href="#" onclick="openTab(event, 'task-runs-by-app')">Task runs by app</a></li>
@@ -60,7 +60,8 @@
                 </ul>
                 <h3>Throughput</h3>
                 <ul>
-                    <li><a class="tabLinks" href="#" onclick="openTab(event, 'throughput-all')">Throughput</a></li>
+                    <li><a class="tabLinks" href="#" onclick="openTab(event, 'throughput-by-state')">Throughput by state</a></li>
+                    <li><a class="tabLinks" href="#" onclick="openTab(event, 'throughput-by-app')">Throughput by app</a></li>
                 </ul>
             </div>
 
@@ -100,9 +101,14 @@
                     {% include "admin/taskmonitor/tasklog/report_barchart_partial.html" with data=tasks_top_retried %}
                 </div>
 
-                <div id="throughput-all" class="tabContent">
-                    <h2>Task throughput</h2>
-                    {% include "admin/taskmonitor/tasklog/report_areachart_partial.html" with series=tasks_throughput_2 %}
+                <div id="throughput-by-state" class="tabContent">
+                    <h2>Task throughput per minute by state</h2>
+                    {% include "admin/taskmonitor/tasklog/chart_throughput_partial.html" with series=tasks_throughput_by_state %}
+                </div>
+
+                <div id="throughput-by-app" class="tabContent">
+                    <h2>Task throughput per minute by app</h2>
+                    {% include "admin/taskmonitor/tasklog/chart_throughput_partial.html" with series=tasks_throughput_by_app %}
                 </div>
 
                 <br>

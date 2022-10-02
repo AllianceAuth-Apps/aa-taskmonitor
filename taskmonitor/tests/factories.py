@@ -30,7 +30,7 @@ class TaskLogFactory(factory.django.DjangoModelFactory):
         model = TaskLog
 
     app_name = factory.fuzzy.FuzzyChoice(fake_tasks.keys())
-    received = factory.fuzzy.FuzzyDateTime(timezone.now() - dt.timedelta(minutes=5))
+    received = factory.fuzzy.FuzzyDateTime(timezone.now() - dt.timedelta(hours=3))
     started = factory.LazyAttribute(
         lambda o: factory.fuzzy.FuzzyDateTime(start_dt=o.received).fuzz()
     )

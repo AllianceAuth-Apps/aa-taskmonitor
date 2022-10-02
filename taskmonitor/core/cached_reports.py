@@ -78,7 +78,8 @@ def _calc_data() -> dict:
         "tasks_top_failed": _calc_tasks_top_failed(changelist_url),
         "tasks_top_retried": _calc_tasks_top_retried(changelist_url),
         "tasks_throughput": _calc_tasks_throughput(now),
-        "tasks_throughput_2": _calc_tasks_throughput_2(),
+        "tasks_throughput_by_state": _calc_tasks_throughput_by_state(),
+        "tasks_throughput_by_app": _calc_tasks_throughput_by_app(),
         "MAX_TOP": TASKMONITOR_REPORTS_MAX_TOP,
     }
     return context
@@ -188,7 +189,7 @@ def _calc_tasks_throughput(now):
     return tasks_throughput
 
 
-def _calc_tasks_throughput_2():
+def _calc_tasks_throughput_by_state():
     series = []
     for state in TaskLog.State:
         result = (
@@ -199,4 +200,23 @@ def _calc_tasks_throughput_2():
         )
         data = [[int(obj["x"].timestamp() * 1000), obj["y"]] for obj in result]
         series.append({"name": state.label, "data": data})
+    return series
+
+
+def _calc_tasks_throughput_by_app():
+    series = []
+    apps = (
+        TaskLog.objects.values_list("app_name", flat=True)
+        .distinct()
+        .order_by("app_name")
+    )
+    for app_name in apps:
+        result = (
+            TaskLog.objects.filter(app_name=app_name)
+            .annotate(x=TruncMinute("timestamp"))
+            .values("x")
+            .annotate(y=Count("id"))
+        )
+        data = [[int(obj["x"].timestamp() * 1000), obj["y"]] for obj in result]
+        series.append({"name": app_name, "data": data})
     return series

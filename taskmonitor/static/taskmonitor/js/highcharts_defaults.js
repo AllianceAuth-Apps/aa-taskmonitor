@@ -103,6 +103,10 @@ if (matchesDarkMode.matches) {
 					enabled: true
 				}
 			},
+			column: {
+				animation: false,
+				borderColor: backgroundColor,
+			},
 			line: {
 				animation: false,
 				lineWidth: 2,

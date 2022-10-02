@@ -1,13 +1,15 @@
 """Container for caching the reports data used in views."""
 
 import datetime as dt
+import inspect
+import sys
 from typing import Optional
 
 from django.core.cache import cache
 from django.db.models import Count, F, Max, Min, Sum, Value
 from django.db.models.functions import Concat, TruncMinute
 from django.urls import reverse
-from django.utils import timezone
+from django.utils import functional, timezone
 
 from ..app_settings import (
     TASKMONITOR_HOUSEKEEPING_FREQUENCY,
@@ -16,7 +18,222 @@ from ..app_settings import (
 )
 from ..models import TaskLog
 
-CACHE_KEY = "TASKMONITOR_REPORTS_DATA"
+CACHE_KEY = "taskmonitor_reports_data"
+
+
+class CachedReport:
+    """A cached report."""
+
+    name = ""
+
+    @functional.cached_property
+    def changelist_url(self) -> str:
+        return reverse("admin:taskmonitor_tasklog_changelist")
+
+    @functional.cached_property
+    def total_runs(self) -> int:
+        return TaskLog.objects.count()
+
+    @functional.cached_property
+    def total_runtime(self):
+        return TaskLog.objects.aggregate(total_runtime=Sum("runtime"))["total_runtime"]
+
+    @property
+    def total_runtime_date(self):
+        try:
+            return self.now - dt.timedelta(seconds=self.total_runtime)
+        except TypeError:
+            return None
+
+    @functional.cached_property
+    def now(self) -> dt.datetime:
+        return timezone.now()
+
+    def data(self) -> list:
+        return cache.get_or_set(
+            f"{CACHE_KEY}_{self.name}", self._calc_data, timeout=_timeout()
+        )
+
+    def _calc_data(self):
+        """Calculate data."""
+        raise NotImplementedError()
+
+    @classmethod
+    def report_classes(cls):
+        return [
+            obj
+            for _, obj in inspect.getmembers(sys.modules[__name__], inspect.isclass)
+            if issubclass(obj, cls) and obj is not cls
+        ]
+
+
+class TaskDates(CachedReport):
+    name = "task_dates"
+
+    def _calc_data(self):
+        oldest_date = TaskLog.objects.aggregate(oldest=Min("timestamp"))["oldest"]
+        youngest_date = TaskLog.objects.aggregate(youngest=Max("timestamp"))["youngest"]
+        return oldest_date, youngest_date
+
+
+class TaskRunsByState(CachedReport):
+    name = "task_runs_by_state"
+
+    def _calc_data(self):
+        if not self.total_runs:
+            return None
+        return [
+            {
+                "name": state.label,
+                "y": TaskLog.objects.filter(state=state.value).count(),
+                "url": f"{self.changelist_url}?state__exact={state}",
+            }
+            for state in TaskLog.State
+        ]
+
+
+class TaskRunsByApp(CachedReport):
+    name = "task_runs_by_app"
+
+    def _calc_data(self):
+        if not self.total_runs:
+            return None
+        return list(
+            TaskLog.objects.values(name=F("app_name"))
+            .annotate(y=Count("pk"))
+            .annotate(url=Concat(Value(f"{self.changelist_url}?app_name="), F("name")))
+            .order_by("-y")
+        )
+
+
+class TasksTopRuns(CachedReport):
+    name = "tasks_top_runs"
+
+    def _calc_data(self):
+        if not self.total_runs:
+            return None
+        return list(
+            TaskLog.objects.values(name=F("task_name"))
+            .annotate(y=Count("pk"))
+            .annotate(url=Concat(Value(f"{self.changelist_url}?task_name="), F("name")))
+            .order_by("-y")[:TASKMONITOR_REPORTS_MAX_TOP]
+        )
+
+
+class TasksTopRuntime(CachedReport):
+    name = "tasks_top_runtime"
+
+    def _calc_data(self):
+        if not self.total_runtime:
+            return None
+        return list(
+            TaskLog.objects.values(name=F("task_name"))
+            .annotate(y=Max("runtime"))
+            .annotate(
+                url=Concat(Value(f"{self.changelist_url}?o=5&task_name="), F("name"))
+            )
+            .order_by("-y")[:TASKMONITOR_REPORTS_MAX_TOP]
+        )
+
+
+class TasksTopFailed(CachedReport):
+    name = "tasks_top_failed"
+
+    def _calc_data(self):
+        # def _calc_tasks_top_failed(changelist_url):
+        total_failed = TaskLog.objects.filter(state=TaskLog.State.FAILURE).count()
+        if not total_failed:
+            return None
+        return list(
+            TaskLog.objects.filter(state=TaskLog.State.FAILURE)
+            .values(name=F("task_name"))
+            .annotate(y=Count("pk"))
+            .annotate(
+                url=Concat(
+                    Value(f"{self.changelist_url}?state__exact=3&task_name="), F("name")
+                )
+            )
+            .order_by("-y")[:TASKMONITOR_REPORTS_MAX_TOP]
+        )
+
+
+class TasksTopRetried(CachedReport):
+    name = "tasks_top_retried"
+
+    def _calc_data(self):
+        total_retried = TaskLog.objects.filter(state=TaskLog.State.RETRY).count()
+        if not total_retried:
+            return None
+        return list(
+            TaskLog.objects.filter(state=TaskLog.State.RETRY)
+            .values(name=F("task_name"))
+            .annotate(y=Count("pk"))
+            .annotate(
+                url=Concat(
+                    Value(f"{self.changelist_url}?state__exact=2&task_name="), F("name")
+                )
+            )
+            .order_by("-y")[:TASKMONITOR_REPORTS_MAX_TOP]
+        )
+
+
+class TasksThroughput(CachedReport):
+    name = "tasks_throughput"
+
+    def _calc_data(self):
+        tasklogs_not_failed = TaskLog.objects.exclude(state=TaskLog.State.FAILURE)
+        tasks_throughput = []
+        average_last_hours = dict()
+        for hours in [1, 3, 6, 12, 24]:
+            average_last_hours[hours] = tasklogs_not_failed.filter(
+                timestamp__gt=self.now - dt.timedelta(hours=hours)
+            ).avg_throughput()
+        for hours, y in average_last_hours.items():
+            tasks_throughput.append({"name": f"Average last {hours} hours", "y": y})
+        average_overall = tasklogs_not_failed.avg_throughput()
+        tasks_throughput.append({"name": "Average overall", "y": average_overall})
+        peak_overall = tasklogs_not_failed.max_throughput()
+        tasks_throughput.append({"name": "Peak overall", "y": peak_overall})
+        return tasks_throughput
+
+
+class TasksThroughputByState(CachedReport):
+    name = "tasks_throughput_by_state"
+
+    def _calc_data(self):
+        series = []
+        for state in TaskLog.State:
+            result = (
+                TaskLog.objects.filter(state=state)
+                .annotate(x=TruncMinute("timestamp"))
+                .values("x")
+                .annotate(y=Count("id"))
+            )
+            data = [[int(obj["x"].timestamp() * 1000), obj["y"]] for obj in result]
+            series.append({"name": state.label, "data": data})
+        return series
+
+
+class TasksThroughputByApp(CachedReport):
+    name = "tasks_throughput_by_app"
+
+    def _calc_data(self):
+        series = []
+        apps = (
+            TaskLog.objects.values_list("app_name", flat=True)
+            .distinct()
+            .order_by("app_name")
+        )
+        for app_name in apps:
+            result = (
+                TaskLog.objects.filter(app_name=app_name)
+                .annotate(x=TruncMinute("timestamp"))
+                .values("x")
+                .annotate(y=Count("id"))
+            )
+            data = [[int(obj["x"].timestamp() * 1000), obj["y"]] for obj in result]
+            series.append({"name": app_name, "data": data})
+        return series
 
 
 def data() -> dict:
@@ -60,163 +277,24 @@ def clear_cache() -> None:
 
 def _calc_data() -> dict:
     """Calculate the report data."""
-    now = timezone.now()
-    oldest_date = TaskLog.objects.aggregate(oldest=Min("timestamp"))["oldest"]
-    youngest_date = TaskLog.objects.aggregate(youngest=Max("timestamp"))["youngest"]
-    total_runtime, total_runtime_date = _calc_total_runtime(now)
-    total_runs = TaskLog.objects.count()
-    changelist_url = reverse("admin:taskmonitor_tasklog_changelist")
+    # oldest_date, youngest_date = _reports["task_dates"].data()
     context = {
-        "oldest_date": oldest_date,
-        "youngest_date": youngest_date,
-        "total_runs": total_runs,
-        "total_runtime_date": total_runtime_date,
-        "task_totals_by_state": _calc_task_totals_by_state(total_runs, changelist_url),
-        "task_runs_per_app": _calc_task_runs_per_app(total_runs, changelist_url),
-        "tasks_top_runs": _calc_tasks_top_runs(total_runs, changelist_url),
-        "tasks_top_runtime": _calc_tasks_top_runtime(total_runtime, changelist_url),
-        "tasks_top_failed": _calc_tasks_top_failed(changelist_url),
-        "tasks_top_retried": _calc_tasks_top_retried(changelist_url),
-        "tasks_throughput": _calc_tasks_throughput(now),
-        "tasks_throughput_by_state": _calc_tasks_throughput_by_state(),
-        "tasks_throughput_by_app": _calc_tasks_throughput_by_app(),
+        "oldest_date": None,
+        "youngest_date": None,
+        "total_runs": _reports["task_runs_by_state"].total_runs,
+        "total_runtime_date": _reports["task_runs_by_state"].total_runtime_date,
+        "task_totals_by_state": _reports["task_runs_by_state"].data(),
+        "task_runs_per_app": _reports["task_runs_by_app"].data(),
+        "tasks_top_runs": _reports["tasks_top_runs"].data(),
+        "tasks_top_runtime": _reports["tasks_top_runtime"].data(),
+        "tasks_top_failed": _reports["tasks_top_failed"].data(),
+        "tasks_top_retried": _reports["tasks_top_retried"].data(),
+        "tasks_throughput": _reports["tasks_throughput"].data(),
+        "tasks_throughput_by_state": _reports["tasks_throughput_by_state"].data(),
+        "tasks_throughput_by_app": _reports["tasks_throughput_by_app"].data(),
         "MAX_TOP": TASKMONITOR_REPORTS_MAX_TOP,
     }
     return context
 
 
-def _calc_total_runtime(now):
-    total_runtime = TaskLog.objects.aggregate(total_runtime=Sum("runtime"))[
-        "total_runtime"
-    ]
-    try:
-        total_runtime_date = now - dt.timedelta(seconds=total_runtime)
-    except TypeError:
-        total_runtime_date = None
-    return total_runtime, total_runtime_date
-
-
-def _calc_task_totals_by_state(total_runs, changelist_url):
-    if not total_runs:
-        return None
-    return [
-        {
-            "name": state.label,
-            "y": TaskLog.objects.filter(state=state.value).count(),
-            "url": f"{changelist_url}?state__exact={state}",
-        }
-        for state in TaskLog.State
-    ]
-
-
-def _calc_task_runs_per_app(total_runs, changelist_url):
-    if not total_runs:
-        return None
-    return list(
-        TaskLog.objects.values(name=F("app_name"))
-        .annotate(y=Count("pk"))
-        .annotate(url=Concat(Value(f"{changelist_url}?app_name="), F("name")))
-        .order_by("-y")
-    )
-
-
-def _calc_tasks_top_runs(total_runs, changelist_url):
-    if not total_runs:
-        return None
-    return list(
-        TaskLog.objects.values(name=F("task_name"))
-        .annotate(y=Count("pk"))
-        .annotate(url=Concat(Value(f"{changelist_url}?task_name="), F("name")))
-        .order_by("-y")[:TASKMONITOR_REPORTS_MAX_TOP]
-    )
-
-
-def _calc_tasks_top_runtime(total_runtime, changelist_url):
-    if not total_runtime:
-        return None
-    return list(
-        TaskLog.objects.values(name=F("task_name"))
-        .annotate(y=Max("runtime"))
-        .annotate(url=Concat(Value(f"{changelist_url}?o=5&task_name="), F("name")))
-        .order_by("-y")[:TASKMONITOR_REPORTS_MAX_TOP]
-    )
-
-
-def _calc_tasks_top_failed(changelist_url):
-    total_failed = TaskLog.objects.filter(state=TaskLog.State.FAILURE).count()
-    if not total_failed:
-        return None
-    return list(
-        TaskLog.objects.filter(state=TaskLog.State.FAILURE)
-        .values(name=F("task_name"))
-        .annotate(y=Count("pk"))
-        .annotate(
-            url=Concat(Value(f"{changelist_url}?state__exact=3&task_name="), F("name"))
-        )
-        .order_by("-y")[:TASKMONITOR_REPORTS_MAX_TOP]
-    )
-
-
-def _calc_tasks_top_retried(changelist_url):
-    total_retried = TaskLog.objects.filter(state=TaskLog.State.RETRY).count()
-    if not total_retried:
-        return None
-    return list(
-        TaskLog.objects.filter(state=TaskLog.State.RETRY)
-        .values(name=F("task_name"))
-        .annotate(y=Count("pk"))
-        .annotate(
-            url=Concat(Value(f"{changelist_url}?state__exact=2&task_name="), F("name"))
-        )
-        .order_by("-y")[:TASKMONITOR_REPORTS_MAX_TOP]
-    )
-
-
-def _calc_tasks_throughput(now):
-    tasklogs_not_failed = TaskLog.objects.exclude(state=TaskLog.State.FAILURE)
-    tasks_throughput = []
-    average_last_hours = dict()
-    for hours in [1, 3, 6, 12, 24]:
-        average_last_hours[hours] = tasklogs_not_failed.filter(
-            timestamp__gt=now - dt.timedelta(hours=hours)
-        ).avg_throughput()
-    for hours, y in average_last_hours.items():
-        tasks_throughput.append({"name": f"Average last {hours} hours", "y": y})
-    average_overall = tasklogs_not_failed.avg_throughput()
-    tasks_throughput.append({"name": "Average overall", "y": average_overall})
-    peak_overall = tasklogs_not_failed.max_throughput()
-    tasks_throughput.append({"name": "Peak overall", "y": peak_overall})
-    return tasks_throughput
-
-
-def _calc_tasks_throughput_by_state():
-    series = []
-    for state in TaskLog.State:
-        result = (
-            TaskLog.objects.filter(state=state)
-            .annotate(x=TruncMinute("timestamp"))
-            .values("x")
-            .annotate(y=Count("id"))
-        )
-        data = [[int(obj["x"].timestamp() * 1000), obj["y"]] for obj in result]
-        series.append({"name": state.label, "data": data})
-    return series
-
-
-def _calc_tasks_throughput_by_app():
-    series = []
-    apps = (
-        TaskLog.objects.values_list("app_name", flat=True)
-        .distinct()
-        .order_by("app_name")
-    )
-    for app_name in apps:
-        result = (
-            TaskLog.objects.filter(app_name=app_name)
-            .annotate(x=TruncMinute("timestamp"))
-            .values("x")
-            .annotate(y=Count("id"))
-        )
-        data = [[int(obj["x"].timestamp() * 1000), obj["y"]] for obj in result]
-        series.append({"name": app_name, "data": data})
-    return series
+_reports = {obj.name: obj for obj in [cls() for cls in CachedReport.report_classes()]}

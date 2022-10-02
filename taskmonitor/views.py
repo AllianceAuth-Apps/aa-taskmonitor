@@ -4,7 +4,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.decorators import login_required
-from django.http import StreamingHttpResponse
+from django.http import Http404, JsonResponse, StreamingHttpResponse
 from django.shortcuts import redirect, render
 
 from allianceauth import NAME as site_header
@@ -80,3 +80,14 @@ def admin_taskmonitor_reports_recalculation(request):
         ),
     )
     return redirect("taskmonitor:admin_taskmonitor_reports")
+
+
+@login_required
+@staff_member_required
+def admin_taskmonitor_report_data(request, report_name: str):
+    """Data for a report."""
+    try:
+        data = {"data": cached_reports.report_data(report_name)}
+    except KeyError:
+        raise Http404(f'No report with name: "{report_name}"')
+    return JsonResponse(data)

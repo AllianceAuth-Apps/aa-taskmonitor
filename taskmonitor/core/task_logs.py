@@ -11,7 +11,7 @@ from . import task_records
 TASK_RECEIVED = "received"
 TASK_STARTED = "started"
 
-CACHE_KEY = "TASKMONITOR_LAST_HOUSEKEEPING"
+CACHE_KEY = "taskmonitor_last_housekeeping"
 
 
 def run_housekeeping_if_stale():

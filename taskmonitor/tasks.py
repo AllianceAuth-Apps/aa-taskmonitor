@@ -38,5 +38,17 @@ def delete_stale_tasklogs():
 
 @shared_task
 def refresh_reports_cache():
-    cached_reports.refresh_cache()
-    logger.info("Refreshed the reports cache.")
+    """Refresh cache for all reports."""
+    reports = cached_reports.reports()
+    logger.info(f"Refreshing caches for {len(reports)} reports...")
+    for report in reports:
+        refresh_single_report_cache.apply_async(
+            priority=DEFAULT_TASK_PRIORITY, args=[report.name]
+        )
+
+
+@shared_task
+def refresh_single_report_cache(report_name: str):
+    """Refresh cache for given report."""
+    cached_reports.report(report_name).refresh_cache()
+    logger.info(f"Refreshed reports cache of {report_name}.")

@@ -15,7 +15,7 @@ from taskmonitor.models import TaskLog
 # generate fake apps and task names
 faker = faker.Faker()
 fake_tasks = {}
-for app_name in {faker.first_name().lower() for _ in range(10)}:
+for app_name in {faker.first_name().lower() for _ in range(24)}:
     fake_tasks[app_name] = [
         app_name + ".tasks." + "_".join(faker.words(3)).lower()
         for _ in range(randint(3, 20))
@@ -30,7 +30,7 @@ class TaskLogFactory(factory.django.DjangoModelFactory):
         model = TaskLog
 
     app_name = factory.fuzzy.FuzzyChoice(fake_tasks.keys())
-    received = factory.fuzzy.FuzzyDateTime(timezone.now() - dt.timedelta(minutes=5))
+    received = factory.fuzzy.FuzzyDateTime(timezone.now() - dt.timedelta(hours=3))
     started = factory.LazyAttribute(
         lambda o: factory.fuzzy.FuzzyDateTime(start_dt=o.received).fuzz()
     )

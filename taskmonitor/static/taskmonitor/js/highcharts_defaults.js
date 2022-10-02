@@ -1,22 +1,61 @@
 /*
- * hc_dark_theme.js
- *
- * Global style theme definition for all highcharts
- * based on "dark-unica" theme from Torstein Honsi
+ * Global defaults incl. a dark mode theme
+ * Dark mode theme is automatically activated based on media query
  *
 **/
 
 'use strict';
-/* global document */
-// Load the fonts
-// import Highcharts from '../parts/Globals.js';
+
+// Shared defaults
+let colors = {
+	primary: '#375a7f',
+	secondary: '#444444',
+	success: '#00bc8c',
+	info: '#3498db',
+	warning: '#f39c12',
+	danger: '#e74c3c',
+	light: '#adb5bd',
+	dark: '#303030',
+	primary_2: '#37530465e',
+	secondary_2: '#383838',
+	success_2: '#0c8667',
+	info_2: '#2e6f9a',
+	warning_2: '#aa7118',
+	danger_2: '#a23d33',
+	light_2: '#7c8287',
+	dark_2: '#2b2b2b',
+}
+Highcharts.theme = {
+	credits: {
+		enabled: false
+	},
+	colors: [
+		colors.success,
+		colors.primary,
+		colors.danger,
+		colors.warning,
+		colors.secondary,
+		colors.info,
+		colors.light,
+		colors.dark,
+		colors.success_2,
+		colors.primary_2,
+		colors.danger_2,
+		colors.warning_2,
+		colors.secondary_2,
+		colors.info_2,
+		colors.light_2,
+		colors.dark_2,
+	],
+}
 
 let matchesDarkMode = window.matchMedia("(prefers-color-scheme: dark)");
 if (matchesDarkMode.matches) {
+	// Dark mode styling
 	let normalTextColor = '#eeeeee'; //'#9F9F9F'
 	let backgroundColor = '#121212';
-	Highcharts.theme = {
-		colors: ['#00bc8c', '#375a7f', '#e74c3c', '#f39c12', '#444444', '#3498db', '#adb5bd', '#303030'],
+	Object.assign(
+		Highcharts.theme, {
 		chart: {
 			backgroundColor: backgroundColor,
 			style: {
@@ -52,7 +91,6 @@ if (matchesDarkMode.matches) {
 			title: {
 				style: {
 					color: normalTextColor
-
 				}
 			}
 		},
@@ -100,6 +138,10 @@ if (matchesDarkMode.matches) {
 					enabled: true
 				}
 			},
+			column: {
+				animation: false,
+				borderColor: backgroundColor,
+			},
 			line: {
 				animation: false,
 				lineWidth: 2,
@@ -131,11 +173,6 @@ if (matchesDarkMode.matches) {
 			},
 			itemHiddenStyle: {
 				color: '#606063'
-			}
-		},
-		credits: {
-			style: {
-				color: '#666'
 			}
 		},
 		labels: {
@@ -231,8 +268,15 @@ if (matchesDarkMode.matches) {
 		textColor: '#C0C0C0',
 		contrastTextColor: '#F0F0F3',
 		maskColor: 'rgba(255,255,255,0.3)'
-	};
-
-	// Apply the theme
-	Highcharts.setOptions(Highcharts.theme);
+	});
 }
+else {
+	// Light mode styling
+	// Object.assign(
+	// 	Highcharts.theme, {
+	// 	colors: ['#18bc9c', '#2c3e5a', '#e74c3c', '#f39c12', '#95a5a6', '#3498db', '#ecf0f1', '#7b8a8b'],
+	// });
+}
+
+// Apply the theme
+Highcharts.setOptions(Highcharts.theme);

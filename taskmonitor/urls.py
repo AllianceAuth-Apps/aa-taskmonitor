@@ -25,4 +25,9 @@ urlpatterns = [
         views.admin_taskmonitor_reports_recalculation,
         name="admin_taskmonitor_reports_recalculation",
     ),
+    path(
+        "admin_taskmonitor_report_data/<str:report_name>",
+        views.admin_taskmonitor_report_data,
+        name="admin_taskmonitor_report_data",
+    ),
 ]

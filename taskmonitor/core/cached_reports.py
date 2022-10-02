@@ -284,14 +284,19 @@ def data() -> dict:
     }
 
 
-def report_data(key):
+def report_data(report_name: str):
     """Data of an cached report."""
-    return _reports[key].data()
+    return report(report_name).data()
 
 
 def reports() -> List[_CachedReport]:
     """List of all cached reports."""
     return _reports.values()
+
+
+def report(report_name: str) -> _CachedReport:
+    """Access report by name."""
+    return _reports[report_name]
 
 
 # Instantiation of all cached reports

@@ -49,7 +49,6 @@
                 <ul>
                     <li class="selected"><a class="tabLinks" href="#" onclick="openTab(event, 'task-runs-by-state')" id="defaultTab">Task runs by state</a></li>
                     <li><a class="tabLinks" href="#" onclick="openTab(event, 'task-runs-by-app')">Task runs by app</a></li>
-                    <li><a class="tabLinks" href="#" onclick="openTab(event, 'task-througput')">Task througput</a></li>
                 </ul>
                 <h3>Top tasks</h3>
                 <ul>
@@ -62,6 +61,7 @@
                 <ul>
                     <li><a class="tabLinks" href="#" onclick="openTab(event, 'throughput-by-state')">Throughput by state</a></li>
                     <li><a class="tabLinks" href="#" onclick="openTab(event, 'throughput-by-app')">Throughput by app</a></li>
+                    <li><a class="tabLinks" href="#" onclick="openTab(event, 'task-througput')">Througput overview</a></li>
                 </ul>
             </div>
 
@@ -114,7 +114,7 @@
                 <br>
                 <p>
                     Total of {% if basic_information.total_runs > 1000000 %}{{ basic_information.total_runs|intword }}{% else %}{{ basic_information.total_runs|intcomma }}{% endif %} task logs spanning {{ basic_information.youngest_date|timeuntil:basic_information.oldest_date }} with a cumulative runtime of {{ basic_information.total_runtime_date|timesince }}.
-                    This data is cached. Last updated {{ last_update_at|naturaltime }}.
+                    This data is cached.
                     All data of this app is stored for a maxmimum of {{ data_max_age }} hours.
                 </p>
             </div>

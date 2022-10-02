@@ -13,6 +13,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Fixed
 
+## [0.6.0] - 2022-10-02
+
+### Added
+
+- New Charts Task throughput over time by state
+- New Charts Task throughput over time by app
+
 ## [0.5.1] - 2022-09-30
 
 ### Fixed

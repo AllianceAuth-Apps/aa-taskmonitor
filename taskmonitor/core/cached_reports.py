@@ -20,6 +20,8 @@ from ..app_settings import (
 from ..models import TaskLog
 
 CACHE_KEY = "taskmonitor_reports_data"
+MAX_APPS_COUNT = 14
+APP_NAME_OTHERS = "Others"
 
 
 class _CachedReport:
@@ -136,12 +138,20 @@ class TaskRunsByApp(_CachedReport):
     def _calc_data(self):
         if not self.total_runs:
             return None
-        return list(
+        data = list(
             TaskLog.objects.values(name=F("app_name"))
             .annotate(y=Count("pk"))
             .annotate(url=Concat(Value(f"{self.changelist_url}?app_name="), F("name")))
             .order_by("-y")
         )
+        if len(data) > MAX_APPS_COUNT:
+            others_y = sum(
+                [app["y"] for i, app in enumerate(data, start=1) if i > MAX_APPS_COUNT]
+            )
+            return data[:MAX_APPS_COUNT] + [
+                {"name": APP_NAME_OTHERS, "y": others_y, "url": "#"}
+            ]
+        return data
 
 
 class TasksTopRuns(_CachedReport):
@@ -246,15 +256,15 @@ class TasksThroughputByApp(_CachedReport):
 
     def _calc_data(self):
         series = []
-        apps = (
-            TaskLog.objects.values_list("app_name", flat=True)
-            .distinct()
-            .order_by("app_name")
-        )
-        for app_name in apps:
+        app_names = [app["name"] for app in report("task_runs_by_app").data()]
+        real_app_name = {name for name in app_names if name != APP_NAME_OTHERS}
+        for app_name in app_names:
+            if app_name in real_app_name:
+                app_qs = TaskLog.objects.filter(app_name=app_name)
+            else:
+                app_qs = TaskLog.objects.exclude(app_name__in=real_app_name)
             result = (
-                TaskLog.objects.filter(app_name=app_name)
-                .annotate(x=TruncMinute("timestamp"))
+                app_qs.annotate(x=TruncMinute("timestamp"))
                 .values("x")
                 .annotate(y=Count("id"))
             )

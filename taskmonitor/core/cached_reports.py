@@ -2,8 +2,10 @@
 
 import datetime as dt
 import inspect
+
+# import re
 import sys
-from typing import Optional
+from typing import List, Optional
 
 from django.core.cache import cache
 from django.db.models import Count, F, Max, Min, Sum, Value
@@ -21,10 +23,11 @@ from ..models import TaskLog
 CACHE_KEY = "taskmonitor_reports_data"
 
 
-class CachedReport:
-    """A cached report."""
+class _CachedReport:
+    """Base class for a cached report."""
 
-    name = ""
+    # def __init__(self) -> None:
+    #     self.name = re.sub(r"(?<!^)(?=[A-Z])", "_", self.__class__.__name__).lower()
 
     @functional.cached_property
     def changelist_url(self) -> str:
@@ -45,14 +48,47 @@ class CachedReport:
         except TypeError:
             return None
 
+    @property
+    def cache_key(self):
+        return f"{CACHE_KEY}_{self.name}"
+
+    @property
+    def timeout(self):
+        """Timeout in seconds."""
+        return TASKMONITOR_REPORTS_MAX_AGE * 60
+
     @functional.cached_property
     def now(self) -> dt.datetime:
         return timezone.now()
 
     def data(self) -> list:
-        return cache.get_or_set(
-            f"{CACHE_KEY}_{self.name}", self._calc_data, timeout=_timeout()
-        )
+        return cache.get_or_set(self.cache_key, self._calc_data, timeout=self.timeout)
+
+    def refresh_cache(self) -> None:
+        """Refresh the cache."""
+        cache.set(self.cache_key, self._calc_data(), timeout=self.timeout)
+
+    def clear_cache(self) -> None:
+        """Clear the cache."""
+        cache.delete(self.cache_key)
+
+    def last_update_at(self, ttl) -> Optional[dt.datetime]:
+        """When the cache was last updated or None if there is no cache."""
+        ttl = self._ttl()
+        if not ttl:
+            return None
+        return timezone.now() - dt.timedelta(seconds=max(0, self.timeout - ttl))
+
+    def next_update_at(self, ttl) -> Optional[dt.datetime]:
+        """When the cache will be updated next (earliest) or None if no cache."""
+        ttl = self._ttl()
+        if not ttl:
+            return None
+        duration = TASKMONITOR_HOUSEKEEPING_FREQUENCY * 60 / 2 + ttl
+        return timezone.now() + dt.timedelta(seconds=duration)
+
+    def _ttl(self):
+        return cache.ttl(self.cache_key)
 
     def _calc_data(self):
         """Calculate data."""
@@ -67,7 +103,7 @@ class CachedReport:
         ]
 
 
-class TaskDates(CachedReport):
+class TaskDates(_CachedReport):
     name = "task_dates"
 
     def _calc_data(self):
@@ -76,7 +112,7 @@ class TaskDates(CachedReport):
         return oldest_date, youngest_date
 
 
-class TaskRunsByState(CachedReport):
+class TaskRunsByState(_CachedReport):
     name = "task_runs_by_state"
 
     def _calc_data(self):
@@ -92,7 +128,7 @@ class TaskRunsByState(CachedReport):
         ]
 
 
-class TaskRunsByApp(CachedReport):
+class TaskRunsByApp(_CachedReport):
     name = "task_runs_by_app"
 
     def _calc_data(self):
@@ -106,7 +142,7 @@ class TaskRunsByApp(CachedReport):
         )
 
 
-class TasksTopRuns(CachedReport):
+class TasksTopRuns(_CachedReport):
     name = "tasks_top_runs"
 
     def _calc_data(self):
@@ -120,7 +156,7 @@ class TasksTopRuns(CachedReport):
         )
 
 
-class TasksTopRuntime(CachedReport):
+class TasksTopRuntime(_CachedReport):
     name = "tasks_top_runtime"
 
     def _calc_data(self):
@@ -136,7 +172,7 @@ class TasksTopRuntime(CachedReport):
         )
 
 
-class TasksTopFailed(CachedReport):
+class TasksTopFailed(_CachedReport):
     name = "tasks_top_failed"
 
     def _calc_data(self):
@@ -157,7 +193,7 @@ class TasksTopFailed(CachedReport):
         )
 
 
-class TasksTopRetried(CachedReport):
+class TasksTopRetried(_CachedReport):
     name = "tasks_top_retried"
 
     def _calc_data(self):
@@ -177,7 +213,7 @@ class TasksTopRetried(CachedReport):
         )
 
 
-class TasksThroughput(CachedReport):
+class TasksThroughput(_CachedReport):
     name = "tasks_throughput"
 
     def _calc_data(self):
@@ -197,7 +233,7 @@ class TasksThroughput(CachedReport):
         return tasks_throughput
 
 
-class TasksThroughputByState(CachedReport):
+class TasksThroughputByState(_CachedReport):
     name = "tasks_throughput_by_state"
 
     def _calc_data(self):
@@ -214,7 +250,7 @@ class TasksThroughputByState(CachedReport):
         return series
 
 
-class TasksThroughputByApp(CachedReport):
+class TasksThroughputByApp(_CachedReport):
     name = "tasks_throughput_by_app"
 
     def _calc_data(self):
@@ -236,51 +272,24 @@ class TasksThroughputByApp(CachedReport):
         return series
 
 
-def data() -> dict:
-    """Return the cached reports data."""
-    context = cache.get_or_set(CACHE_KEY, _calc_data, timeout=_timeout())
-    ttl = cache.ttl(CACHE_KEY)
-    context["last_update_at"] = _last_update_at(ttl)
-    context["next_update_at"] = _next_update_at(ttl)
-    return context
-
-
-def _timeout() -> int:
-    """Timeout in seconds."""
-    return TASKMONITOR_REPORTS_MAX_AGE * 60
-
-
-def _last_update_at(ttl) -> Optional[dt.datetime]:
-    """When the cache was last updated or None if there is no cache."""
-    if not ttl:
-        return None
-    return timezone.now() - dt.timedelta(seconds=max(0, _timeout() - ttl))
-
-
-def _next_update_at(ttl) -> Optional[dt.datetime]:
-    """When the cache will be updated next (earliest) or None if no cache."""
-    if not ttl:
-        return None
-    duration = TASKMONITOR_HOUSEKEEPING_FREQUENCY * 60 / 2 + ttl
-    return timezone.now() + dt.timedelta(seconds=duration)
-
-
 def refresh_cache() -> None:
     """Refresh the cache."""
-    cache.set(CACHE_KEY, _calc_data(), timeout=_timeout())
+    for report in _reports.values():
+        report.refresh_cache()
 
 
 def clear_cache() -> None:
     """Clear the cache."""
-    cache.delete(CACHE_KEY)
+    for report in _reports.values():
+        report.clear_cache()
 
 
-def _calc_data() -> dict:
+def data() -> dict:
     """Calculate the report data."""
-    # oldest_date, youngest_date = _reports["task_dates"].data()
+    oldest_date, youngest_date = _reports["task_dates"].data()
     context = {
-        "oldest_date": None,
-        "youngest_date": None,
+        "oldest_date": oldest_date,
+        "youngest_date": youngest_date,
         "total_runs": _reports["task_runs_by_state"].total_runs,
         "total_runtime_date": _reports["task_runs_by_state"].total_runtime_date,
         "task_totals_by_state": _reports["task_runs_by_state"].data(),
@@ -297,4 +306,16 @@ def _calc_data() -> dict:
     return context
 
 
-_reports = {obj.name: obj for obj in [cls() for cls in CachedReport.report_classes()]}
+def report_data(key):
+    """Data of an cached report."""
+    data = _reports[key].data()
+    return data
+
+
+def reports() -> List[_CachedReport]:
+    """List of all cached reports."""
+    return _reports.keys()
+
+
+# Instantiation of all cached reports
+_reports = {obj.name: obj for obj in [cls() for cls in _CachedReport.report_classes()]}

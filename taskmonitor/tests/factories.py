@@ -1,7 +1,7 @@
 import datetime as dt
 import itertools
 from dataclasses import asdict, dataclass
-from random import choice, choices, randint
+from random import choice, choices, randint, shuffle
 from uuid import UUID
 
 import factory
@@ -24,6 +24,11 @@ fake_tasks_all = list(
     itertools.chain(*[fake_tasks[app_name] for app_name in fake_tasks])
 )
 
+fake_words = [obj.lower() for obj in faker.words(50)]
+fake_numbers = [randint(0, 1_000_000) for _ in range(100)]
+fake_args = fake_words + fake_numbers
+shuffle(fake_args)
+
 
 class TaskLogFactory(factory.django.DjangoModelFactory):
     class Meta:
@@ -39,6 +44,15 @@ class TaskLogFactory(factory.django.DjangoModelFactory):
     @factory.lazy_attribute
     def task_id(self):
         return UUID(faker.uuid4())
+
+    @factory.lazy_attribute
+    def task_args(self):
+        return list(choices(fake_args, k=randint(0, 10)))
+
+    @factory.lazy_attribute
+    def task_kwargs(self):
+        keys = choices(fake_words, k=randint(0, 20))
+        return {key: randint(0, 1_000_000) for key in keys}
 
     @factory.lazy_attribute
     def runtime(self):
@@ -99,6 +113,8 @@ class ContextStub:
     id: str
     retries: int
     delivery_info: dict
+    args: list
+    kwargs: dict
     parent_id: str = None
 
     def asdict(self) -> dict:
@@ -116,6 +132,8 @@ class ContextStub:
                 "routing_key": None,
                 "priority": obj.priority,
             },
+            args=obj.task_args,
+            kwargs=obj.task_kwargs,
         )
 
 

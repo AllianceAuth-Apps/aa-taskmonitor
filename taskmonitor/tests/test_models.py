@@ -28,6 +28,8 @@ class TestManagerCreateFromTask(TestCase):
                 retries=expected.retries,
                 received=expected.received,
                 started=expected.started,
+                task_args=expected.task_args,
+                task_kwargs=expected.task_kwargs,
             )
         # then
         self._assert_equal_objs(expected, result)

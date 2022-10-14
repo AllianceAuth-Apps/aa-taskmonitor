@@ -155,13 +155,15 @@ class TaskLogManagerBase(models.Manager):
         state: int,
         retries: int,
         priority: int,
+        task_args: list,
+        task_kwargs: dict,
         received: dt.datetime = None,
         started: dt.datetime = None,
         parent_id: str = None,
         exception=None,
     ) -> models.Model:
         """Create new object from a celery task."""
-        args = {
+        params = {
             "app_name": extract_app_name(task_name),
             "priority": priority,
             "parent_id": UUID(parent_id) if parent_id else None,
@@ -172,14 +174,16 @@ class TaskLogManagerBase(models.Manager):
             "task_id": UUID(task_id),
             "task_name": task_name,
             "timestamp": timezone.now(),
+            "task_args": task_args,
+            "task_kwargs": task_kwargs,
         }
         if exception:
-            args["exception"] = str(exception)
+            params["exception"] = str(exception)
             if traceback := getattr(exception, "__traceback__"):
-                args["traceback"] = "".join(
+                params["traceback"] = "".join(
                     tb.format_exception(None, value=exception, tb=traceback)
                 )
-        return self.create(**args)
+        return self.create(**params)
 
 
 TaskLogManager = TaskLogManagerBase.from_queryset(TaskLogQuerySet)

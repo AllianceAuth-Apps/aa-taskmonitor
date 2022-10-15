@@ -79,5 +79,16 @@ def truncate_result(value):
     if isinstance(value, dict):
         return truncate_dict(value)
     elif isinstance(value, (list, tuple, set)):
-        return truncate_list(value)
+        return compress_list(truncate_list(value))
     return value
+
+
+def compress_list(lst: list) -> list:
+    """Compress list to empty list of it contains of empty containers only.
+
+    Example: `[ {}, {} ]` -> `[]`
+    """
+    for item in lst:
+        if item is False or item:
+            return lst
+    return []

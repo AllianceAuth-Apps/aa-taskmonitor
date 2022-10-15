@@ -1,6 +1,7 @@
 from django.test import TestCase
 
 from taskmonitor.helpers import (
+    compress_list,
     dict_sort_keys,
     extract_app_name,
     truncate_dict,
@@ -133,3 +134,35 @@ class TestTruncateResult(TestCase):
         result = truncate_result({"a": 1, "b": {"ba": 1}, "c": [1, 2]})
         # then
         self.assertDictEqual(result, {"a": 1, "b": {}, "c": []})
+
+    def test_should_truncate_and_compress_nested_lists(self):
+        # when
+        result = truncate_result([[1, 2], {"alpha": 1}, (1, 2)])
+        # then
+        self.assertListEqual(result, [])
+
+
+class TestCompressList(TestCase):
+    def test_should_copy_non_empty_list_1(self):
+        # when
+        result = compress_list([1, 2])
+        # then
+        self.assertListEqual(result, [1, 2])
+
+    def test_should_copy_non_empty_list_2(self):
+        # when
+        result = compress_list([1, []])
+        # then
+        self.assertListEqual(result, [1, []])
+
+    def test_should_compress_list_of_empty_containers(self):
+        # when
+        result = compress_list([[], {}, tuple(), set()])
+        # then
+        self.assertListEqual(result, [])
+
+    def test_should_keep_booleans(self):
+        # when
+        result = compress_list([False, []])
+        # then
+        self.assertListEqual(result, [False, []])

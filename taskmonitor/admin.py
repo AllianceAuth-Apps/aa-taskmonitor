@@ -158,7 +158,9 @@ class TaskLogAdmin(admin.ModelAdmin):
 
     @admin.display(description="Result")
     def _result(self, obj):
-        return format_html_data(obj.result)
+        if obj.state is TaskLog.State.SUCCESS:
+            return format_html_data(obj.result)
+        return "-"
 
     @admin.display(description="Args")
     def _args(self, obj):

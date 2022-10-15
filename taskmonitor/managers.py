@@ -162,6 +162,7 @@ class TaskLogManagerBase(models.Manager):
         started: dt.datetime = None,
         parent_id: str = None,
         exception=None,
+        result=None,
     ) -> models.Model:
         """Create new object from a celery task."""
         params = {
@@ -175,6 +176,7 @@ class TaskLogManagerBase(models.Manager):
             "task_id": UUID(task_id),
             "task_name": task_name,
             "timestamp": timezone.now(),
+            "result": result,
         }
         params["task_args"] = (
             truncate_args(task_args)

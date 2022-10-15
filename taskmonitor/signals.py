@@ -23,8 +23,8 @@ def task_retry_handler(sender=None, request=None, reason=None, **kw):
 
 
 @signals.task_success.connect
-def task_success_handler(sender=None, **kw):
-    task_logs.task_success_handler_2(sender)
+def task_success_handler(sender=None, result=None, **kw):
+    task_logs.task_success_handler_2(sender=sender, result=result)
 
 
 @signals.task_failure.connect

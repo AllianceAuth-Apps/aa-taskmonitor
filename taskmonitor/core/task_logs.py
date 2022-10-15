@@ -37,7 +37,7 @@ def task_prerun_handler_2(task_id):
         task_records.set(task_id, TASK_STARTED, timezone.now())
 
 
-def task_success_handler_2(sender):
+def task_success_handler_2(sender, result):
     """Handle task success signal."""
     if sender and sender.request:
         request = sender.request
@@ -53,6 +53,7 @@ def task_success_handler_2(sender):
             started=task_records.fetch(task_id, TASK_STARTED),
             task_args=request.args,
             task_kwargs=request.kwargs,
+            result=result,
         )
     run_housekeeping_if_stale()
 

@@ -107,6 +107,12 @@ class TaskLogFactory(factory.django.DjangoModelFactory):
             end_dt=start_dt + dt.timedelta(seconds=max_duration),
         ).fuzz()
 
+    @factory.lazy_attribute
+    def result(self):
+        if self.state is TaskLog.State.SUCCESS:
+            return choice(fake_args)
+        return None
+
 
 @dataclass
 class ContextStub:

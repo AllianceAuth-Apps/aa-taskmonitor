@@ -1,3 +1,4 @@
+import json
 from typing import Optional
 
 from django.contrib import admin
@@ -81,6 +82,7 @@ class TaskLogAdmin(admin.ModelAdmin):
         "timestamp",
         "_task_args",
         "_task_kwargs",
+        "_result",
         "retries",
         "priority",
         "state",
@@ -104,6 +106,16 @@ class TaskLogAdmin(admin.ModelAdmin):
         if "delete_selected" in actions:
             del actions["delete_selected"]
         return actions
+
+    def get_readonly_fields(self, request, obj):
+        try:
+            field = [f for f in obj._meta.fields if f.name == "task_kwargs"]
+            if len(field) > 0:
+                field = field[0]
+                field.help_text = "some special help text"
+        except Exception:
+            pass
+        return self.readonly_fields
 
     def _params(self, obj):
         if obj.task_args and not obj.task_args:
@@ -141,20 +153,28 @@ class TaskLogAdmin(admin.ModelAdmin):
         queryset._raw_delete(queryset.db)
         self.message_user(request, f"Deleted {entries_count} entries.")
 
+    def _result(self, obj):
+        return format_html_data(obj.result)
+
     @admin.display(description="args")
     def _task_args(self, obj):
-        return html.format_html("<code>{}</code>", obj.task_args)
+        return format_html_data(obj.task_args)
 
     @admin.display(description="kwargs")
     def _task_kwargs(self, obj):
-        return html.format_html("<code>{}</code>", dict_sort_keys(obj.task_kwargs))
+        return format_html_data(obj.task_kwargs)
 
     def _traceback(self, obj):
-        return safestring.mark_safe(
-            "<br>".join(
-                [
-                    html.format_html("<code>{}</code>", line)
-                    for line in obj.traceback.splitlines()
-                ]
-            )
-        )
+        return format_html_lines(obj.traceback)
+
+
+def format_html_lines(text) -> str:
+    return safestring.mark_safe(
+        "<br>".join(
+            [html.format_html("<code>{}</code>", line) for line in text.splitlines()]
+        ).replace("\t", "&emsp;&emsp;")
+    )
+
+
+def format_html_data(data) -> str:
+    return format_html_lines(json.dumps(data, sort_keys=True, indent="\t"))

@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 
 - Store task params in task log
+- Store task results in task log
 
 ### Changed
 

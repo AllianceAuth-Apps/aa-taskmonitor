@@ -46,11 +46,11 @@ class TaskLogFactory(factory.django.DjangoModelFactory):
         return UUID(faker.uuid4())
 
     @factory.lazy_attribute
-    def task_args(self):
+    def args(self):
         return list(choices(fake_args, k=randint(0, 10)))
 
     @factory.lazy_attribute
-    def task_kwargs(self):
+    def kwargs(self):
         keys = choices(fake_words, k=randint(0, 20))
         return {key: randint(0, 1_000_000) for key in keys}
 
@@ -138,8 +138,8 @@ class ContextStub:
                 "routing_key": None,
                 "priority": obj.priority,
             },
-            args=obj.task_args,
-            kwargs=obj.task_kwargs,
+            args=obj.args,
+            kwargs=obj.kwargs,
         )
 
 

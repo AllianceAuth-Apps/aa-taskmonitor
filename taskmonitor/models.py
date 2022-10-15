@@ -60,7 +60,19 @@ class TaskLog(models.Model):
     app_name = models.CharField(
         max_length=255, db_index=True, help_text="Name of the app this task belongs to."
     )
+    args = models.JSONField(
+        default=list,
+        help_text=(
+            "Positional arguments the task was called with. Nested items might be truncated to [] or {}."
+        ),
+    )
     exception = models.TextField(help_text="Message of the raised exception if any.")
+    kwargs = models.JSONField(
+        default=dict,
+        help_text=(
+            "Keyword arguments the task was called with. Nested items might be truncated to [] or {}."
+        ),
+    )
     parent_id = models.UUIDField(
         null=True, default=None, help_text="ID of the parent task if any."
     )
@@ -96,18 +108,7 @@ class TaskLog(models.Model):
     task_name = models.CharField(
         max_length=255, db_index=True, help_text="Name of this task."
     )
-    task_args = models.JSONField(
-        default=list,
-        help_text=(
-            "Positional arguments the task was called with. Nested items might be truncated to [] or {}."
-        ),
-    )
-    task_kwargs = models.JSONField(
-        default=dict,
-        help_text=(
-            "Keyword arguments the task was called with. Nested items might be truncated to [] or {}."
-        ),
-    )
+
     timestamp = models.DateTimeField(
         db_index=True, help_text="Timestamp when this log was created."
     )

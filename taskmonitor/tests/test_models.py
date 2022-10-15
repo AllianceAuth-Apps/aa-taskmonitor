@@ -27,8 +27,8 @@ class TestManagerCreateFromTask(TestCase):
                 retries=expected.retries,
                 received=expected.received,
                 started=expected.started,
-                task_args=expected.task_args,
-                task_kwargs=expected.task_kwargs,
+                args=expected.args,
+                kwargs=expected.kwargs,
                 result=expected.result,
             )
         # then
@@ -50,8 +50,8 @@ class TestManagerCreateFromTask(TestCase):
                 retries=expected.retries,
                 received=expected.received,
                 started=expected.started,
-                task_args=expected.task_args,
-                task_kwargs=expected.task_kwargs,
+                args=expected.args,
+                kwargs=expected.kwargs,
                 result=expected.result,
             )
         # then
@@ -60,7 +60,7 @@ class TestManagerCreateFromTask(TestCase):
     def test_should_truncate_args(self):
         # given
         expected = TaskLogFactory.build(
-            state=TaskLog.State.SUCCESS, task_args=[1, [1, 2], 3]
+            state=TaskLog.State.SUCCESS, args=[1, [1, 2], 3]
         )
         # when
         with patch(MANAGERS_PATH + ".TASKMONITOR_TRUNCATE_NESTED_PARAMS", True):
@@ -72,16 +72,16 @@ class TestManagerCreateFromTask(TestCase):
                 retries=expected.retries,
                 received=expected.received,
                 started=expected.started,
-                task_args=expected.task_args,
-                task_kwargs=expected.task_kwargs,
+                args=expected.args,
+                kwargs=expected.kwargs,
             )
         # then
-        self.assertListEqual(result.task_args, [1, [], 3])
+        self.assertListEqual(result.args, [1, [], 3])
 
     def test_should_not_truncate_args(self):
         # given
         expected = TaskLogFactory.build(
-            state=TaskLog.State.SUCCESS, task_args=[1, [1, 2], 3]
+            state=TaskLog.State.SUCCESS, args=[1, [1, 2], 3]
         )
         # when
         with patch(MANAGERS_PATH + ".TASKMONITOR_TRUNCATE_NESTED_PARAMS", False):
@@ -93,16 +93,16 @@ class TestManagerCreateFromTask(TestCase):
                 retries=expected.retries,
                 received=expected.received,
                 started=expected.started,
-                task_args=expected.task_args,
-                task_kwargs=expected.task_kwargs,
+                args=expected.args,
+                kwargs=expected.kwargs,
             )
         # then
-        self.assertListEqual(result.task_args, [1, [1, 2], 3])
+        self.assertListEqual(result.args, [1, [1, 2], 3])
 
     def test_should_truncate_kwargs(self):
         # given
         expected = TaskLogFactory.build(
-            state=TaskLog.State.SUCCESS, task_kwargs={"b": 2, "a": {"aa": 1}}
+            state=TaskLog.State.SUCCESS, kwargs={"b": 2, "a": {"aa": 1}}
         )
         # when
         with patch(MANAGERS_PATH + ".TASKMONITOR_TRUNCATE_NESTED_PARAMS", True):
@@ -114,16 +114,16 @@ class TestManagerCreateFromTask(TestCase):
                 retries=expected.retries,
                 received=expected.received,
                 started=expected.started,
-                task_args=expected.task_args,
-                task_kwargs=expected.task_kwargs,
+                args=expected.args,
+                kwargs=expected.kwargs,
             )
         # then
-        self.assertDictEqual(result.task_kwargs, {"a": {}, "b": 2})
+        self.assertDictEqual(result.kwargs, {"a": {}, "b": 2})
 
     def test_should_not_truncate_kwargs(self):
         # given
         expected = TaskLogFactory.build(
-            state=TaskLog.State.SUCCESS, task_kwargs={"a": {"aa": 1}}
+            state=TaskLog.State.SUCCESS, kwargs={"a": {"aa": 1}}
         )
         # when
         with patch(MANAGERS_PATH + ".TASKMONITOR_TRUNCATE_NESTED_PARAMS", False):
@@ -135,11 +135,11 @@ class TestManagerCreateFromTask(TestCase):
                 retries=expected.retries,
                 received=expected.received,
                 started=expected.started,
-                task_args=expected.task_args,
-                task_kwargs=expected.task_kwargs,
+                args=expected.args,
+                kwargs=expected.kwargs,
             )
         # then
-        self.assertDictEqual(result.task_kwargs, {"a": {"aa": 1}})
+        self.assertDictEqual(result.kwargs, {"a": {"aa": 1}})
 
     def _assert_equal_objs(self, expected, result):
         field_names = {

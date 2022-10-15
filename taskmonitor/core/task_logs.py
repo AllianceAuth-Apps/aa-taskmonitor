@@ -51,8 +51,8 @@ def task_success_handler_2(sender, result):
             parent_id=request.parent_id,
             received=task_records.fetch(task_id, TASK_RECEIVED),
             started=task_records.fetch(task_id, TASK_STARTED),
-            task_args=request.args,
-            task_kwargs=request.kwargs,
+            args=request.args,
+            kwargs=request.kwargs,
             result=result,
         )
     run_housekeeping_if_stale()
@@ -71,8 +71,8 @@ def task_retry_handler_2(sender, request, reason):
             parent_id=request.parent_id,
             received=task_records.fetch(task_id, TASK_RECEIVED),
             started=task_records.fetch(task_id, TASK_STARTED),
-            task_args=request.args,
-            task_kwargs=request.kwargs,
+            args=request.args,
+            kwargs=request.kwargs,
             exception=reason,
         )
     run_housekeeping_if_stale()
@@ -91,8 +91,8 @@ def task_failure_handler_2(sender, task_id, exception):
             parent_id=request.parent_id,
             received=task_records.fetch(task_id, TASK_RECEIVED),
             started=task_records.fetch(task_id, TASK_STARTED),
-            task_args=request.args,
-            task_kwargs=request.kwargs,
+            args=request.args,
+            kwargs=request.kwargs,
             exception=exception,
         )
     run_housekeeping_if_stale()
@@ -110,8 +110,8 @@ def task_internal_error_handler_2(sender, task_id, request, exception):
             parent_id=request.get("parent_id"),
             received=task_records.fetch(task_id, TASK_RECEIVED),
             started=task_records.fetch(task_id, TASK_STARTED),
-            task_args=request["args"],
-            task_kwargs=request["kwargs"],
+            args=request["args"],
+            kwargs=request["kwargs"],
             exception=exception,
         )
     run_housekeeping_if_stale()

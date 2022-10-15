@@ -5,7 +5,6 @@ from django.contrib import admin
 from django.shortcuts import redirect
 from django.utils import html, safestring, timezone
 
-from .helpers import dict_sort_keys
 from .models import QueuedTask, TaskLog, TaskReport
 
 
@@ -80,8 +79,8 @@ class TaskLogAdmin(admin.ModelAdmin):
         "task_id",
         "task_name",
         "timestamp",
-        "_task_args",
-        "_task_kwargs",
+        "_args",
+        "_kwargs",
         "_result",
         "retries",
         "priority",
@@ -109,7 +108,7 @@ class TaskLogAdmin(admin.ModelAdmin):
 
     def get_readonly_fields(self, request, obj):
         try:
-            field = [f for f in obj._meta.fields if f.name == "task_kwargs"]
+            field = [f for f in obj._meta.fields if f.name == "kwargs"]
             if len(field) > 0:
                 field = field[0]
                 field.help_text = "some special help text"
@@ -118,13 +117,17 @@ class TaskLogAdmin(admin.ModelAdmin):
         return self.readonly_fields
 
     def _params(self, obj):
-        if obj.task_args and not obj.task_args:
-            return html.format_html("<code>{}</code>", obj.task_args)
-        if not obj.task_args and obj.task_kwargs:
-            return html.format_html("<code>{}</code>", dict_sort_keys(obj.task_kwargs))
-        if obj.task_args and obj.task_kwargs:
+        if obj.args and not obj.args:
+            return html.format_html("<code>{}</code>", json.dumps(obj.args))
+        if not obj.args and obj.kwargs:
             return html.format_html(
-                "<code>{}<br>{}</code>", obj.task_args, dict_sort_keys(obj.task_kwargs)
+                "<code>{}</code>", json.dumps(obj.kwargs, sort_keys=True)
+            )
+        if obj.args and obj.kwargs:
+            return html.format_html(
+                "<code>{}<br>{}</code>",
+                json.dumps(obj.args),
+                json.dumps(obj.kwargs, sort_keys=True),
             )
         return None
 
@@ -143,7 +146,7 @@ class TaskLogAdmin(admin.ModelAdmin):
             '<span class="{}">{}</span>', css_class, obj.get_state_display()
         )
 
-    @admin.display(ordering="exception")
+    @admin.display(ordering="Exception")
     def _exception(self, obj) -> str:
         return html.format_html("<code>{}</code>", obj.exception)
 
@@ -153,17 +156,19 @@ class TaskLogAdmin(admin.ModelAdmin):
         queryset._raw_delete(queryset.db)
         self.message_user(request, f"Deleted {entries_count} entries.")
 
+    @admin.display(description="Result")
     def _result(self, obj):
         return format_html_data(obj.result)
 
-    @admin.display(description="args")
-    def _task_args(self, obj):
-        return format_html_data(obj.task_args)
+    @admin.display(description="Args")
+    def _args(self, obj):
+        return format_html_data(obj.args)
 
-    @admin.display(description="kwargs")
-    def _task_kwargs(self, obj):
-        return format_html_data(obj.task_kwargs)
+    @admin.display(description="Kwargs")
+    def _kwargs(self, obj):
+        return format_html_data(obj.kwargs)
 
+    @admin.display(description="Traceback")
     def _traceback(self, obj):
         return format_html_lines(obj.traceback)
 

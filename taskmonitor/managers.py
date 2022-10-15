@@ -156,8 +156,8 @@ class TaskLogManagerBase(models.Manager):
         state: int,
         retries: int,
         priority: int,
-        task_args: list,
-        task_kwargs: dict,
+        args: list,
+        kwargs: dict,
         received: dt.datetime = None,
         started: dt.datetime = None,
         parent_id: str = None,
@@ -178,15 +178,11 @@ class TaskLogManagerBase(models.Manager):
             "timestamp": timezone.now(),
             "result": result,
         }
-        params["task_args"] = (
-            truncate_args(task_args)
-            if TASKMONITOR_TRUNCATE_NESTED_PARAMS
-            else task_args
+        params["args"] = (
+            truncate_args(args) if TASKMONITOR_TRUNCATE_NESTED_PARAMS else args
         )
-        params["task_kwargs"] = (
-            truncate_kwargs(task_kwargs)
-            if TASKMONITOR_TRUNCATE_NESTED_PARAMS
-            else task_kwargs
+        params["kwargs"] = (
+            truncate_kwargs(kwargs) if TASKMONITOR_TRUNCATE_NESTED_PARAMS else kwargs
         )
         if exception:
             params["exception"] = str(exception)

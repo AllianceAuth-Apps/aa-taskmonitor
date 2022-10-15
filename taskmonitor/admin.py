@@ -141,9 +141,11 @@ class TaskLogAdmin(admin.ModelAdmin):
         queryset._raw_delete(queryset.db)
         self.message_user(request, f"Deleted {entries_count} entries.")
 
+    @admin.display(description="args")
     def _task_args(self, obj):
         return html.format_html("<code>{}</code>", obj.task_args)
 
+    @admin.display(description="kwargs")
     def _task_kwargs(self, obj):
         return html.format_html("<code>{}</code>", dict_sort_keys(obj.task_kwargs))
 

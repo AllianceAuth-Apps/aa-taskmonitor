@@ -109,7 +109,7 @@ class TaskLogFactory(factory.django.DjangoModelFactory):
 
     @factory.lazy_attribute
     def result(self):
-        if self.state is TaskLog.State.SUCCESS:
+        if self.state == TaskLog.State.SUCCESS:
             return choice(fake_args)
         return None
 

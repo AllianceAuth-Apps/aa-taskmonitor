@@ -158,7 +158,7 @@ class TaskLogAdmin(admin.ModelAdmin):
 
     @admin.display(description="Result")
     def _result(self, obj):
-        if obj.state is TaskLog.State.SUCCESS:
+        if obj.state == TaskLog.State.SUCCESS:
             return format_html_data(obj.result)
         return "-"
 
@@ -179,9 +179,11 @@ def format_html_lines(text) -> str:
     return safestring.mark_safe(
         "<br>".join(
             [html.format_html("<code>{}</code>", line) for line in text.splitlines()]
-        ).replace("\t", "&emsp;&emsp;")
+        )
     )
 
 
 def format_html_data(data) -> str:
-    return format_html_lines(json.dumps(data, sort_keys=True, indent="\t"))
+    return html.format_html(
+        "<code>{}</code>", json.dumps(data, sort_keys=True, indent=4)
+    )

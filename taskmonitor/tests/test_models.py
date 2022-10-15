@@ -100,7 +100,7 @@ class TestManagerCreateFromTask(TestCase):
     def test_should_truncate_kwargs(self):
         # given
         expected = TaskLogFactory.build(
-            state=TaskLog.State.SUCCESS, task_kwargs={"a": {"aa": {"aaa": 1}}}
+            state=TaskLog.State.SUCCESS, task_kwargs={"a": {"aa": 1}}
         )
         # when
         with patch(MANAGERS_PATH + ".TASKMONITOR_TRUNCATE_NESTED_PARAMS", True):
@@ -116,12 +116,12 @@ class TestManagerCreateFromTask(TestCase):
                 task_kwargs=expected.task_kwargs,
             )
         # then
-        self.assertDictEqual(result.task_kwargs, {"a": {"aa": {"": None}}})
+        self.assertDictEqual(result.task_kwargs, {"a": {"": None}})
 
     def test_should_not_truncate_kwargs(self):
         # given
         expected = TaskLogFactory.build(
-            state=TaskLog.State.SUCCESS, task_kwargs={"a": {"aa": {"aaa": 1}}}
+            state=TaskLog.State.SUCCESS, task_kwargs={"a": {"aa": 1}}
         )
         # when
         with patch(MANAGERS_PATH + ".TASKMONITOR_TRUNCATE_NESTED_PARAMS", False):
@@ -137,7 +137,7 @@ class TestManagerCreateFromTask(TestCase):
                 task_kwargs=expected.task_kwargs,
             )
         # then
-        self.assertDictEqual(result.task_kwargs, {"a": {"aa": {"aaa": 1}}})
+        self.assertDictEqual(result.task_kwargs, {"a": {"aa": 1}})
 
     def _assert_equal_objs(self, expected, result):
         field_names = {

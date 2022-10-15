@@ -76,58 +76,24 @@ class TestTruncateArgs(TestCase):
 class TestTruncateKwargs(TestCase):
     def test_should_copy_unnested_dict(self):
         # when
-        result = truncate_kwargs(
-            {
-                "alpha": 1,
-                "bravo": [1, 2, 3],
-                "charlie": (1, 2, 3),
-                "delta": {"blue": 1, "red": 2},
-            }
-        )
+        result = truncate_kwargs({"a": 1, "b": "blue"})
         # then
-        self.assertDictEqual(
-            result,
-            {
-                "alpha": 1,
-                "bravo": [1, 2, 3],
-                "charlie": [1, 2, 3],
-                "delta": {"blue": 1, "red": 2},
-            },
-        )
+        self.assertDictEqual(result, {"a": 1, "b": "blue"})
 
     def test_should_truncate_nested_lists(self):
         # when
-        result = truncate_kwargs(
-            {
-                "alpha": 1,
-                "bravo": [1, [1, 2], 3],
-                "charlie": [1, (1, 2), 3],
-                "delta": [1, {"blue": 1}, 3],
-            }
-        )
+        result = truncate_kwargs({"a": [1, 2, 3]})
         # then
-        self.assertDictEqual(
-            result,
-            {
-                "alpha": 1,
-                "bravo": [1, [None], 3],
-                "charlie": [1, [None], 3],
-                "delta": [1, {"": None}, 3],
-            },
-        )
+        self.assertDictEqual(result, {"a": [None]})
 
     def test_should_truncate_nested_dict(self):
         # when
-        result = truncate_kwargs({"a": {"aa": {"aaa": 1}}})
+        result = truncate_kwargs({"a": {"aa": 1, "ab": 2}})
         # then
-        self.assertDictEqual(result, {"a": {"aa": {"": None}}})
+        self.assertDictEqual(result, {"a": {"": None}})
 
     def test_should_truncate_mixed(self):
         # when
-        result = truncate_kwargs(
-            {"a": {"aa": {"aaa": 1}}, "b": 1, "c": [1, 2], "d": [1, [1, 2], 3]}
-        )
+        result = truncate_kwargs({"a": 1, "b": {"ba": 1}, "c": [1, 2]})
         # then
-        self.assertDictEqual(
-            result, {"a": {"aa": {"": None}}, "b": 1, "c": [1, 2], "d": [1, [None], 3]}
-        )
+        self.assertDictEqual(result, {"a": 1, "b": {"": None}, "c": [None]})

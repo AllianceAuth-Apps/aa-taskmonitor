@@ -96,10 +96,16 @@ class TaskLog(models.Model):
         max_length=255, db_index=True, help_text="Name of this task."
     )
     task_args = models.JSONField(
-        default=list, help_text="Positional arguments the task was called with."
+        default=list,
+        help_text=(
+            'Positional arguments the task was called with. Nested items might be truncated to [None] or {"": None}.'
+        ),
     )
     task_kwargs = models.JSONField(
-        default=dict, help_text="Keyword arguments the task was called with."
+        default=dict,
+        help_text=(
+            'Keyword arguments the task was called with. Nested items might be truncated to [None] or {"": None}.'
+        ),
     )
     timestamp = models.DateTimeField(
         db_index=True, help_text="Timestamp when this log was created."

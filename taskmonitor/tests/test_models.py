@@ -12,6 +12,26 @@ MODELS_PATH = "taskmonitor.models"
 
 
 class TestManagerCreateFromTask(TestCase):
+    def test_should_create_from_succeeded_task(self):
+        # given
+        expected = TaskLogFactory.build(state=TaskLog.State.SUCCESS)
+        # when
+        with patch("django.utils.timezone.now") as mock_now:
+            mock_now.return_value = expected.timestamp
+            result = TaskLog.objects.create_from_task(
+                task_id=str(expected.task_id),
+                task_name=expected.task_name,
+                state=expected.state,
+                priority=expected.priority,
+                retries=expected.retries,
+                received=expected.received,
+                started=expected.started,
+                task_args=expected.task_args,
+                task_kwargs=expected.task_kwargs,
+            )
+        # then
+        self._assert_equal_objs(expected, result)
+
     def test_should_create_from_failed_task(self):
         # given
         expected = TaskLogFactory.build(
@@ -33,6 +53,46 @@ class TestManagerCreateFromTask(TestCase):
             )
         # then
         self._assert_equal_objs(expected, result)
+
+    def test_should_truncate_args(self):
+        # given
+        expected = TaskLogFactory.build(
+            state=TaskLog.State.SUCCESS, task_args=[1, [1, 2], 3]
+        )
+        # when
+        result = TaskLog.objects.create_from_task(
+            task_id=str(expected.task_id),
+            task_name=expected.task_name,
+            state=expected.state,
+            priority=expected.priority,
+            retries=expected.retries,
+            received=expected.received,
+            started=expected.started,
+            task_args=expected.task_args,
+            task_kwargs=expected.task_kwargs,
+        )
+        # then
+        self.assertListEqual(result.task_args, [1, [None], 3])
+
+    def test_should_truncate_kwargs(self):
+        # given
+        expected = TaskLogFactory.build(
+            state=TaskLog.State.SUCCESS, task_kwargs={"a": {"aa": {"aaa": 1}}}
+        )
+        # when
+        result = TaskLog.objects.create_from_task(
+            task_id=str(expected.task_id),
+            task_name=expected.task_name,
+            state=expected.state,
+            priority=expected.priority,
+            retries=expected.retries,
+            received=expected.received,
+            started=expected.started,
+            task_args=expected.task_args,
+            task_kwargs=expected.task_kwargs,
+        )
+        # then
+        self.assertDictEqual(result.task_kwargs, {"a": {"aa": {"": None}}})
 
     def _assert_equal_objs(self, expected, result):
         field_names = {

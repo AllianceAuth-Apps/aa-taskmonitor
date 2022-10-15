@@ -9,7 +9,7 @@ from django.db.models.functions import TruncMinute
 from django.utils import timezone
 
 from .core import celery_queues
-from .helpers import extract_app_name
+from .helpers import extract_app_name, truncate_args, truncate_kwargs
 
 
 class QuerySetQueryStub:
@@ -174,8 +174,8 @@ class TaskLogManagerBase(models.Manager):
             "task_id": UUID(task_id),
             "task_name": task_name,
             "timestamp": timezone.now(),
-            "task_args": task_args,
-            "task_kwargs": task_kwargs,
+            "task_args": truncate_args(task_args),
+            "task_kwargs": truncate_kwargs(task_kwargs),
         }
         if exception:
             params["exception"] = str(exception)

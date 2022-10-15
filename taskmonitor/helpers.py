@@ -47,23 +47,23 @@ def dict_sort_keys(d: dict) -> dict:
     return dict(sorted(d.items(), key=lambda x: x[0].lower()))
 
 
-def truncate_args(args: list) -> list:
+def truncate_list(lst: list) -> list:
     """Truncate nested elements and return as new list.
 
     Dicts will be replaced by `{}`
 
     Lists, tuple and sets wil be replaced by `[]`
     """
-    return [_replace_nested_element(item) for item in args]
+    return [_replace_nested_element(item) for item in lst]
 
 
-def truncate_kwargs(kwargs: dict) -> dict:
+def truncate_dict(dct: dict) -> dict:
     """Truncate nested values and return as new dict.
 
     Example:
     `{"a": {"aa": 1, ...}, "b": [1, 2, ...]}`-> `{"a": {}, "b": []}`
     """
-    return {key: _replace_nested_element(value) for key, value in kwargs.items()}
+    return {key: _replace_nested_element(value) for key, value in dct.items()}
 
 
 def _replace_nested_element(value):
@@ -77,7 +77,7 @@ def _replace_nested_element(value):
 def truncate_result(value):
     """Truncate nested items in results and return as new value."""
     if isinstance(value, dict):
-        return truncate_kwargs(value)
+        return truncate_dict(value)
     elif isinstance(value, (list, tuple, set)):
-        return truncate_args(value)
+        return truncate_list(value)
     return value

@@ -3,8 +3,8 @@ from django.test import TestCase
 from taskmonitor.helpers import (
     dict_sort_keys,
     extract_app_name,
-    truncate_args,
-    truncate_kwargs,
+    truncate_dict,
+    truncate_list,
     truncate_result,
 )
 
@@ -47,60 +47,60 @@ class TestExtractAppName(TestCase):
         self.assertEqual(result, "")
 
 
-class TestTruncateArgs(TestCase):
+class TestTruncateList(TestCase):
     def test_should_copy_unnested_list(self):
         # when
-        result = truncate_args([1, "alpha", 3])
+        result = truncate_list([1, "alpha", 3])
         # then
         self.assertListEqual(result, [1, "alpha", 3])
 
     def test_should_truncate_nested_list(self):
         # when
-        result = truncate_args([1, [1, 2], 3])
+        result = truncate_list([1, [1, 2], 3])
         # then
         self.assertListEqual(result, [1, [], 3])
 
     def test_should_truncate_nested_dict(self):
         # when
-        result = truncate_args([1, {"alpha": 1}, 3])
+        result = truncate_list([1, {"alpha": 1}, 3])
         # then
         self.assertListEqual(result, [1, {}, 3])
 
     def test_should_truncate_tuple(self):
         # when
-        result = truncate_args([1, (1, 2), 3])
+        result = truncate_list([1, (1, 2), 3])
         # then
         self.assertListEqual(result, [1, [], 3])
 
     def test_should_truncate_mix(self):
         # when
-        result = truncate_args([1, [1, 2], {"alpha": 1}, (1, 2), 3])
+        result = truncate_list([1, [1, 2], {"alpha": 1}, (1, 2), 3])
         # then
         self.assertListEqual(result, [1, [], {}, [], 3])
 
 
-class TestTruncateKwargs(TestCase):
+class TestTruncateDict(TestCase):
     def test_should_copy_unnested_dict(self):
         # when
-        result = truncate_kwargs({"a": 1, "b": "blue"})
+        result = truncate_dict({"a": 1, "b": "blue"})
         # then
         self.assertDictEqual(result, {"a": 1, "b": "blue"})
 
     def test_should_truncate_nested_lists(self):
         # when
-        result = truncate_kwargs({"a": [1, 2, 3]})
+        result = truncate_dict({"a": [1, 2, 3]})
         # then
         self.assertDictEqual(result, {"a": []})
 
     def test_should_truncate_nested_dict(self):
         # when
-        result = truncate_kwargs({"a": {"aa": 1, "ab": 2}})
+        result = truncate_dict({"a": {"aa": 1, "ab": 2}})
         # then
         self.assertDictEqual(result, {"a": {}})
 
     def test_should_truncate_mixed(self):
         # when
-        result = truncate_kwargs({"a": 1, "b": {"ba": 1}, "c": [1, 2]})
+        result = truncate_dict({"a": 1, "b": {"ba": 1}, "c": [1, 2]})
         # then
         self.assertDictEqual(result, {"a": 1, "b": {}, "c": []})
 

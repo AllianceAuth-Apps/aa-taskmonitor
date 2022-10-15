@@ -10,7 +10,7 @@ from django.utils import timezone
 
 from .app_settings import TASKMONITOR_TRUNCATE_NESTED_DATA
 from .core import celery_queues
-from .helpers import extract_app_name, truncate_args, truncate_kwargs, truncate_result
+from .helpers import extract_app_name, truncate_dict, truncate_list, truncate_result
 
 
 class QuerySetQueryStub:
@@ -178,10 +178,10 @@ class TaskLogManagerBase(models.Manager):
             "timestamp": timezone.now(),
         }
         params["args"] = (
-            truncate_args(args) if TASKMONITOR_TRUNCATE_NESTED_DATA else args
+            truncate_list(args) if TASKMONITOR_TRUNCATE_NESTED_DATA else args
         )
         params["kwargs"] = (
-            truncate_kwargs(kwargs) if TASKMONITOR_TRUNCATE_NESTED_DATA else kwargs
+            truncate_dict(kwargs) if TASKMONITOR_TRUNCATE_NESTED_DATA else kwargs
         )
         params["result"] = (
             truncate_result(result) if TASKMONITOR_TRUNCATE_NESTED_DATA else result

@@ -146,7 +146,7 @@ class TaskLogAdmin(admin.ModelAdmin):
             '<span class="{}">{}</span>', css_class, obj.get_state_display()
         )
 
-    @admin.display(ordering="Exception")
+    @admin.display(description="Exception")
     def _exception(self, obj) -> str:
         return html.format_html("<code>{}</code>", obj.exception)
 

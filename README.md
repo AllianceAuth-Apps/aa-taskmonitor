@@ -96,7 +96,7 @@ Name | Description | Default
 `TASKMONITOR_HOUSEKEEPING_FREQUENCY`| Frequency of house keeping runs in minutes. | `15`
 `TASKMONITOR_REPORTS_MAX_AGE`| Max age of cached reports in minutes. | `15`
 `TASKMONITOR_REPORTS_MAX_TOP`| Max items to show in the top reports. e.g. 10 will shop the top ten items. | `15`
-`TASKMONITOR_TRUNCATE_NESTED_DATA`| Whether deeply nested task params and results are truncated. This saves storage. When activate nested lists and nested dicts are truncated to the top level. Further, a result list containing empty containers only are shortened to an empty list.<br>Examples:<br>`[1, [2, 3], 4]` => `[1, [], 4]` | `True`
+`TASKMONITOR_TRUNCATE_NESTED_DATA`| Whether deeply nested task params and results are truncated. Please see FAQ for details. | `True`
 
 ## FAQ
 
@@ -113,3 +113,19 @@ Task Monitor on the other hand aims to be fully functional standalone by providi
 ## How is this app different from celery's flower?
 
 Flower offers more detailed and technical information about task runs and might  therefore be more most for developers. However, it not designed to store a larger number of task logs (default is only 10K) and is appears therefore to be less suited for Alliance Auth, where you typically have 100K+ tasks per day.
+
+## What does data truncating do exactly?
+
+Task Monitor has data truncating enabled by default. It is applied when storing args, kwargs and results in task logs. This helps to reduce the storage consumptions and also makes the task log better readable. But it can be turned off.
+
+Task args are truncated by clearing all nested containers.
+
+Example: `[1, [2, 3], 4]` becomes `[1, [], 4]`
+
+Task kwargs are truncated by clearing all nested containers in values.
+
+Example: `{"a": [1, 2], "b": 3}` becomes `{"a": [], "b": 3}`
+
+Finally, task results are truncated like args and kwargs depending on their type. In addition lists of empty containers are compressed.
+
+Example: `[ [], [], [] ]` becomes `[]`

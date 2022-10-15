@@ -13,3 +13,8 @@ TASKMONITOR_REPORTS_MAX_AGE = clean_setting("TASKMONITOR_REPORTS_MAX_AGE", 30)
 
 TASKMONITOR_REPORTS_MAX_TOP = clean_setting("TASKMONITOR_REPORTS_MAX_TOP", 20)
 """Max items to show in the top reports. e.g. 10 will shop the top ten items."""
+
+TASKMONITOR_TRUNCATE_NESTED_PARAMS = clean_setting(
+    "TASKMONITOR_TRUNCATE_NESTED_PARAMS", True
+)
+"""Whether deeply nested task params are truncated or not."""

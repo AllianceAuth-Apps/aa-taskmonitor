@@ -17,7 +17,6 @@ An Alliance Auth app for monitoring celery tasks.
 - [Features](#features)
 - [Screenshots](#screenshots)
 - [Installation](#installation)
-- [User manual](#user-manual)
 - [Settings](#settings)
 - [FAQ](#faq)
 - [Change Log](CHANGELOG.md)
@@ -97,6 +96,7 @@ Name | Description | Default
 `TASKMONITOR_HOUSEKEEPING_FREQUENCY`| Frequency of house keeping runs in minutes. | `15`
 `TASKMONITOR_REPORTS_MAX_AGE`| Max age of cached reports in minutes. | `15`
 `TASKMONITOR_REPORTS_MAX_TOP`| Max items to show in the top reports. e.g. 10 will shop the top ten items. | `15`
+`TASKMONITOR_TRUNCATE_NESTED_PARAMS`| Whether deeply nested task params are truncated or not. This saves storage space. | `True`
 
 ## FAQ
 

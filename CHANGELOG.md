@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Fixed
 
+## [0.7.0] - TBD
+
+- Store task params in task log
+
 ## [0.6.0] - 2022-10-02
 
 ### Added

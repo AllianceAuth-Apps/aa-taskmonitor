@@ -8,6 +8,7 @@ from django.db.models import Avg, Count, Max
 from django.db.models.functions import TruncMinute
 from django.utils import timezone
 
+from .app_settings import TASKMONITOR_TRUNCATE_NESTED_PARAMS
 from .core import celery_queues
 from .helpers import extract_app_name, truncate_args, truncate_kwargs
 
@@ -174,9 +175,17 @@ class TaskLogManagerBase(models.Manager):
             "task_id": UUID(task_id),
             "task_name": task_name,
             "timestamp": timezone.now(),
-            "task_args": truncate_args(task_args),
-            "task_kwargs": truncate_kwargs(task_kwargs),
         }
+        params["task_args"] = (
+            truncate_args(task_args)
+            if TASKMONITOR_TRUNCATE_NESTED_PARAMS
+            else task_args
+        )
+        params["task_kwargs"] = (
+            truncate_kwargs(task_kwargs)
+            if TASKMONITOR_TRUNCATE_NESTED_PARAMS
+            else task_kwargs
+        )
         if exception:
             params["exception"] = str(exception)
             if traceback := getattr(exception, "__traceback__"):

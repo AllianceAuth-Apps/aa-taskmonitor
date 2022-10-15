@@ -72,3 +72,12 @@ def _replace_nested_element(value):
     elif isinstance(value, (list, tuple, set)):
         return list()
     return value
+
+
+def truncate_result(value):
+    """Truncate nested items in results and return as new value."""
+    if isinstance(value, dict):
+        return truncate_kwargs(value)
+    elif isinstance(value, (list, tuple, set)):
+        return truncate_args(value)
+    return value

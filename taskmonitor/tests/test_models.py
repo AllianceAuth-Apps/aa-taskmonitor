@@ -63,7 +63,7 @@ class TestManagerCreateFromTask(TestCase):
             state=TaskLog.State.SUCCESS, args=[1, [1, 2], 3]
         )
         # when
-        with patch(MANAGERS_PATH + ".TASKMONITOR_TRUNCATE_NESTED_PARAMS", True):
+        with patch(MANAGERS_PATH + ".TASKMONITOR_TRUNCATE_NESTED_DATA", True):
             result = TaskLog.objects.create_from_task(
                 task_id=str(expected.task_id),
                 task_name=expected.task_name,
@@ -84,7 +84,7 @@ class TestManagerCreateFromTask(TestCase):
             state=TaskLog.State.SUCCESS, args=[1, [1, 2], 3]
         )
         # when
-        with patch(MANAGERS_PATH + ".TASKMONITOR_TRUNCATE_NESTED_PARAMS", False):
+        with patch(MANAGERS_PATH + ".TASKMONITOR_TRUNCATE_NESTED_DATA", False):
             result = TaskLog.objects.create_from_task(
                 task_id=str(expected.task_id),
                 task_name=expected.task_name,
@@ -105,7 +105,7 @@ class TestManagerCreateFromTask(TestCase):
             state=TaskLog.State.SUCCESS, kwargs={"b": 2, "a": {"aa": 1}}
         )
         # when
-        with patch(MANAGERS_PATH + ".TASKMONITOR_TRUNCATE_NESTED_PARAMS", True):
+        with patch(MANAGERS_PATH + ".TASKMONITOR_TRUNCATE_NESTED_DATA", True):
             result = TaskLog.objects.create_from_task(
                 task_id=str(expected.task_id),
                 task_name=expected.task_name,
@@ -126,7 +126,7 @@ class TestManagerCreateFromTask(TestCase):
             state=TaskLog.State.SUCCESS, kwargs={"a": {"aa": 1}}
         )
         # when
-        with patch(MANAGERS_PATH + ".TASKMONITOR_TRUNCATE_NESTED_PARAMS", False):
+        with patch(MANAGERS_PATH + ".TASKMONITOR_TRUNCATE_NESTED_DATA", False):
             result = TaskLog.objects.create_from_task(
                 task_id=str(expected.task_id),
                 task_name=expected.task_name,
@@ -140,6 +140,50 @@ class TestManagerCreateFromTask(TestCase):
             )
         # then
         self.assertDictEqual(result.kwargs, {"a": {"aa": 1}})
+
+    def test_should_truncate_result(self):
+        # given
+        expected = TaskLogFactory.build(
+            state=TaskLog.State.SUCCESS, result=[1, [1, 2], 3]
+        )
+        # when
+        with patch(MANAGERS_PATH + ".TASKMONITOR_TRUNCATE_NESTED_DATA", True):
+            obj = TaskLog.objects.create_from_task(
+                task_id=str(expected.task_id),
+                task_name=expected.task_name,
+                state=expected.state,
+                priority=expected.priority,
+                retries=expected.retries,
+                received=expected.received,
+                started=expected.started,
+                args=expected.args,
+                kwargs=expected.kwargs,
+                result=expected.result,
+            )
+        # then
+        self.assertListEqual(obj.result, [1, [], 3])
+
+    def test_should_not_truncate_result(self):
+        # given
+        expected = TaskLogFactory.build(
+            state=TaskLog.State.SUCCESS, result=[1, [1, 2], 3]
+        )
+        # when
+        with patch(MANAGERS_PATH + ".TASKMONITOR_TRUNCATE_NESTED_DATA", False):
+            obj = TaskLog.objects.create_from_task(
+                task_id=str(expected.task_id),
+                task_name=expected.task_name,
+                state=expected.state,
+                priority=expected.priority,
+                retries=expected.retries,
+                received=expected.received,
+                started=expected.started,
+                args=expected.args,
+                kwargs=expected.kwargs,
+                result=expected.result,
+            )
+        # then
+        self.assertListEqual(obj.result, [1, [1, 2], 3])
 
     def _assert_equal_objs(self, expected, result):
         field_names = {

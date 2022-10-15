@@ -5,6 +5,7 @@ from taskmonitor.helpers import (
     extract_app_name,
     truncate_args,
     truncate_kwargs,
+    truncate_result,
 )
 
 
@@ -112,3 +113,23 @@ class TestSortDict(TestCase):
         expected = {"a": 1, "b": 2, "C": 3}
         self.assertDictEqual(result, expected)
         self.assertListEqual(list(result.keys()), list(expected.keys()))
+
+
+class TestTruncateResult(TestCase):
+    def test_should_copy_scalar_values(self):
+        # when
+        result = truncate_result("alpha")
+        # then
+        self.assertEqual(result, "alpha")
+
+    def test_should_truncate_nested_lists(self):
+        # when
+        result = truncate_result([1, [1, 2], {"alpha": 1}, (1, 2), 3])
+        # then
+        self.assertListEqual(result, [1, [], {}, [], 3])
+
+    def test_should_truncate_nested_dicts(self):
+        # when
+        result = truncate_result({"a": 1, "b": {"ba": 1}, "c": [1, 2]})
+        # then
+        self.assertDictEqual(result, {"a": 1, "b": {}, "c": []})

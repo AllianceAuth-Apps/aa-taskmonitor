@@ -15,7 +15,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [0.7.0] - TBD
 
+### Added
+
 - Store task params in task log
+
+### Changed
+
+- Format technical fields in task log (e.g. traceback) as code
 
 ## [0.6.0] - 2022-10-02
 

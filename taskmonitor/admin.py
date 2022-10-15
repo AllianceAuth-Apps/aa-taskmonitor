@@ -2,8 +2,9 @@ from typing import Optional
 
 from django.contrib import admin
 from django.shortcuts import redirect
-from django.utils import html, timezone
+from django.utils import html, safestring, timezone
 
+from .helpers import dict_sort_keys
 from .models import QueuedTask, TaskLog, TaskReport
 
 
@@ -64,6 +65,7 @@ class TaskLogAdmin(admin.ModelAdmin):
     list_display = (
         "timestamp",
         "task_name",
+        "_params",
         "priority",
         "_state",
         "_runtime",
@@ -73,6 +75,23 @@ class TaskLogAdmin(admin.ModelAdmin):
     search_fields = ("task_name", "app_name", "task_id")
     actions = ["delete_selected_2"]
     show_full_result_count = False
+    fields = (
+        "task_id",
+        "task_name",
+        "timestamp",
+        "_task_args",
+        "_task_kwargs",
+        "retries",
+        "priority",
+        "state",
+        "runtime",
+        "app_name",
+        "_exception",
+        "parent_id",
+        "received",
+        "started",
+        "_traceback",
+    )
 
     def has_add_permission(self, *args, **kwargs) -> bool:
         return False
@@ -85,6 +104,17 @@ class TaskLogAdmin(admin.ModelAdmin):
         if "delete_selected" in actions:
             del actions["delete_selected"]
         return actions
+
+    def _params(self, obj):
+        if obj.task_args and not obj.task_args:
+            return html.format_html("<code>{}</code>", obj.task_args)
+        if not obj.task_args and obj.task_kwargs:
+            return html.format_html("<code>{}</code>", dict_sort_keys(obj.task_kwargs))
+        if obj.task_args and obj.task_kwargs:
+            return html.format_html(
+                "<code>{}<br>{}</code>", obj.task_args, dict_sort_keys(obj.task_kwargs)
+            )
+        return None
 
     @admin.display(ordering="runtime")
     def _runtime(self, obj) -> Optional[str]:
@@ -103,17 +133,26 @@ class TaskLogAdmin(admin.ModelAdmin):
 
     @admin.display(ordering="exception")
     def _exception(self, obj) -> str:
-        return obj.exception
-        # if obj.exception:
-        #     return html.format_html(
-        #         '<span class="truncate" title="{}">{}</span>',
-        #         obj.exception,
-        #         obj.exception,
-        #     )
-        # return ""
+        return html.format_html("<code>{}</code>", obj.exception)
 
     @admin.action(description="Delete selected entries (NO CONFIRMATION!")
     def delete_selected_2(self, request, queryset):
         entries_count = queryset.count()
         queryset._raw_delete(queryset.db)
         self.message_user(request, f"Deleted {entries_count} entries.")
+
+    def _task_args(self, obj):
+        return html.format_html("<code>{}</code>", obj.task_args)
+
+    def _task_kwargs(self, obj):
+        return html.format_html("<code>{}</code>", dict_sort_keys(obj.task_kwargs))
+
+    def _traceback(self, obj):
+        return safestring.mark_safe(
+            "<br>".join(
+                [
+                    html.format_html("<code>{}</code>", line)
+                    for line in obj.traceback.splitlines()
+                ]
+            )
+        )

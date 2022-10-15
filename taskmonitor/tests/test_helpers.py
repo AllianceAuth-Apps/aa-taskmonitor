@@ -1,6 +1,11 @@
 from django.test import TestCase
 
-from taskmonitor.helpers import extract_app_name, truncate_args, truncate_kwargs
+from taskmonitor.helpers import (
+    dict_sort_keys,
+    extract_app_name,
+    truncate_args,
+    truncate_kwargs,
+)
 
 
 class TestExtractAppName(TestCase):
@@ -52,25 +57,25 @@ class TestTruncateArgs(TestCase):
         # when
         result = truncate_args([1, [1, 2], 3])
         # then
-        self.assertListEqual(result, [1, [None], 3])
+        self.assertListEqual(result, [1, [], 3])
 
     def test_should_truncate_nested_dict(self):
         # when
         result = truncate_args([1, {"alpha": 1}, 3])
         # then
-        self.assertListEqual(result, [1, {"": None}, 3])
+        self.assertListEqual(result, [1, {}, 3])
 
     def test_should_truncate_tuple(self):
         # when
         result = truncate_args([1, (1, 2), 3])
         # then
-        self.assertListEqual(result, [1, [None], 3])
+        self.assertListEqual(result, [1, [], 3])
 
     def test_should_truncate_mix(self):
         # when
         result = truncate_args([1, [1, 2], {"alpha": 1}, (1, 2), 3])
         # then
-        self.assertListEqual(result, [1, [None], {"": None}, [None], 3])
+        self.assertListEqual(result, [1, [], {}, [], 3])
 
 
 class TestTruncateKwargs(TestCase):
@@ -84,16 +89,26 @@ class TestTruncateKwargs(TestCase):
         # when
         result = truncate_kwargs({"a": [1, 2, 3]})
         # then
-        self.assertDictEqual(result, {"a": [None]})
+        self.assertDictEqual(result, {"a": []})
 
     def test_should_truncate_nested_dict(self):
         # when
         result = truncate_kwargs({"a": {"aa": 1, "ab": 2}})
         # then
-        self.assertDictEqual(result, {"a": {"": None}})
+        self.assertDictEqual(result, {"a": {}})
 
     def test_should_truncate_mixed(self):
         # when
         result = truncate_kwargs({"a": 1, "b": {"ba": 1}, "c": [1, 2]})
         # then
-        self.assertDictEqual(result, {"a": 1, "b": {"": None}, "c": [None]})
+        self.assertDictEqual(result, {"a": 1, "b": {}, "c": []})
+
+
+class TestSortDict(TestCase):
+    def test_should_sort_normal_keys(self):
+        # when
+        result = dict_sort_keys({"a": 1, "C": 3, "b": 2})
+        # then
+        expected = {"a": 1, "b": 2, "C": 3}
+        self.assertDictEqual(result, expected)
+        self.assertListEqual(list(result.keys()), list(expected.keys()))

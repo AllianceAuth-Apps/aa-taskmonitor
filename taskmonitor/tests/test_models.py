@@ -74,7 +74,7 @@ class TestManagerCreateFromTask(TestCase):
                 task_kwargs=expected.task_kwargs,
             )
         # then
-        self.assertListEqual(result.task_args, [1, [None], 3])
+        self.assertListEqual(result.task_args, [1, [], 3])
 
     def test_should_not_truncate_args(self):
         # given
@@ -100,7 +100,7 @@ class TestManagerCreateFromTask(TestCase):
     def test_should_truncate_kwargs(self):
         # given
         expected = TaskLogFactory.build(
-            state=TaskLog.State.SUCCESS, task_kwargs={"a": {"aa": 1}}
+            state=TaskLog.State.SUCCESS, task_kwargs={"b": 2, "a": {"aa": 1}}
         )
         # when
         with patch(MANAGERS_PATH + ".TASKMONITOR_TRUNCATE_NESTED_PARAMS", True):
@@ -116,7 +116,7 @@ class TestManagerCreateFromTask(TestCase):
                 task_kwargs=expected.task_kwargs,
             )
         # then
-        self.assertDictEqual(result.task_kwargs, {"a": {"": None}})
+        self.assertDictEqual(result.task_kwargs, {"a": {}, "b": 2})
 
     def test_should_not_truncate_kwargs(self):
         # given

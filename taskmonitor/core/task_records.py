@@ -9,7 +9,7 @@ from django.core.cache import cache
 
 from ..app_settings import TASKMONITOR_DATA_MAX_AGE
 
-CACHE_KEY = "TASKMONITOR_RECORDS"
+CACHE_KEY = "taskmonitor_records"
 
 
 def set(task_id: str, key: str, value: Any):

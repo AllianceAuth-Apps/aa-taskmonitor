@@ -13,6 +13,18 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Fixed
 
+## [0.7.0] - 2022-10-16
+
+### Added
+
+- Store task params in task log
+- Store task results in task log
+- Truncate stored task params & results to safe space (can be turned off)
+
+### Changed
+
+- Show technical data in task log (e.g. traceback) as code
+
 ## [0.6.0] - 2022-10-02
 
 ### Added

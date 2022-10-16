@@ -1,8 +1,9 @@
+import json
 from typing import Optional
 
 from django.contrib import admin
 from django.shortcuts import redirect
-from django.utils import html, timezone
+from django.utils import html, safestring, timezone
 
 from .models import QueuedTask, TaskLog, TaskReport
 
@@ -64,6 +65,7 @@ class TaskLogAdmin(admin.ModelAdmin):
     list_display = (
         "timestamp",
         "task_name",
+        "_params",
         "priority",
         "_state",
         "_runtime",
@@ -73,6 +75,24 @@ class TaskLogAdmin(admin.ModelAdmin):
     search_fields = ("task_name", "app_name", "task_id")
     actions = ["delete_selected_2"]
     show_full_result_count = False
+    fields = (
+        "task_id",
+        "task_name",
+        "timestamp",
+        "_args",
+        "_kwargs",
+        "_result",
+        "retries",
+        "priority",
+        "state",
+        "runtime",
+        "app_name",
+        "_exception",
+        "parent_id",
+        "received",
+        "started",
+        "_traceback",
+    )
 
     def has_add_permission(self, *args, **kwargs) -> bool:
         return False
@@ -85,6 +105,31 @@ class TaskLogAdmin(admin.ModelAdmin):
         if "delete_selected" in actions:
             del actions["delete_selected"]
         return actions
+
+    def get_readonly_fields(self, request, obj):
+        try:
+            field = [f for f in obj._meta.fields if f.name == "kwargs"]
+            if len(field) > 0:
+                field = field[0]
+                field.help_text = "some special help text"
+        except Exception:
+            pass
+        return self.readonly_fields
+
+    def _params(self, obj):
+        if obj.args and not obj.args:
+            return html.format_html("<code>{}</code>", json.dumps(obj.args))
+        if not obj.args and obj.kwargs:
+            return html.format_html(
+                "<code>{}</code>", json.dumps(obj.kwargs, sort_keys=True)
+            )
+        if obj.args and obj.kwargs:
+            return html.format_html(
+                "<code>{}<br>{}</code>",
+                json.dumps(obj.args),
+                json.dumps(obj.kwargs, sort_keys=True),
+            )
+        return None
 
     @admin.display(ordering="runtime")
     def _runtime(self, obj) -> Optional[str]:
@@ -101,19 +146,44 @@ class TaskLogAdmin(admin.ModelAdmin):
             '<span class="{}">{}</span>', css_class, obj.get_state_display()
         )
 
-    @admin.display(ordering="exception")
+    @admin.display(description="Exception")
     def _exception(self, obj) -> str:
-        return obj.exception
-        # if obj.exception:
-        #     return html.format_html(
-        #         '<span class="truncate" title="{}">{}</span>',
-        #         obj.exception,
-        #         obj.exception,
-        #     )
-        # return ""
+        return html.format_html("<code>{}</code>", obj.exception)
 
     @admin.action(description="Delete selected entries (NO CONFIRMATION!")
     def delete_selected_2(self, request, queryset):
         entries_count = queryset.count()
         queryset._raw_delete(queryset.db)
         self.message_user(request, f"Deleted {entries_count} entries.")
+
+    @admin.display(description="Result")
+    def _result(self, obj):
+        if obj.state == TaskLog.State.SUCCESS:
+            return format_html_data(obj.result)
+        return "-"
+
+    @admin.display(description="Args")
+    def _args(self, obj):
+        return format_html_data(obj.args)
+
+    @admin.display(description="Kwargs")
+    def _kwargs(self, obj):
+        return format_html_data(obj.kwargs)
+
+    @admin.display(description="Traceback")
+    def _traceback(self, obj):
+        return format_html_lines(obj.traceback)
+
+
+def format_html_lines(text) -> str:
+    return safestring.mark_safe(
+        "<br>".join(
+            [html.format_html("<code>{}</code>", line) for line in text.splitlines()]
+        )
+    )
+
+
+def format_html_data(data) -> str:
+    return html.format_html(
+        "<code>{}</code>", json.dumps(data, sort_keys=True, indent=4)
+    )

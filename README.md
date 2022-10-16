@@ -17,7 +17,6 @@ An Alliance Auth app for monitoring celery tasks.
 - [Features](#features)
 - [Screenshots](#screenshots)
 - [Installation](#installation)
-- [User manual](#user-manual)
 - [Settings](#settings)
 - [FAQ](#faq)
 - [Change Log](CHANGELOG.md)
@@ -26,12 +25,12 @@ An Alliance Auth app for monitoring celery tasks.
 
 Task Monitor enables administrators to monitor celery tasks running on their system.
 
-- Stores full log with details of all recently executed celery tasks including failed and retried tasks.
-- Keeps the storage needs in check by automatically deleting older task logs
-
+- Creates a log of all recently executed celery tasks including failed and retried tasks.
+- Stores many details in task logs to support the analysis of potential celery issues, including the parameters a task with called with and complete exception messages
+- Keeps the storage needs in check by automatically deleting older task logs and removing likely bloat from the collected data (but can also be turned off)
 - Admins can investigate task log with search & filters
 - Admins can view details for each task incl. exceptions and trace logs
-- Admins can review reports providing answers to common questions, e.g:
+- Admins can review reports with charts providing answers to common questions, e.g:
   - How many tasks have failed/retried?
   - How many tasks where run by each of my apps?
   - Which are the most frequent tasks?
@@ -49,9 +48,9 @@ Task Monitor enables administrators to monitor celery tasks running on their sys
 
 ![tasklog](https://i.imgur.com/3XMc8Zi.png)
 
-### The start of the reports page
+### Example chart in reports
 
-![tasklog](https://i.imgur.com/hSX5Qsb.png)
+![tasklog](https://i.imgur.com/OrVmZXT.png)
 
 ## Installation
 
@@ -97,6 +96,7 @@ Name | Description | Default
 `TASKMONITOR_HOUSEKEEPING_FREQUENCY`| Frequency of house keeping runs in minutes. | `15`
 `TASKMONITOR_REPORTS_MAX_AGE`| Max age of cached reports in minutes. | `15`
 `TASKMONITOR_REPORTS_MAX_TOP`| Max items to show in the top reports. e.g. 10 will shop the top ten items. | `15`
+`TASKMONITOR_TRUNCATE_NESTED_DATA`| Whether deeply nested task params and results are truncated. Please see FAQ for details. | `True`
 
 ## FAQ
 
@@ -113,3 +113,19 @@ Task Monitor on the other hand aims to be fully functional standalone by providi
 ## How is this app different from celery's flower?
 
 Flower offers more detailed and technical information about task runs and might  therefore be more most for developers. However, it not designed to store a larger number of task logs (default is only 10K) and is appears therefore to be less suited for Alliance Auth, where you typically have 100K+ tasks per day.
+
+## What does data truncating do exactly?
+
+Task Monitor has data truncating enabled by default. It is applied when storing args, kwargs and results in task logs. This helps to reduce the storage consumptions and also makes the task log better readable. But it can be turned off.
+
+Task args are truncated by clearing all nested containers.
+
+Example: `[1, [2, 3], 4]` becomes `[1, [], 4]`
+
+Task kwargs are truncated by clearing all nested containers in values.
+
+Example: `{"a": [1, 2], "b": 3}` becomes `{"a": [], "b": 3}`
+
+Finally, task results are truncated like args and kwargs depending on their type. In addition lists of empty containers are compressed.
+
+Example: `[ [], [], [] ]` becomes `[]`

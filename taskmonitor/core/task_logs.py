@@ -37,19 +37,23 @@ def task_prerun_handler_2(task_id):
         task_records.set(task_id, TASK_STARTED, timezone.now())
 
 
-def task_success_handler_2(sender):
+def task_success_handler_2(sender, result):
     """Handle task success signal."""
     if sender and sender.request:
-        task_id = sender.request.id
+        request = sender.request
+        task_id = request.id
         TaskLog.objects.create_from_task(
             task_id=task_id,
             task_name=sender.name,
             state=TaskLog.State.SUCCESS,
-            retries=sender.request.retries,
-            priority=sender.request.delivery_info["priority"],
-            parent_id=sender.request.parent_id,
+            retries=request.retries,
+            priority=request.delivery_info["priority"],
+            parent_id=request.parent_id,
             received=task_records.fetch(task_id, TASK_RECEIVED),
             started=task_records.fetch(task_id, TASK_STARTED),
+            args=request.args,
+            kwargs=request.kwargs,
+            result=result,
         )
     run_housekeeping_if_stale()
 
@@ -67,6 +71,8 @@ def task_retry_handler_2(sender, request, reason):
             parent_id=request.parent_id,
             received=task_records.fetch(task_id, TASK_RECEIVED),
             started=task_records.fetch(task_id, TASK_STARTED),
+            args=request.args,
+            kwargs=request.kwargs,
             exception=reason,
         )
     run_housekeeping_if_stale()
@@ -75,15 +81,18 @@ def task_retry_handler_2(sender, request, reason):
 def task_failure_handler_2(sender, task_id, exception):
     """Handle task failure signal."""
     if sender and task_id:
+        request = sender.request
         TaskLog.objects.create_from_task(
             task_id=task_id,
             task_name=sender.name,
             state=TaskLog.State.FAILURE,
-            retries=sender.request.retries,
-            priority=sender.request.delivery_info["priority"],
-            parent_id=sender.request.parent_id,
+            retries=request.retries,
+            priority=request.delivery_info["priority"],
+            parent_id=request.parent_id,
             received=task_records.fetch(task_id, TASK_RECEIVED),
             started=task_records.fetch(task_id, TASK_STARTED),
+            args=request.args,
+            kwargs=request.kwargs,
             exception=exception,
         )
     run_housekeeping_if_stale()
@@ -101,6 +110,8 @@ def task_internal_error_handler_2(sender, task_id, request, exception):
             parent_id=request.get("parent_id"),
             received=task_records.fetch(task_id, TASK_RECEIVED),
             started=task_records.fetch(task_id, TASK_STARTED),
+            args=request["args"],
+            kwargs=request["kwargs"],
             exception=exception,
         )
     run_housekeeping_if_stale()

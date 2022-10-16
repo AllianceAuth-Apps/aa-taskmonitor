@@ -8,8 +8,9 @@ from django.db.models import Avg, Count, Max
 from django.db.models.functions import TruncMinute
 from django.utils import timezone
 
+from .app_settings import TASKMONITOR_TRUNCATE_NESTED_DATA
 from .core import celery_queues
-from .helpers import extract_app_name
+from .helpers import extract_app_name, truncate_dict, truncate_list, truncate_result
 
 
 class QuerySetQueryStub:
@@ -155,13 +156,16 @@ class TaskLogManagerBase(models.Manager):
         state: int,
         retries: int,
         priority: int,
+        args: list,
+        kwargs: dict,
         received: dt.datetime = None,
         started: dt.datetime = None,
         parent_id: str = None,
         exception=None,
+        result=None,
     ) -> models.Model:
         """Create new object from a celery task."""
-        args = {
+        params = {
             "app_name": extract_app_name(task_name),
             "priority": priority,
             "parent_id": UUID(parent_id) if parent_id else None,
@@ -173,13 +177,22 @@ class TaskLogManagerBase(models.Manager):
             "task_name": task_name,
             "timestamp": timezone.now(),
         }
+        params["args"] = (
+            truncate_list(args) if TASKMONITOR_TRUNCATE_NESTED_DATA else args
+        )
+        params["kwargs"] = (
+            truncate_dict(kwargs) if TASKMONITOR_TRUNCATE_NESTED_DATA else kwargs
+        )
+        params["result"] = (
+            truncate_result(result) if TASKMONITOR_TRUNCATE_NESTED_DATA else result
+        )
         if exception:
-            args["exception"] = str(exception)
+            params["exception"] = str(exception)
             if traceback := getattr(exception, "__traceback__"):
-                args["traceback"] = "".join(
+                params["traceback"] = "".join(
                     tb.format_exception(None, value=exception, tb=traceback)
                 )
-        return self.create(**args)
+        return self.create(**params)
 
 
 TaskLogManager = TaskLogManagerBase.from_queryset(TaskLogQuerySet)

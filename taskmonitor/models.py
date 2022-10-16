@@ -57,19 +57,64 @@ class TaskLog(models.Model):
         RETRY = 2, "retry"
         FAILURE = 3, "failure"
 
-    app_name = models.CharField(max_length=255, db_index=True)
-    exception = models.TextField()
-    parent_id = models.UUIDField(null=True, default=None)
-    priority = models.IntegerField(null=True, default=None)
-    retries = models.IntegerField()
-    received = models.DateTimeField(null=True, default=None)
-    runtime = models.FloatField(null=True, default=None, db_index=True)
-    started = models.DateTimeField(null=True, default=None)
-    state = models.IntegerField(choices=State.choices, db_index=True)
-    task_id = models.UUIDField(default=uuid.uuid4, db_index=True)
-    task_name = models.CharField(max_length=255, db_index=True)
-    timestamp = models.DateTimeField(db_index=True)
-    traceback = models.TextField()
+    app_name = models.CharField(
+        max_length=255, db_index=True, help_text="Name of the app this task belongs to."
+    )
+    args = models.JSONField(
+        default=list,
+        help_text=(
+            "Positional arguments the task was called with. Nested items might be truncated to [] or {}."
+        ),
+    )
+    exception = models.TextField(help_text="Message of the raised exception if any.")
+    kwargs = models.JSONField(
+        default=dict,
+        help_text=(
+            "Keyword arguments the task was called with. Nested items might be truncated to [] or {}."
+        ),
+    )
+    parent_id = models.UUIDField(
+        null=True, default=None, help_text="ID of the parent task if any."
+    )
+    priority = models.IntegerField(
+        null=True, default=None, help_text="Priority this task was executed with."
+    )
+    result = models.JSONField(default=None, null=True, help_text="Result of the task.")
+    retries = models.IntegerField(help_text="Number of retries.")
+    received = models.DateTimeField(
+        null=True,
+        default=None,
+        help_text="When a task is received from the broker and is ready for execution.",
+    )
+    runtime = models.FloatField(
+        null=True,
+        default=None,
+        db_index=True,
+        help_text="Runtime of this task in seconds.",
+    )
+    started = models.DateTimeField(
+        null=True,
+        default=None,
+        help_text="When the task execution started.",
+    )
+    state = models.IntegerField(
+        choices=State.choices,
+        db_index=True,
+        help_text="Task's state when it was logged.",
+    )
+    task_id = models.UUIDField(
+        default=uuid.uuid4, db_index=True, help_text="Unique ID of this task."
+    )
+    task_name = models.CharField(
+        max_length=255, db_index=True, help_text="Name of this task."
+    )
+
+    timestamp = models.DateTimeField(
+        db_index=True, help_text="Timestamp when this log was created."
+    )
+    traceback = models.TextField(
+        help_text="Full stack trace if there was an exception."
+    )
 
     objects = TaskLogManager()
 

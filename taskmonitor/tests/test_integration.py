@@ -25,7 +25,7 @@ class TestSignalHandlingEnd2End(TestCase):
         task_records.set(expected.task_id, task_logs.TASK_STARTED, timezone.now())
         sender = SenderStub.create_from_obj(expected)
         # when
-        task_logs.task_success_handler_2(sender=sender)
+        task_logs.task_success_handler_2(sender=sender, result=expected.result)
         # then
         self.assertTrue(
             TaskLog.objects.filter(

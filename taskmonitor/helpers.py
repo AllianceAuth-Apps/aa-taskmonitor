@@ -40,3 +40,55 @@ def next_number(key: str = None) -> int:
         pass
     next_number._counter[key] = itertools.count(start=1)
     return next_number._counter[key].__next__()
+
+
+def dict_sort_keys(d: dict) -> dict:
+    """Return a copy of this dictionary with sorted keys."""
+    return dict(sorted(d.items(), key=lambda x: x[0].lower()))
+
+
+def truncate_list(lst: list) -> list:
+    """Truncate nested elements and return as new list.
+
+    Dicts will be replaced by `{}`
+
+    Lists, tuple and sets wil be replaced by `[]`
+    """
+    return [_replace_nested_element(item) for item in lst]
+
+
+def truncate_dict(dct: dict) -> dict:
+    """Truncate nested values and return as new dict.
+
+    Example:
+    `{"a": {"aa": 1, ...}, "b": [1, 2, ...]}`-> `{"a": {}, "b": []}`
+    """
+    return {key: _replace_nested_element(value) for key, value in dct.items()}
+
+
+def _replace_nested_element(value):
+    if isinstance(value, dict):
+        return dict()
+    elif isinstance(value, (list, tuple, set)):
+        return list()
+    return value
+
+
+def truncate_result(value):
+    """Truncate nested items in results and return as new value."""
+    if isinstance(value, dict):
+        return truncate_dict(value)
+    elif isinstance(value, (list, tuple, set)):
+        return compress_list(truncate_list(value))
+    return value
+
+
+def compress_list(lst: list) -> list:
+    """Compress list to empty list of it contains of empty containers only.
+
+    Example: `[ {}, {} ]` -> `[]`
+    """
+    for item in lst:
+        if item is False or item:
+            return lst
+    return []

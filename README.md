@@ -25,12 +25,12 @@ An Alliance Auth app for monitoring celery tasks.
 
 Task Monitor enables administrators to monitor celery tasks running on their system.
 
-- Stores full log with details of all recently executed celery tasks including failed and retried tasks.
-- Keeps the storage needs in check by automatically deleting older task logs
-
+- Creates a log of all recently executed celery tasks including failed and retried tasks.
+- Stores many details in task logs to support the analysis of potential celery issues, including the parameters a task with called with and complete exception messages
+- Keeps the storage needs in check by automatically deleting older task logs and removing likely bloat from the collected data (but can also be turned off)
 - Admins can investigate task log with search & filters
 - Admins can view details for each task incl. exceptions and trace logs
-- Admins can review reports providing answers to common questions, e.g:
+- Admins can review reports with charts providing answers to common questions, e.g:
   - How many tasks have failed/retried?
   - How many tasks where run by each of my apps?
   - Which are the most frequent tasks?
@@ -48,9 +48,9 @@ Task Monitor enables administrators to monitor celery tasks running on their sys
 
 ![tasklog](https://i.imgur.com/3XMc8Zi.png)
 
-### The start of the reports page
+### Example chart in reports
 
-![tasklog](https://i.imgur.com/hSX5Qsb.png)
+![tasklog](https://i.imgur.com/OrVmZXT.png)
 
 ## Installation
 

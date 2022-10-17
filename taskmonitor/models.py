@@ -1,5 +1,7 @@
+import json
 import uuid
 
+from django.core.serializers.json import DjangoJSONEncoder
 from django.db import models
 
 from .helpers import extract_app_name
@@ -125,3 +127,27 @@ class TaskLog(models.Model):
         if self.started:
             self.runtime = (self.timestamp - self.started).total_seconds()
         super().save(*args, **kwargs)
+
+    def asdict(self) -> dict:
+        struct = {}
+        for field in self._meta.fields:
+            if field.choices:
+                value = getattr(self, f"get_{field.name}_display")()
+            else:
+                value = getattr(self, field.name)
+            if isinstance(field, models.TextField):
+                value = self.traceback.splitlines()
+            # if callable(value):
+            #     try:
+            #         value = value() or ""
+            #     except Exception:
+            #         value = "Error retrieving value"
+            if value is None:
+                value = ""
+            struct[field.name] = value
+        return struct
+
+    def asjson(self) -> str:
+        return json.dumps(
+            self.asdict(), indent=4, sort_keys=True, cls=DjangoJSONEncoder
+        )

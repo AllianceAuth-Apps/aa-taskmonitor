@@ -1,4 +1,5 @@
 import datetime as dt
+import json
 from unittest.mock import patch
 
 from django.test import TestCase
@@ -10,6 +11,18 @@ from .factories import QueuedTaskRawFactory, TaskLogFactory
 
 MODELS_PATH = "taskmonitor.models"
 MANAGERS_PATH = "taskmonitor.managers"
+
+
+class TestTaskLog(TestCase):
+    def test_should_convert_to_json(self):
+        # given
+        obj = TaskLogFactory()
+        # when
+        data = obj.asjson()
+        # then
+        obj_2 = json.loads(data)
+        self.assertEqual(obj_2["task_name"], obj.task_name)
+        self.assertEqual(obj_2["task_id"], str(obj.task_id))
 
 
 class TestManagerCreateFromTask(TestCase):

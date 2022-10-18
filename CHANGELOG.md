@@ -13,6 +13,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Fixed
 
+## [0.8.0] - 2022-10-18
+
+### Added
+
+- Ability to copy a task log to the clipboard for easy sharing
+
 ## [0.7.0] - 2022-10-16
 
 ### Added

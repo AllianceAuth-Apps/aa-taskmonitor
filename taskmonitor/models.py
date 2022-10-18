@@ -129,14 +129,13 @@ class TaskLog(models.Model):
         super().save(*args, **kwargs)
 
     def asdict(self) -> dict:
+        """Convert to representation as Python dict."""
         struct = {}
         for field in self._meta.fields:
             if field.choices:
                 value = getattr(self, f"get_{field.name}_display")()
             else:
                 value = getattr(self, field.name)
-            if isinstance(field, models.TextField):
-                value = self.traceback.splitlines()
             # if callable(value):
             #     try:
             #         value = value() or ""
@@ -148,6 +147,18 @@ class TaskLog(models.Model):
         return struct
 
     def asjson(self) -> str:
+        """Convert to representation in JSON."""
         return json.dumps(
             self.asdict(), indent=4, sort_keys=True, cls=DjangoJSONEncoder
         )
+
+    def astext(self) -> str:
+        """Convert to text form that can be easily shared, e.g. on Discord chat."""
+        text = "Task Log:"
+        for key, value in self.asdict().items():
+            text += "\n\n"
+            if isinstance(value, (dict, list, tuple, set)) or key == "traceback":
+                text += f"{key}:\n{value}"
+            else:
+                text += f"{key}: {value}"
+        return text

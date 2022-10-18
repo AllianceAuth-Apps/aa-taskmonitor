@@ -177,7 +177,7 @@ class TaskLogAdmin(admin.ModelAdmin):
     def change_view(self, request, object_id, form_url="", extra_context=None):
         extra_context = extra_context or {}
         obj = get_object_or_404(TaskLog, pk=object_id)
-        extra_context["tasklog_plain"] = obj.asjson()
+        extra_context["tasklog_text"] = obj.astext()
         return super().change_view(
             request, object_id, form_url, extra_context=extra_context
         )

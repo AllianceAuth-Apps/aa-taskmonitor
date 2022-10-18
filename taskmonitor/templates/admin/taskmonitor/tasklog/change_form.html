@@ -1,0 +1,37 @@
+{% extends "admin/change_form.html" %}
+{% load i18n %}
+
+{% block extrahead %}
+    {{ block.super }}
+    {% include 'bundles/clipboard-js.html' %}
+{% endblock %}
+
+{% block object-tools-items %}
+    {{ block.super }}
+    <li>
+        <a
+            href="#"
+            class="btn copy-to-clipboard"
+            data-clipboard-text="{{ tasklog_text }}"
+            title="Click to toogle">
+            {% translate "Copy to clipboard" %}
+        </a>
+    </li>
+{% endblock %}
+
+{% block content %}
+    {{ block.super }}
+    <script type="text/javascript">
+        /** Copy given text to the clipboard */
+        const clipboard = new ClipboardJS('.copy-to-clipboard');
+
+        clipboard.on('success', function (e) {
+            e.clearSelection();
+        });
+
+        clipboard.on('error', function (e) {
+            console.error('Action:', e.action);
+            console.error('Trigger:', e.trigger);
+        });
+    </script>
+{% endblock %}

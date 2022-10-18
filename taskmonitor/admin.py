@@ -2,7 +2,7 @@ import json
 from typing import Optional
 
 from django.contrib import admin
-from django.shortcuts import redirect
+from django.shortcuts import get_object_or_404, redirect
 from django.utils import html, safestring, timezone
 
 from .models import QueuedTask, TaskLog, TaskReport
@@ -173,6 +173,14 @@ class TaskLogAdmin(admin.ModelAdmin):
     @admin.display(description="Traceback")
     def _traceback(self, obj):
         return format_html_lines(obj.traceback)
+
+    def change_view(self, request, object_id, form_url="", extra_context=None):
+        extra_context = extra_context or {}
+        obj = get_object_or_404(TaskLog, pk=object_id)
+        extra_context["tasklog_text"] = obj.astext()
+        return super().change_view(
+            request, object_id, form_url, extra_context=extra_context
+        )
 
 
 def format_html_lines(text) -> str:

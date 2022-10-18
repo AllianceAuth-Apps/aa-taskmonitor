@@ -110,22 +110,12 @@ class TaskLogQuerySet(models.QuerySet):
         """Return the tasklogs for a CSV file line by line.
         And return the field names as first line.
         """
-        yield [field.name for field in fields]
+        field_names = [field.name for field in fields]
+        yield field_names
         for obj in self.iterator():
-            values = []
-            for field in fields:
-                if field.choices:
-                    value = getattr(obj, f"get_{field.name}_display")()
-                else:
-                    value = getattr(obj, field.name)
-                # if callable(value):
-                #     try:
-                #         value = value() or ""
-                #     except Exception:
-                #         value = "Error retrieving value"
-                if value is None:
-                    value = ""
-                values.append(value)
+            values = [
+                value for key, value in obj.asdict().items() if key in set(field_names)
+            ]
             yield values
 
     def aggregate_timestamp_trunc(self):

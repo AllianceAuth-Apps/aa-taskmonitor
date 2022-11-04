@@ -1,16 +1,24 @@
 import datetime as dt
+import json
 import traceback as tb
 from typing import List
 from uuid import UUID
 
+from django.core.serializers.json import DjangoJSONEncoder
 from django.db import models
 from django.db.models import Avg, Count, Max
 from django.db.models.functions import TruncMinute
 from django.utils import timezone
 
+from allianceauth.services.hooks import get_extension_logger
+from app_utils.logging import LoggerAddTag
+
+from . import __title__
 from .app_settings import TASKMONITOR_TRUNCATE_NESTED_DATA
 from .core import celery_queues
 from .helpers import extract_app_name, truncate_dict, truncate_list, truncate_result
+
+logger = LoggerAddTag(get_extension_logger(__name__), __title__)
 
 
 class QuerySetQueryStub:
@@ -173,6 +181,15 @@ class TaskLogManagerBase(models.Manager):
         params["kwargs"] = (
             truncate_dict(kwargs) if TASKMONITOR_TRUNCATE_NESTED_DATA else kwargs
         )
+        try:
+            json.dumps(result, cls=DjangoJSONEncoder)
+        except TypeError:
+            logger.warning(
+                "%s [%s]: Result was not JSON serializable and therefore discarded.",
+                task_name,
+                task_id,
+            )
+            result = None
         params["result"] = (
             truncate_result(result) if TASKMONITOR_TRUNCATE_NESTED_DATA else result
         )

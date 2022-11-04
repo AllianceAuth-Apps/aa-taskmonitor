@@ -13,6 +13,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Fixed
 
+## [0.8.1] - 2022-11-04
+
+### Fixed
+
+- TypeError('Object of type Response is not JSON serializable') (#4)
+
 ## [0.8.0] - 2022-10-18
 
 ### Added

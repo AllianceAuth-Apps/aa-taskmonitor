@@ -32,6 +32,11 @@ pre-commit:
   needs: []
   image: python:3.9-bullseye
 
+.test-py310:
+  stage: test
+  needs: []
+  image: python:3.10-bullseye
+
 test-py38-dj32:
   extends: .test-py38
   script:
@@ -42,6 +47,12 @@ test-py39-dj32:
   extends: .test-py39
   script:
     - tox -e py39-django32
+    - bash <(curl -s https://codecov.io/bash)
+
+test-py310-dj32:
+  extends: .test-py310
+  script:
+    - tox -e py310-django32
     - bash <(curl -s https://codecov.io/bash)
 
 deploy-pypi:

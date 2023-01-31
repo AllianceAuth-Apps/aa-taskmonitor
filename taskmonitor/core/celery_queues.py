@@ -5,13 +5,43 @@ import functools
 import itertools
 import json
 from collections import defaultdict
+from typing import List, NamedTuple
 
 import redis
 
 from django.conf import settings
 
+from taskmonitor.helpers import extract_app_name
+
+# from pympler import asizeof
+
+
 PRIORITY_SEP = "\x06\x16"
 DEFAULT_PRIORITY_STEPS = range(10)
+
+
+class QueuedTaskShort(NamedTuple):
+    """DTO for queued tasks, optimized for size."""
+
+    app_name: str
+    id: int
+    name: str
+    priority: int
+
+    @classmethod
+    def from_dict(cls, obj: dict) -> "QueuedTaskShort":
+        """Create QueuedTaskShort from raw task dict."""
+        if "headers" not in obj:
+            raise ValueError("headers missing in obj")
+        headers = obj["headers"]
+        properties = obj["properties"] if "properties" in obj else {}
+        task_name = headers["task"]
+        return cls(
+            app_name=extract_app_name(task_name),
+            id=headers["id"],
+            name=task_name,
+            priority=properties.get("priority"),
+        )
 
 
 def _redis_client():
@@ -24,7 +54,7 @@ def default_queue_name() -> str:
     return getattr(settings, "CELERY_DEFAULT_QUEUE", "celery")
 
 
-def _redis_queue_names(queue_name: str = None) -> list:
+def _redis_queue_names(queue_name: str = None) -> List[str]:
     """List of all queue names on Redis incl. the dedicated queue names for each priority."""
     if not queue_name:
         queue_name = default_queue_name()
@@ -35,23 +65,26 @@ def _redis_queue_names(queue_name: str = None) -> list:
     return names
 
 
-def queue_length() -> list:
+def queue_length() -> int:
     """Length of the celery queue."""
     r = _redis_client()
     return sum(r.llen(name) for name in _redis_queue_names())
 
 
-def _fetch_tasks_from_queue(r: redis.Redis, redis_queue_name: str) -> list:
+def _fetch_tasks_from_queue(
+    r: redis.Redis, redis_queue_name: str
+) -> List[QueuedTaskShort]:
     """Fetch tasks from given queue and return ordered
     with oldest task in first position.
     """
-    tasks_raw = reversed(r.lrange(redis_queue_name, 0, -1))
-    tasks = [json.loads(obj.decode("utf8")) for obj in tasks_raw]
-    del tasks_raw
-    return tasks
+    tasks = []
+    for obj_encoded in r.lrange(redis_queue_name, 0, -1):
+        obj = json.loads(obj_encoded.decode("utf8"))
+        tasks.append(QueuedTaskShort.from_dict(obj))
+    return reversed(tasks)
 
 
-def fetch_tasks() -> list:
+def fetch_tasks() -> List[QueuedTaskShort]:
     """Fetch all tasks from queues and return as combined list."""
     _fetch_func = functools.partial(_fetch_tasks_from_queue, _redis_client())
     redis_queue_names = _redis_queue_names()

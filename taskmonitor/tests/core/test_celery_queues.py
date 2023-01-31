@@ -3,6 +3,7 @@ from unittest import mock
 from django.test import TestCase
 
 from taskmonitor.core import celery_queues
+from taskmonitor.core.celery_queues import QueuedTaskShort
 
 from ..factories import QueuedTaskRawFactory
 
@@ -47,6 +48,6 @@ class TestCeleryQueues(TestCase):
         result = celery_queues.fetch_tasks()
         # then
         self.assertEqual(len(result), 3)
-        self.assertEqual(result[0], raw_task_3)
-        self.assertEqual(result[1], raw_task_1)
-        self.assertEqual(result[2], raw_task_2)
+        self.assertEqual(result[0], QueuedTaskShort.from_dict(raw_task_3))
+        self.assertEqual(result[1], QueuedTaskShort.from_dict(raw_task_1))
+        self.assertEqual(result[2], QueuedTaskShort.from_dict(raw_task_2))

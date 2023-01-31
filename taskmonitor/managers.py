@@ -104,7 +104,7 @@ class QueuedTaskManagerBase(models.Manager):
         objs = []
         for position, obj in enumerate(celery_queues.fetch_tasks()):
             try:
-                objs.append(QueuedTask.create_from_dict(obj, position))
+                objs.append(QueuedTask.from_dto(obj, position))
             except ValueError:
                 pass
         return ListAsQuerySet(objs, model=QueuedTask)

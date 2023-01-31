@@ -80,7 +80,10 @@ def _fetch_tasks_from_queue(
     tasks = []
     for obj_encoded in r.lrange(redis_queue_name, 0, -1):
         obj = json.loads(obj_encoded.decode("utf8"))
-        tasks.append(QueuedTaskShort.from_dict(obj))
+        try:
+            tasks.append(QueuedTaskShort.from_dict(obj))
+        except ValueError:
+            pass
     return reversed(tasks)
 
 

@@ -98,5 +98,6 @@ def admin_taskmonitor_report_data(request, report_name: str):
 def admin_queued_task_purge(request):
     """Purge the task queue."""
     queue_length = celery_queues.queue_length()
-    messages.info(request, f"Purged queue with {queue_length} tasks.")
+    celery_queues.clear_tasks()
+    messages.info(request, f"Purged queue with {queue_length:,} tasks.")
     return redirect("admin:taskmonitor_queuedtask_changelist")

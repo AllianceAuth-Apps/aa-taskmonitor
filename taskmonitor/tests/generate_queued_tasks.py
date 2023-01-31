@@ -16,11 +16,14 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "myauth.settings.local")
 django.setup()
 
 """MAIN"""
-from example.tasks import my_task
+from taskmonitor.core import celery_queues
+from taskmonitor.tests.factories import QueuedTaskRawFactory
 
-MAX_ENTRIES = 1_000
+TASK_AMOUNT = 1_000
 
-print(f"Adding {MAX_ENTRIES:,} tasks to the queue...")
-for _ in range(MAX_ENTRIES):
-    my_task.delay()
-print("DONE!")
+print(f"Started adding {TASK_AMOUNT:,} tasks to queued tasks...")
+q_name = celery_queues.default_queue_name()
+tasks = (QueuedTaskRawFactory() for _ in range(TASK_AMOUNT))
+celery_queues.add_tasks(q_name, tasks)
+print(f"Using queue name: {q_name}")
+print(f"Added {TASK_AMOUNT:,} to queued tasks.")

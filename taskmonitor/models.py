@@ -4,6 +4,7 @@ import uuid
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db import models
 
+from .core.celery_queues import QueuedTaskShort
 from .helpers import extract_app_name
 from .managers import QueuedTaskManager, TaskLogManager
 
@@ -26,7 +27,8 @@ class QueuedTask(models.Model):
         return self.id
 
     @classmethod
-    def create_from_dict(cls, obj: dict, position: int) -> "QueuedTask":
+    def from_dict(cls, obj: dict, position: int) -> "QueuedTask":
+        """Create object from dictionary (DEPRECATED)."""
         if "headers" not in obj:
             raise ValueError("headers missing in obj")
         headers = obj["headers"]
@@ -37,6 +39,17 @@ class QueuedTask(models.Model):
             id=headers["id"],
             name=task_name,
             priority=properties.get("priority"),
+            position=position,
+        )
+
+    @classmethod
+    def from_dto(cls, obj: QueuedTaskShort, position: int) -> "QueuedTask":
+        """Create model object from data transport object."""
+        return cls(
+            app_name=obj.app_name,
+            id=obj.id,
+            name=obj.name,
+            priority=obj.priority,
             position=position,
         )
 

@@ -13,6 +13,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Fixed
 
+## [0.9.0] - 2023-01-31
+
+### Added
+
+- Ability to clear the task queue from the admin site
+
+### Changed
+
+- Significantly improved performance of the "Queued Tasks" page
+
 ## [0.8.1] - 2022-11-04
 
 ### Fixed

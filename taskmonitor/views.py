@@ -13,7 +13,7 @@ from app_utils.logging import LoggerAddTag
 
 from . import __title__, tasks
 from .app_settings import TASKMONITOR_DATA_MAX_AGE
-from .core import cached_reports
+from .core import cached_reports, celery_queues
 from .helpers import Echo
 from .models import TaskLog
 
@@ -91,3 +91,13 @@ def admin_taskmonitor_report_data(request, report_name: str):
     except KeyError:
         raise Http404(f'No report with name: "{report_name}"')
     return JsonResponse(data)
+
+
+@login_required
+@staff_member_required
+def admin_queued_task_purge(request):
+    """Purge the task queue."""
+    queue_length = celery_queues.queue_length()
+    celery_queues.clear_tasks()
+    messages.info(request, f"Purged queue with {queue_length:,} tasks.")
+    return redirect("admin:taskmonitor_queuedtask_changelist")

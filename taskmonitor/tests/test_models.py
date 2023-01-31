@@ -1,10 +1,12 @@
 import datetime as dt
 import json
+from typing import List
 from unittest.mock import patch
 
 from django.test import TestCase
 from django.utils import timezone
 
+from taskmonitor.core.celery_queues import QueuedTaskShort
 from taskmonitor.models import QueuedTask, TaskLog
 
 from .factories import QueuedTaskRawFactory, TaskLogFactory
@@ -236,7 +238,7 @@ class TestQueuedTask(TestCase):
         # given
         queued_task_raw = QueuedTaskRawFactory()
         # when
-        obj = QueuedTask.create_from_dict(queued_task_raw, 99)
+        obj = QueuedTask.from_dict(queued_task_raw, 99)
         # then
         headers = queued_task_raw["headers"]
         self.assertEqual(obj.id, headers["id"])
@@ -256,7 +258,12 @@ class TestQueuedTask(TestCase):
         queued_task_raw = {}
         # when
         with self.assertRaises(ValueError):
-            QueuedTask.create_from_dict(queued_task_raw, 9)
+            QueuedTask.from_dict(queued_task_raw, 9)
+
+
+def make_dto_list(objs) -> List[QueuedTaskShort]:
+    """Convert list of raw tasks into task DTOs."""
+    return [QueuedTaskShort.from_dict(obj) for obj in objs]
 
 
 @patch("taskmonitor.managers.celery_queues")
@@ -264,10 +271,9 @@ class TestQueuedTaskManager(TestCase):
     def test_all(self, mock_celery_queues):
         # given
         queued_task_raw = QueuedTaskRawFactory()
-        mock_celery_queues.fetch_tasks.return_value = [
-            queued_task_raw,
-            QueuedTaskRawFactory(),
-        ]
+        mock_celery_queues.fetch_tasks.return_value = make_dto_list(
+            [queued_task_raw, QueuedTaskRawFactory()]
+        )
         # when
         qs = QueuedTask.objects.all()
         # then
@@ -276,24 +282,25 @@ class TestQueuedTaskManager(TestCase):
 
     def test_count(self, mock_celery_queues):
         # given
-        mock_celery_queues.fetch_tasks.return_value = [
-            QueuedTaskRawFactory(),
-            QueuedTaskRawFactory(),
-        ]
+        mock_celery_queues.fetch_tasks.return_value = make_dto_list(
+            [QueuedTaskRawFactory(), QueuedTaskRawFactory()]
+        )
         # when/then
         self.assertEqual(QueuedTask.objects.count(), 2)
 
     def test_get(self, mock_celery_queues):
         # given
         queued_task_raw = QueuedTaskRawFactory()
-        mock_celery_queues.fetch_tasks.return_value = [
-            QueuedTaskRawFactory(),
-            QueuedTaskRawFactory(),
-            QueuedTaskRawFactory(),
-            queued_task_raw,
-            QueuedTaskRawFactory(),
-            QueuedTaskRawFactory(),
-        ]
+        mock_celery_queues.fetch_tasks.return_value = make_dto_list(
+            [
+                QueuedTaskRawFactory(),
+                QueuedTaskRawFactory(),
+                QueuedTaskRawFactory(),
+                queued_task_raw,
+                QueuedTaskRawFactory(),
+                QueuedTaskRawFactory(),
+            ]
+        )
         # when
         obj = QueuedTask.objects.get(id=queued_task_raw["headers"]["id"])
         # then
@@ -302,11 +309,9 @@ class TestQueuedTaskManager(TestCase):
     def test_first(self, mock_celery_queues):
         # given
         queued_task_raw = QueuedTaskRawFactory()
-        mock_celery_queues.fetch_tasks.return_value = [
-            queued_task_raw,
-            QueuedTaskRawFactory(),
-            QueuedTaskRawFactory(),
-        ]
+        mock_celery_queues.fetch_tasks.return_value = make_dto_list(
+            [queued_task_raw, QueuedTaskRawFactory(), QueuedTaskRawFactory()]
+        )
         # when
         obj = QueuedTask.objects.first()
         # then
@@ -317,7 +322,7 @@ class TestQueuedTaskManager(TestCase):
         self.maxDiff = None
         raw_1 = QueuedTaskRawFactory(headers__task="bravo")
         raw_2 = QueuedTaskRawFactory(headers__task="alpha")
-        mock_celery_queues.fetch_tasks.return_value = [raw_1, raw_2]
+        mock_celery_queues.fetch_tasks.return_value = make_dto_list([raw_1, raw_2])
         # when
         qs = QueuedTask.objects.order_by("name")
         # then
@@ -329,7 +334,7 @@ class TestQueuedTaskManager(TestCase):
         self.maxDiff = None
         raw_1 = QueuedTaskRawFactory(headers__task="bravo")
         raw_2 = QueuedTaskRawFactory(headers__task="alpha")
-        mock_celery_queues.fetch_tasks.return_value = [raw_2, raw_1]
+        mock_celery_queues.fetch_tasks.return_value = make_dto_list([raw_2, raw_1])
         # when
         qs = QueuedTask.objects.order_by("-name")
         # then
@@ -342,7 +347,9 @@ class TestQueuedTaskManager(TestCase):
         raw_1 = QueuedTaskRawFactory(headers__task="bravo", properties__priority=7)
         raw_2 = QueuedTaskRawFactory(headers__task="bravo", properties__priority=1)
         raw_3 = QueuedTaskRawFactory(headers__task="alpha", properties__priority=4)
-        mock_celery_queues.fetch_tasks.return_value = [raw_1, raw_2, raw_3]
+        mock_celery_queues.fetch_tasks.return_value = make_dto_list(
+            [raw_1, raw_2, raw_3]
+        )
         # when
         qs = QueuedTask.objects.order_by("name", "priority")
         # then
@@ -354,7 +361,9 @@ class TestQueuedTaskManager(TestCase):
         raw_1 = QueuedTaskRawFactory(headers__task="bravo")
         raw_2 = QueuedTaskRawFactory(headers__task="bravo")
         raw_3 = QueuedTaskRawFactory(headers__task="alpha")
-        mock_celery_queues.fetch_tasks.return_value = [raw_1, raw_2, raw_3]
+        mock_celery_queues.fetch_tasks.return_value = make_dto_list(
+            [raw_1, raw_2, raw_3]
+        )
         # when
         qs = QueuedTask.objects.filter(name="alpha")
         # then
@@ -365,7 +374,7 @@ class TestQueuedTaskManager(TestCase):
         # given
         raw_1 = QueuedTaskRawFactory(headers__task="alpha", properties__priority=5)
         raw_2 = QueuedTaskRawFactory(headers__task="bravo", properties__priority=5)
-        mock_celery_queues.fetch_tasks.return_value = [raw_1, raw_2]
+        mock_celery_queues.fetch_tasks.return_value = make_dto_list([raw_1, raw_2])
         # when
         result = QueuedTask.objects.values("name", "priority")
         # then
@@ -377,7 +386,7 @@ class TestQueuedTaskManager(TestCase):
         # given
         raw_1 = QueuedTaskRawFactory(headers__task="alpha", properties__priority=5)
         raw_2 = QueuedTaskRawFactory(headers__task="bravo", properties__priority=5)
-        mock_celery_queues.fetch_tasks.return_value = [raw_1, raw_2]
+        mock_celery_queues.fetch_tasks.return_value = make_dto_list([raw_1, raw_2])
         # when
         result = QueuedTask.objects.values_list("name", "priority")
         # then
@@ -387,7 +396,7 @@ class TestQueuedTaskManager(TestCase):
         # given
         raw_1 = QueuedTaskRawFactory(headers__task="alpha")
         raw_2 = QueuedTaskRawFactory(headers__task="bravo")
-        mock_celery_queues.fetch_tasks.return_value = [raw_1, raw_2]
+        mock_celery_queues.fetch_tasks.return_value = make_dto_list([raw_1, raw_2])
         # when
         result = QueuedTask.objects.values_list("name", flat=True)
         # then

@@ -28,6 +28,8 @@ class QuerySetQueryStub:
 
 
 class ListAsQuerySet(list):
+    """Masquerade a list as QuerySet."""
+
     def __init__(self, *args, model, distinct=False, **kwargs):
         self.model = model
         self.query = QuerySetQueryStub()
@@ -101,12 +103,10 @@ class QueuedTaskManagerBase(models.Manager):
     def get_queryset(self):
         from .models import QueuedTask
 
-        objs = []
-        for position, obj in enumerate(celery_queues.fetch_tasks()):
-            try:
-                objs.append(QueuedTask.create_from_dict(obj, position))
-            except ValueError:
-                pass
+        objs = [
+            QueuedTask.from_dto(obj, position)
+            for position, obj in enumerate(celery_queues.fetch_tasks())
+        ]
         return ListAsQuerySet(objs, model=QueuedTask)
 
 

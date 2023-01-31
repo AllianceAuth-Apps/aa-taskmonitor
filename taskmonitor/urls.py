@@ -30,4 +30,9 @@ urlpatterns = [
         views.admin_taskmonitor_report_data,
         name="admin_taskmonitor_report_data",
     ),
+    path(
+        "admin_queued_task_purge",
+        views.admin_queued_task_purge,
+        name="admin_queued_task_purge",
+    ),
 ]

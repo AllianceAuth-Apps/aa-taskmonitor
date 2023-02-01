@@ -55,7 +55,7 @@ class TestCeleryQueues(TestCase):
         self.assertEqual(result[2], QueuedTaskShort.from_dict(raw_task_2))
 
 
-@mock.patch(MODULE_PATH + ".TASKS_CACHE_TIMEOUT", 5)
+@mock.patch(MODULE_PATH + ".TASKMONITOR_QUEUED_TASKS_CACHE_TIMEOUT", 5)
 class TestTaskCache(TestCase):
     def test_should_return_tasks_when_not_stale(self):
         # given

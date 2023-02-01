@@ -18,3 +18,8 @@ TASKMONITOR_TRUNCATE_NESTED_DATA = clean_setting(
     "TASKMONITOR_TRUNCATE_NESTED_DATA", True
 )
 """Whether deeply nested task params and results are truncated."""
+
+TASKMONITOR_QUEUED_TASKS_CACHE_TIMEOUT = clean_setting(
+    "TASKMONITOR_QUEUED_TASKS_CACHE_TIMEOUT", 60
+)
+"""Timeout for caching queued tasks in seconds."""

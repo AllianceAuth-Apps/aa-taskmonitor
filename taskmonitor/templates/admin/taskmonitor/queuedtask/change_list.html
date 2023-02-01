@@ -3,7 +3,8 @@
 {% load humanize %}
 
 {% block object-tools %}
-    <p>Snapshot at {{ now }} with {{ task_count|intcomma }} tasks.</p>
+    <p>Snapshot at {{ now }} with {{ task_count|intcomma }} tasks.
+    Data is cached for {{ cache_timeout }} seconds.</p>
     {{ block.super }}
     <ul class="object-tools">
         <li>

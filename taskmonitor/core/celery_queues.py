@@ -18,14 +18,11 @@ from allianceauth.services.hooks import get_extension_logger
 from app_utils.logging import LoggerAddTag
 
 from taskmonitor import __title__
-
-# from pympler import asizeof
+from taskmonitor.app_settings import TASKMONITOR_QUEUED_TASKS_CACHE_TIMEOUT
 from taskmonitor.helpers import extract_app_name
 
 PRIORITY_SEP = "\x06\x16"
 DEFAULT_PRIORITY_STEPS = range(10)
-
-TASKS_CACHE_TIMEOUT = 3  # seconds
 
 
 logger = LoggerAddTag(get_extension_logger(__name__), __title__)
@@ -66,7 +63,9 @@ class TasksCache:
         """Return True when cache is expired, else False."""
         if not self._created_at:
             return True
-        return now() - self._created_at > dt.timedelta(seconds=TASKS_CACHE_TIMEOUT)
+        return now() - self._created_at > dt.timedelta(
+            seconds=TASKMONITOR_QUEUED_TASKS_CACHE_TIMEOUT
+        )
 
     def set(self, tasks: List[QueuedTaskShort]):
         """Store tasks in cache."""

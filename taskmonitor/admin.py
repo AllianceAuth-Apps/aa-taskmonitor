@@ -5,6 +5,7 @@ from django.contrib import admin
 from django.shortcuts import get_object_or_404, redirect
 from django.utils import html, safestring, timezone
 
+from .app_settings import TASKMONITOR_QUEUED_TASKS_CACHE_TIMEOUT
 from .models import QueuedTask, TaskLog, TaskReport
 
 
@@ -37,6 +38,7 @@ class QueuedTaskAdmin(admin.ModelAdmin):
             "title": "Currently queued tasks",
             "now": timezone.now(),
             "task_count": QueuedTask.objects.count(),
+            "cache_timeout": TASKMONITOR_QUEUED_TASKS_CACHE_TIMEOUT,
         }
         extra_context.update(context)
         return super().changelist_view(request, extra_context)

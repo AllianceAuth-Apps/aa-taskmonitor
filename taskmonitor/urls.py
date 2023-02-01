@@ -35,4 +35,9 @@ urlpatterns = [
         views.admin_queued_task_purge,
         name="admin_queued_task_purge",
     ),
+    path(
+        "admin_queued_task_clear_cache",
+        views.admin_queued_task_clear_cache,
+        name="admin_queued_task_clear_cache",
+    ),
 ]

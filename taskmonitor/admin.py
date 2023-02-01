@@ -5,6 +5,8 @@ from django.contrib import admin
 from django.shortcuts import get_object_or_404, redirect
 from django.utils import html, safestring, timezone
 
+from .app_settings import TASKMONITOR_QUEUED_TASKS_CACHE_TIMEOUT
+from .core import celery_queues
 from .models import QueuedTask, TaskLog, TaskReport
 
 
@@ -33,10 +35,12 @@ class QueuedTaskAdmin(admin.ModelAdmin):
 
     def changelist_view(self, request, extra_context=None):
         extra_context = extra_context or {}
+        cache_created_at = celery_queues.local_cache.created_at() or timezone.now()
         context = {
             "title": "Currently queued tasks",
-            "now": timezone.now(),
+            "cache_created_at": cache_created_at,
             "task_count": QueuedTask.objects.count(),
+            "cache_timeout": TASKMONITOR_QUEUED_TASKS_CACHE_TIMEOUT,
         }
         extra_context.update(context)
         return super().changelist_view(request, extra_context)

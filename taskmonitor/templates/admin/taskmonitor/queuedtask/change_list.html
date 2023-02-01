@@ -3,9 +3,16 @@
 {% load humanize %}
 
 {% block object-tools %}
-    <p>Snapshot at {{ now }} with {{ task_count|intcomma }} tasks.</p>
+    <p>Snapshot at {{ cache_created_at }} with {{ task_count|intcomma }} tasks.
+    Data is cached for {{ cache_timeout }} seconds.</p>
     {{ block.super }}
     <ul class="object-tools">
+        <li>
+            <a href="{% url 'taskmonitor:admin_queued_task_clear_cache' %}"
+               class="btn btn-high">
+                {% translate "Clear cache" %}
+            </a>
+        </li>
         <li>
             <a href="{% url 'taskmonitor:admin_queued_task_purge' %}"
                onclick="return confirm('Are you sure you want to purge the queue?')"

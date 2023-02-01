@@ -8,6 +8,12 @@
     {{ block.super }}
     <ul class="object-tools">
         <li>
+            <a href="{% url 'taskmonitor:admin_queued_task_clear_cache' %}"
+               class="btn btn-high">
+                {% translate "Clear cache" %}
+            </a>
+        </li>
+        <li>
             <a href="{% url 'taskmonitor:admin_queued_task_purge' %}"
                onclick="return confirm('Are you sure you want to purge the queue?')"
                class="btn btn-high">

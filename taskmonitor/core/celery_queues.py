@@ -126,6 +126,7 @@ def clear_tasks(queue_name: str = None):
     for redis_queue_name in _redis_queue_names(queue_name):
         r.delete(redis_queue_name)
     cache.delete(QUEUED_TASKS_CACHE_KEY)
+    clear_cache()
 
 
 def add_tasks(queue_name: str, raw_tasks: list):
@@ -142,3 +143,8 @@ def add_tasks(queue_name: str, raw_tasks: list):
         queue_name_raw = f"{queue_name}{PRIORITY_SEP}{priority}"
         r.lpush(queue_name_raw, *raw_tasks_str)
     del tasks_by_priority
+
+
+def clear_cache():
+    """Clear the queued tasks cache."""
+    cache.delete(QUEUED_TASKS_CACHE_KEY)

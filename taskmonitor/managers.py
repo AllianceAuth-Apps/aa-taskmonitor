@@ -36,14 +36,13 @@ class ListAsQuerySet(list):
         self.distinct_enabled = distinct
         super().__init__(*args, **kwargs)
         self._id_mapper = {str(obj.id): n for n, obj in enumerate(self)}
+        self._list_size = len(self)
 
     def get(self, *args, **kwargs):
-        if "id" in kwargs:
-            try:
-                return self[self._id_mapper[str(kwargs["id"])]]
-            except KeyError:
-                raise self.model.DoesNotExist from None
-        raise self.model.DoesNotExist
+        try:
+            return self[self._id_mapper[str(kwargs["id"])]]
+        except KeyError:
+            raise self.model.DoesNotExist from None
 
     def distinct(self):
         return ListAsQuerySet(list(set(self)), model=self.model, distinct=True)
@@ -88,7 +87,7 @@ class ListAsQuerySet(list):
         return self
 
     def count(self):
-        return len(self)
+        return self._list_size
 
     def _clone(self):
         return self

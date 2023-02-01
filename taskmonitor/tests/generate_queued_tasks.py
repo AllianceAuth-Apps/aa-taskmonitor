@@ -28,7 +28,6 @@ def generate_tasks(amount: int):
     celery_queues.add_tasks(q_name, tasks)
 
 
-celery_queues.clear_tasks()
 print(f"Started adding {TASK_AMOUNT:,} tasks to queued tasks...")
 q_name = celery_queues.default_queue_name()
 for _ in range(TASK_AMOUNT // MAX_CHUNK_SIZE):
@@ -36,3 +35,4 @@ for _ in range(TASK_AMOUNT // MAX_CHUNK_SIZE):
 generate_tasks(TASK_AMOUNT % MAX_CHUNK_SIZE)
 print(f"Using queue name: {q_name}")
 print(f"Added {TASK_AMOUNT:,} to queued tasks.")
+celery_queues.clear_cache()

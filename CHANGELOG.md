@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Changed
 
+- Added cache for queued tasks to further improve performance
+
 ### Fixed
 
 ## [0.9.0] - 2023-01-31

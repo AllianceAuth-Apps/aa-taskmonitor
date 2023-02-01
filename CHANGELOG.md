@@ -7,11 +7,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased] - yyyy-mm-dd
 
+## [0.9.1] - 2023-02-01
+
 ### Added
 
 ### Changed
 
-- Added cache for queued tasks to further improve performance
+- Added caching for queued tasks to further improve performance
 
 ### Fixed
 

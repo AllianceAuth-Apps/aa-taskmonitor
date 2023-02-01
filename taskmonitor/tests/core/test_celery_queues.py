@@ -3,7 +3,7 @@ from unittest import mock
 from django.test import TestCase
 
 from taskmonitor.core import celery_queues
-from taskmonitor.core.celery_queues import QueuedTaskShort
+from taskmonitor.core.celery_queues import QueuedTaskShort, local_cache
 
 from ..factories import QueuedTaskRawFactory
 
@@ -11,6 +11,7 @@ CELERY_QUEUE_NAME = "test_task_monitor_celery"
 MODULE_PATH = "taskmonitor.core.celery_queues"
 
 
+@mock.patch(MODULE_PATH + ".TASKMONITOR_QUEUED_TASKS_CACHE_TIMEOUT", 10)
 @mock.patch(MODULE_PATH + ".default_queue_name")
 class TestCeleryQueues(TestCase):
     def setUp(self):
@@ -53,3 +54,22 @@ class TestCeleryQueues(TestCase):
         self.assertEqual(result[0], QueuedTaskShort.from_dict(raw_task_3))
         self.assertEqual(result[1], QueuedTaskShort.from_dict(raw_task_1))
         self.assertEqual(result[2], QueuedTaskShort.from_dict(raw_task_2))
+
+    def test_should_retrieve_tasks_from_cache(self, mock_queue_base_name):
+        # given
+        tasks = [QueuedTaskShort.from_dict(QueuedTaskRawFactory())]
+        local_cache.set(tasks)
+        # when
+        result = celery_queues.fetch_tasks()
+        # then
+        self.assertEqual(result, tasks)
+
+    def test_should_retrieve_tasks_from_redis_when_no_cache(self, mock_queue_base_name):
+        # given
+        mock_queue_base_name.return_value = CELERY_QUEUE_NAME
+        tasks = [QueuedTaskRawFactory()]
+        celery_queues.add_tasks(CELERY_QUEUE_NAME, tasks)
+        # when
+        result = celery_queues.fetch_tasks()
+        # then
+        self.assertEqual(result[0], QueuedTaskShort.from_dict(tasks[0]))

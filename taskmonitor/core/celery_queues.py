@@ -1,16 +1,18 @@
 """API for working with celery task queue."""
 
 import concurrent.futures
+import datetime as dt
 import functools
 import itertools
 import json
 from collections import defaultdict
-from typing import List, NamedTuple
+from typing import List, NamedTuple, Optional
 
 import redis
 
 from django.conf import settings
 from django.core.cache import cache
+from django.utils import timezone
 
 from allianceauth.services.hooks import get_extension_logger
 from app_utils.logging import LoggerAddTag
@@ -50,6 +52,42 @@ class QueuedTaskShort(NamedTuple):
         )
 
 
+class QueuedTaskCacheEntry(NamedTuple):
+    """Wrapper for storing queued tasks in cache with additional data."""
+
+    tasks: List[QueuedTaskShort]
+    created_at: dt.datetime
+
+
+class CacheApi:
+    """API for working with the cache for queued tasks."""
+
+    def get(self) -> Optional[QueuedTaskCacheEntry]:
+        """Retrieve content of cache or None if cache is expired or invalid."""
+        return cache.get(QUEUED_TASKS_CACHE_KEY)
+
+    def set(self, tasks: List[QueuedTaskShort]) -> QueuedTaskCacheEntry:
+        """Store given tasks in cache."""
+        data = QueuedTaskCacheEntry(tasks=tasks, created_at=timezone.now())
+        cache.set(
+            QUEUED_TASKS_CACHE_KEY,
+            data,
+            timeout=TASKMONITOR_QUEUED_TASKS_CACHE_TIMEOUT,
+        )
+        return data
+
+    def clear(self):
+        """Clear the cache."""
+        cache.delete(QUEUED_TASKS_CACHE_KEY)
+
+    def created_at(self) -> Optional[dt.datetime]:
+        """Return date when cache was created or None when cache is invalid."""
+        data = self.get()
+        if data is None:
+            return None
+        return data.created_at
+
+
 def _redis_client():
     """Fetch the Redis client for the celery broker."""
     return redis.from_url(settings.BROKER_URL)
@@ -81,23 +119,20 @@ def fetch_tasks() -> List[QueuedTaskShort]:
     """Fetch tasks from queues
     and return as ordered list with oldest task in first position.
     """
-    tasks = cache.get(QUEUED_TASKS_CACHE_KEY)
-    if tasks is None:
+    data = local_cache.get()
+    if data is None:
         logger.debug("Cache is stale. Fetching new tasks from queue.")
         tasks = _fetch_task_from_all_queues()
-        cache.set(
-            QUEUED_TASKS_CACHE_KEY,
-            tasks,
-            timeout=TASKMONITOR_QUEUED_TASKS_CACHE_TIMEOUT,
-        )
+        local_cache.set(tasks)
     else:
+        tasks = data.tasks
         logger.debug("Returning tasks from cache.")
     return tasks
 
 
 def _fetch_task_from_all_queues() -> List[QueuedTaskShort]:
     """Coordinate fetching tasks from all priority queues."""
-    _fetch_func = functools.partial(_fetch_tasks_from_one_queue, _redis_client())
+    _fetch_func = functools.partial(_fetch_tasks_from_redis, _redis_client())
     redis_queue_names = _redis_queue_names()
     with concurrent.futures.ThreadPoolExecutor(
         max_workers=len(redis_queue_names)
@@ -106,10 +141,10 @@ def _fetch_task_from_all_queues() -> List[QueuedTaskShort]:
     return list(itertools.chain(*tasks_raw))
 
 
-def _fetch_tasks_from_one_queue(
+def _fetch_tasks_from_redis(
     r: redis.Redis, redis_queue_name: str
 ) -> List[QueuedTaskShort]:
-    """Fetch tasks from given queue."""
+    """Fetch tasks from redis."""
     tasks = []
     for obj_encoded in r.lrange(redis_queue_name, 0, -1):
         obj = json.loads(obj_encoded.decode("utf8"))
@@ -125,8 +160,7 @@ def clear_tasks(queue_name: str = None):
     r = _redis_client()
     for redis_queue_name in _redis_queue_names(queue_name):
         r.delete(redis_queue_name)
-    cache.delete(QUEUED_TASKS_CACHE_KEY)
-    clear_cache()
+    local_cache.clear()
 
 
 def add_tasks(queue_name: str, raw_tasks: list):
@@ -145,6 +179,4 @@ def add_tasks(queue_name: str, raw_tasks: list):
     del tasks_by_priority
 
 
-def clear_cache():
-    """Clear the queued tasks cache."""
-    cache.delete(QUEUED_TASKS_CACHE_KEY)
+local_cache = CacheApi()

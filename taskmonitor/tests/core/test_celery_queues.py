@@ -1,8 +1,6 @@
-import datetime as dt
 from unittest import mock
 
 from django.test import TestCase
-from django.utils.timezone import now
 
 from taskmonitor.core import celery_queues
 from taskmonitor.core.celery_queues import QueuedTaskShort
@@ -47,75 +45,11 @@ class TestCeleryQueues(TestCase):
         raw_task_3 = QueuedTaskRawFactory(properties__priority=3)
         celery_queues.add_tasks(CELERY_QUEUE_NAME, [raw_task_1, raw_task_2, raw_task_3])
         # when
-        result = celery_queues.fetch_tasks(disable_cache=True)
+        with mock.patch(MODULE_PATH + ".cache") as m:
+            m.get.return_value = None
+            result = celery_queues.fetch_tasks()
         # then
         self.assertEqual(len(result), 3)
         self.assertEqual(result[0], QueuedTaskShort.from_dict(raw_task_3))
         self.assertEqual(result[1], QueuedTaskShort.from_dict(raw_task_1))
         self.assertEqual(result[2], QueuedTaskShort.from_dict(raw_task_2))
-
-
-@mock.patch(MODULE_PATH + ".TASKMONITOR_QUEUED_TASKS_CACHE_TIMEOUT", 5)
-class TestTaskCache(TestCase):
-    def test_should_return_tasks_when_not_stale(self):
-        # given
-        cache = celery_queues.TasksCache()
-        tasks = [
-            QueuedTaskShort.from_dict(QueuedTaskRawFactory()),
-            QueuedTaskShort.from_dict(QueuedTaskRawFactory()),
-        ]
-        my_time = now()
-        with mock.patch(MODULE_PATH + ".now") as m:
-            m.return_value = my_time
-            cache.set(tasks)
-        # when
-        with mock.patch(MODULE_PATH + ".now") as m:
-            m.return_value = my_time
-            result = cache.get()
-        # then
-        self.assertEqual(result, tasks)
-
-    def test_should_return_none_when_stale(self):
-        # given
-        cache = celery_queues.TasksCache()
-        tasks = [
-            QueuedTaskShort.from_dict(QueuedTaskRawFactory()),
-            QueuedTaskShort.from_dict(QueuedTaskRawFactory()),
-        ]
-        my_time = now()
-        with mock.patch(MODULE_PATH + ".now") as m:
-            m.return_value = my_time
-            cache.set(tasks)
-        # when
-        with mock.patch(MODULE_PATH + ".now") as m:
-            m.return_value = my_time + dt.timedelta(seconds=6)
-            result = cache.get()
-        # then
-        self.assertIsNone(result)
-
-    def test_should_return_none_when_empty(self):
-        # given
-        cache = celery_queues.TasksCache()
-        # when
-        result = cache.get()
-        # then
-        self.assertIsNone(result)
-
-    def test_should_clear_the_cache(self):
-        # given
-        cache = celery_queues.TasksCache()
-        tasks = [
-            QueuedTaskShort.from_dict(QueuedTaskRawFactory()),
-            QueuedTaskShort.from_dict(QueuedTaskRawFactory()),
-        ]
-        my_time = now()
-        with mock.patch(MODULE_PATH + ".now") as m:
-            m.return_value = my_time
-            cache.set(tasks)
-        cache.clear()
-        # when
-        with mock.patch(MODULE_PATH + ".now") as m:
-            m.return_value = my_time
-            result = cache.get()
-        # then
-        self.assertIsNone(result)

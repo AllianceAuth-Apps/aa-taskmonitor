@@ -1,18 +1,16 @@
 """API for working with celery task queue."""
 
 import concurrent.futures
-import datetime as dt
 import functools
 import itertools
 import json
 from collections import defaultdict
-from dataclasses import dataclass
-from typing import List, NamedTuple, Optional
+from typing import List, NamedTuple
 
 import redis
 
 from django.conf import settings
-from django.utils.timezone import now
+from django.core.cache import cache
 
 from allianceauth.services.hooks import get_extension_logger
 from app_utils.logging import LoggerAddTag
@@ -23,7 +21,7 @@ from taskmonitor.helpers import extract_app_name
 
 PRIORITY_SEP = "\x06\x16"
 DEFAULT_PRIORITY_STEPS = range(10)
-
+QUEUED_TASKS_CACHE_KEY = "queued-tasks-cache-key"
 
 logger = LoggerAddTag(get_extension_logger(__name__), __title__)
 
@@ -50,39 +48,6 @@ class QueuedTaskShort(NamedTuple):
             name=task_name,
             priority=properties.get("priority"),
         )
-
-
-@dataclass
-class TasksCache:
-    """Cache for tasks from celery queues."""
-
-    _tasks: List[QueuedTaskShort] = None
-    _created_at: dt.datetime = None
-
-    def _is_stale(self) -> bool:
-        """Return True when cache is expired, else False."""
-        if not self._created_at:
-            return True
-        return now() - self._created_at > dt.timedelta(
-            seconds=TASKMONITOR_QUEUED_TASKS_CACHE_TIMEOUT
-        )
-
-    def set(self, tasks: List[QueuedTaskShort]):
-        """Store tasks in cache."""
-        self._tasks = tasks
-        self._created_at = now()
-
-    def get(self) -> Optional[List[QueuedTaskShort]]:
-        """Retrieve tasks from cache when not stale, else return None."""
-        if self._is_stale():
-            self.clear()
-            return None
-        return self._tasks
-
-    def clear(self):
-        """Clear the cache."""
-        self._created_at = None
-        self._tasks = None
 
 
 def _redis_client():
@@ -112,12 +77,39 @@ def queue_length() -> int:
     return sum(r.llen(name) for name in _redis_queue_names())
 
 
-def _fetch_tasks_from_queue(
+def fetch_tasks() -> List[QueuedTaskShort]:
+    """Fetch tasks from queues
+    and return as ordered list with oldest task in first position.
+    """
+    tasks = cache.get(QUEUED_TASKS_CACHE_KEY)
+    if tasks is None:
+        logger.debug("Cache is stale. Fetching new tasks from queue.")
+        tasks = _fetch_task_from_all_queues()
+        cache.set(
+            QUEUED_TASKS_CACHE_KEY,
+            tasks,
+            timeout=TASKMONITOR_QUEUED_TASKS_CACHE_TIMEOUT,
+        )
+    else:
+        logger.debug("Returning tasks from cache.")
+    return tasks
+
+
+def _fetch_task_from_all_queues() -> List[QueuedTaskShort]:
+    """Coordinate fetching tasks from all priority queues."""
+    _fetch_func = functools.partial(_fetch_tasks_from_one_queue, _redis_client())
+    redis_queue_names = _redis_queue_names()
+    with concurrent.futures.ThreadPoolExecutor(
+        max_workers=len(redis_queue_names)
+    ) as executor:
+        tasks_raw = executor.map(_fetch_func, redis_queue_names)
+    return list(itertools.chain(*tasks_raw))
+
+
+def _fetch_tasks_from_one_queue(
     r: redis.Redis, redis_queue_name: str
 ) -> List[QueuedTaskShort]:
-    """Fetch tasks from given queue and return ordered
-    with oldest task in first position.
-    """
+    """Fetch tasks from given queue."""
     tasks = []
     for obj_encoded in r.lrange(redis_queue_name, 0, -1):
         obj = json.loads(obj_encoded.decode("utf8"))
@@ -128,31 +120,12 @@ def _fetch_tasks_from_queue(
     return reversed(tasks)
 
 
-def fetch_tasks(disable_cache=False) -> List[QueuedTaskShort]:
-    """Fetch all tasks from queues and return as combined list."""
-    if not disable_cache:
-        tasks = _tasks_cache.get()
-        if tasks is not None:
-            logger.info("Returning tasks from cache.")
-            return tasks
-        logger.info("Cache is stale. Fetching new tasks from queue.")
-    _fetch_func = functools.partial(_fetch_tasks_from_queue, _redis_client())
-    redis_queue_names = _redis_queue_names()
-    with concurrent.futures.ThreadPoolExecutor(
-        max_workers=len(redis_queue_names)
-    ) as executor:
-        tasks_raw = executor.map(_fetch_func, redis_queue_names)
-    tasks = list(itertools.chain(*tasks_raw))
-    _tasks_cache.set(tasks)
-    return tasks
-
-
 def clear_tasks(queue_name: str = None):
     """Clear tasks from all queues."""
     r = _redis_client()
     for redis_queue_name in _redis_queue_names(queue_name):
         r.delete(redis_queue_name)
-    _tasks_cache.clear()
+    cache.delete(QUEUED_TASKS_CACHE_KEY)
 
 
 def add_tasks(queue_name: str, raw_tasks: list):
@@ -169,6 +142,3 @@ def add_tasks(queue_name: str, raw_tasks: list):
         queue_name_raw = f"{queue_name}{PRIORITY_SEP}{priority}"
         r.lpush(queue_name_raw, *raw_tasks_str)
     del tasks_by_priority
-
-
-_tasks_cache = TasksCache()

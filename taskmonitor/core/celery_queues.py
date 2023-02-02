@@ -17,7 +17,7 @@ from app_utils.logging import LoggerAddTag
 from taskmonitor import __title__
 from taskmonitor.app_settings import TASKMONITOR_QUEUED_TASKS_CACHE_TIMEOUT
 
-from .tasks_cache import CacheApi, QueuedTaskShort
+from .tasks_cache import QueuedTasksCache, QueuedTaskShort
 
 PRIORITY_SEP = "\x06\x16"
 DEFAULT_PRIORITY_STEPS = range(10)
@@ -57,11 +57,11 @@ def fetch_tasks() -> List[QueuedTaskShort]:
     """Fetch tasks from queues
     and return as ordered list with oldest task in first position.
     """
-    data = local_cache.get()
+    data = tasks_cache.get()
     if data is None:
         logger.debug("Cache is stale. Fetching new tasks from queue.")
         tasks = _fetch_task_from_all_queues()
-        local_cache.set(tasks)
+        tasks_cache.set(tasks)
     else:
         tasks = data.tasks
         logger.debug("Returning tasks from cache.")
@@ -98,7 +98,7 @@ def clear_tasks(queue_name: str = None):
     r = _redis_client()
     for redis_queue_name in _redis_queue_names(queue_name):
         r.delete(redis_queue_name)
-    local_cache.clear()
+    tasks_cache.clear()
 
 
 def add_tasks(queue_name: str, raw_tasks: list):
@@ -117,6 +117,6 @@ def add_tasks(queue_name: str, raw_tasks: list):
     del tasks_by_priority
 
 
-local_cache = CacheApi(
+tasks_cache = QueuedTasksCache(
     cache_key=QUEUED_TASKS_CACHE_KEY, timeout=TASKMONITOR_QUEUED_TASKS_CACHE_TIMEOUT
 )

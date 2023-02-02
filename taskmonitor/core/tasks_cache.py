@@ -42,10 +42,14 @@ class QueuedTaskCacheEntry(NamedTuple):
 
 
 @dataclass(frozen=True)
-class CacheApi:
-    """API for working with the cache for queued tasks.
+class QueuedTasksCache:
+    """Cache for queued tasks.
 
     Can be disabled when timeout is set to 0.
+
+    Args:
+        - cache_key: custom string used to store the cache
+        - timeout: timeout for cache in seconds
     """
 
     cache_key: str

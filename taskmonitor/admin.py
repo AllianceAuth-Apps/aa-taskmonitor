@@ -71,7 +71,7 @@ class QueuedTaskAdmin(admin.ModelAdmin):
 
     def changelist_view(self, request, extra_context=None):
         extra_context = extra_context or {}
-        cache_created_at = celery_queues.local_cache.created_at() or timezone.now()
+        cache_created_at = celery_queues.tasks_cache.created_at() or timezone.now()
         context = {
             "title": "Currently queued tasks",
             "cache_created_at": cache_created_at,

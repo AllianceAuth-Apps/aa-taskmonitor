@@ -35,4 +35,4 @@ for _ in range(TASK_AMOUNT // MAX_CHUNK_SIZE):
 generate_tasks(TASK_AMOUNT % MAX_CHUNK_SIZE)
 print(f"Using queue name: {q_name}")
 print(f"Added {TASK_AMOUNT:,} to queued tasks.")
-celery_queues.local_cache.clear()
+celery_queues.tasks_cache.clear()

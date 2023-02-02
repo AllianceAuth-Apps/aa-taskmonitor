@@ -3,7 +3,7 @@ from unittest import mock
 from django.test import TestCase
 
 from taskmonitor.core import celery_queues
-from taskmonitor.core.celery_queues import QueuedTaskShort, local_cache
+from taskmonitor.core.celery_queues import QueuedTaskShort, tasks_cache
 
 from ..factories import QueuedTaskRawFactory
 
@@ -46,7 +46,7 @@ class TestCeleryQueues(TestCase):
         raw_task_3 = QueuedTaskRawFactory(properties__priority=3)
         celery_queues.add_tasks(CELERY_QUEUE_NAME, [raw_task_1, raw_task_2, raw_task_3])
         # when
-        with mock.patch(MODULE_PATH + ".local_cache") as m:
+        with mock.patch(MODULE_PATH + ".tasks_cache") as m:
             m.get.return_value = None
             result = celery_queues.fetch_tasks()
         # then
@@ -58,7 +58,7 @@ class TestCeleryQueues(TestCase):
     def test_should_retrieve_tasks_from_cache(self, mock_queue_base_name):
         # given
         tasks = [QueuedTaskShort.from_dict(QueuedTaskRawFactory())]
-        local_cache.set(tasks)
+        tasks_cache.set(tasks)
         # when
         result = celery_queues.fetch_tasks()
         # then

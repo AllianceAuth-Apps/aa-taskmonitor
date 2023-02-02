@@ -1,18 +1,54 @@
 import json
+from collections import Counter
 from typing import Optional
 
 from django.contrib import admin
 from django.shortcuts import get_object_or_404, redirect
 from django.utils import html, safestring, timezone
+from django.utils.translation import gettext_lazy as _
 
 from .app_settings import TASKMONITOR_QUEUED_TASKS_CACHE_TIMEOUT
 from .core import celery_queues
 from .models import QueuedTask, TaskLog, TaskReport
 
 
+class WordCounterListFilter(admin.SimpleListFilter):
+    """Admin filter to filter by words and show counts."""
+
+    filter_by_field_name = ""
+
+    def lookups(self, request, model_admin: admin.ModelAdmin):
+        words = model_admin.get_queryset(request).values_list(
+            self.filter_by_field_name, flat=True
+        )
+        words_counter = Counter(words)
+        result = [(word, f"{word} ({count})") for word, count in words_counter.items()]
+        return sorted(result, key=lambda obj: obj[0])
+
+    def queryset(self, request, queryset):
+        if self.value():
+            params = {self.filter_by_field_name: self.value()}
+            return queryset.filter(**params)
+
+
+class AppsListFilter(WordCounterListFilter):
+    """Filter by app name and show name with counts."""
+
+    title = _("app name")
+    parameter_name = "app"
+    filter_by_field_name = "app_name"
+
+
+class TasksListFilter(WordCounterListFilter):
+    """Filter by task name and show name with counts."""
+
+    title = _("task name")
+    parameter_name = "task"
+    filter_by_field_name = "name"
+
+
 @admin.register(QueuedTask)
 class QueuedTaskAdmin(admin.ModelAdmin):
-
     list_display = (
         "position",
         "id",
@@ -21,7 +57,7 @@ class QueuedTaskAdmin(admin.ModelAdmin):
         "app_name",
     )
     list_display_links = None
-    list_filter = ["app_name", "name"]
+    list_filter = (AppsListFilter, "priority", TasksListFilter)
     ordering = ["position"]
 
     def has_add_permission(self, *args, **kwargs):

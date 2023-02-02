@@ -6,6 +6,7 @@ import functools
 import itertools
 import json
 from collections import defaultdict
+from dataclasses import dataclass
 from typing import List, NamedTuple, Optional
 
 import redis
@@ -59,18 +60,24 @@ class QueuedTaskCacheEntry(NamedTuple):
     created_at: dt.datetime
 
 
+@dataclass(frozen=True)
 class CacheApi:
     """API for working with the cache for queued tasks."""
 
+    cache_key: str
+
     def get(self) -> Optional[QueuedTaskCacheEntry]:
         """Retrieve content of cache or None if cache is expired or invalid."""
-        return cache.get(QUEUED_TASKS_CACHE_KEY)
+        data = cache.get(self.cache_key)
+        if data is not None and not isinstance(data, QueuedTaskCacheEntry):
+            raise TypeError("Expected data to be of type 'QueuedTaskCacheEntry'")
+        return data
 
     def set(self, tasks: List[QueuedTaskShort]) -> QueuedTaskCacheEntry:
         """Store given tasks in cache."""
         data = QueuedTaskCacheEntry(tasks=tasks, created_at=timezone.now())
         cache.set(
-            QUEUED_TASKS_CACHE_KEY,
+            self.cache_key,
             data,
             timeout=TASKMONITOR_QUEUED_TASKS_CACHE_TIMEOUT,
         )
@@ -78,7 +85,7 @@ class CacheApi:
 
     def clear(self):
         """Clear the cache."""
-        cache.delete(QUEUED_TASKS_CACHE_KEY)
+        cache.delete(self.cache_key)
 
     def created_at(self) -> Optional[dt.datetime]:
         """Return date when cache was created or None when cache is invalid."""
@@ -179,4 +186,4 @@ def add_tasks(queue_name: str, raw_tasks: list):
     del tasks_by_priority
 
 
-local_cache = CacheApi()
+local_cache = CacheApi(QUEUED_TASKS_CACHE_KEY)

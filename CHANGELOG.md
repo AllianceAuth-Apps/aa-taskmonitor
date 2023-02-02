@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Added
 
-- Show counts for apps and tasks in list of queued tasks
+- Show counts for apps and tasks for queued tasks
 
 ### Changed
 

@@ -268,7 +268,7 @@ def make_dto_list(objs) -> List[QueuedTaskShort]:
 
 class TestQueuedTaskManager(TestCase):
     @patch("taskmonitor.managers.celery_queues")
-    def test_should_support_get_queryset(self, mock_celery_queues):
+    def test_get_queryset_should_fetch_from_celery_queues(self, mock_celery_queues):
         # given
         queued_task_raw = QueuedTaskRawFactory()
         mock_celery_queues.fetch_tasks.return_value = make_dto_list(
@@ -279,6 +279,14 @@ class TestQueuedTaskManager(TestCase):
         # then
         self.assertEqual(len(qs), 2)
         self.assertEqual(qs[0].id, queued_task_raw["headers"]["id"])
+
+    def test_should_support_all(self):
+        # given
+        tasks = make_dto_list([QueuedTaskRawFactory(), QueuedTaskRawFactory()])
+        qs = QueuedTask.objects.from_dto_list(tasks)
+        # when/then
+        result = qs.all()
+        self.assertEqual(qs, result)
 
     def test_should_support_count(self):
         # given

@@ -38,6 +38,9 @@ class ListAsQuerySet(list):
         self._id_mapper = {str(obj.id): n for n, obj in enumerate(self)}
         self._list_size = len(self)
 
+    def all(self) -> models.QuerySet:
+        return self
+
     def get(self, *args, **kwargs):
         try:
             return self[self._id_mapper[str(kwargs["id"])]]

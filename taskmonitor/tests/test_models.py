@@ -266,9 +266,9 @@ def make_dto_list(objs) -> List[QueuedTaskShort]:
     return [QueuedTaskShort.from_dict(obj) for obj in objs]
 
 
-@patch("taskmonitor.managers.celery_queues")
 class TestQueuedTaskManager(TestCase):
-    def test_all(self, mock_celery_queues):
+    @patch("taskmonitor.managers.celery_queues")
+    def test_get_queryset_should_fetch_from_celery_queues(self, mock_celery_queues):
         # given
         queued_task_raw = QueuedTaskRawFactory()
         mock_celery_queues.fetch_tasks.return_value = make_dto_list(
@@ -280,18 +280,25 @@ class TestQueuedTaskManager(TestCase):
         self.assertEqual(len(qs), 2)
         self.assertEqual(qs[0].id, queued_task_raw["headers"]["id"])
 
-    def test_count(self, mock_celery_queues):
+    def test_should_support_all(self):
         # given
-        mock_celery_queues.fetch_tasks.return_value = make_dto_list(
-            [QueuedTaskRawFactory(), QueuedTaskRawFactory()]
-        )
+        tasks = make_dto_list([QueuedTaskRawFactory(), QueuedTaskRawFactory()])
+        qs = QueuedTask.objects.from_dto_list(tasks)
         # when/then
-        self.assertEqual(QueuedTask.objects.count(), 2)
+        result = qs.all()
+        self.assertEqual(qs, result)
 
-    def test_get(self, mock_celery_queues):
+    def test_should_support_count(self):
+        # given
+        tasks = make_dto_list([QueuedTaskRawFactory(), QueuedTaskRawFactory()])
+        qs = QueuedTask.objects.from_dto_list(tasks)
+        # when/then
+        self.assertEqual(qs.count(), 2)
+
+    def test_should_support_get(self):
         # given
         queued_task_raw = QueuedTaskRawFactory()
-        mock_celery_queues.fetch_tasks.return_value = make_dto_list(
+        tasks = make_dto_list(
             [
                 QueuedTaskRawFactory(),
                 QueuedTaskRawFactory(),
@@ -301,104 +308,122 @@ class TestQueuedTaskManager(TestCase):
                 QueuedTaskRawFactory(),
             ]
         )
+        qs = QueuedTask.objects.from_dto_list(tasks)
         # when
-        obj = QueuedTask.objects.get(id=queued_task_raw["headers"]["id"])
+        obj = qs.get(id=queued_task_raw["headers"]["id"])
         # then
         self.assertEqual(obj.name, queued_task_raw["headers"]["task"])
 
-    def test_first(self, mock_celery_queues):
+    def test_should_support_first(self):
         # given
         queued_task_raw = QueuedTaskRawFactory()
-        mock_celery_queues.fetch_tasks.return_value = make_dto_list(
+        tasks = make_dto_list(
             [queued_task_raw, QueuedTaskRawFactory(), QueuedTaskRawFactory()]
         )
+        qs = QueuedTask.objects.from_dto_list(tasks)
         # when
-        obj = QueuedTask.objects.first()
+        obj = qs.first()
         # then
         self.assertEqual(obj.name, queued_task_raw["headers"]["task"])
 
-    def test_order_by_asc(self, mock_celery_queues):
+    def test_should_support_order_by_asc(self):
         # given
         self.maxDiff = None
         raw_1 = QueuedTaskRawFactory(headers__task="bravo")
         raw_2 = QueuedTaskRawFactory(headers__task="alpha")
-        mock_celery_queues.fetch_tasks.return_value = make_dto_list([raw_1, raw_2])
+        tasks = make_dto_list([raw_1, raw_2])
+        qs = QueuedTask.objects.from_dto_list(tasks)
         # when
-        qs = QueuedTask.objects.order_by("name")
+        result = qs.order_by("name")
         # then
-        task_ids = [obj.id for obj in qs]
+        task_ids = [obj.id for obj in result]
         self.assertEqual(task_ids, raw_task_ids([raw_2, raw_1]))
 
-    def test_order_by_desc(self, mock_celery_queues):
+    def test_should_support_order_by_desc(self):
         # given
         self.maxDiff = None
         raw_1 = QueuedTaskRawFactory(headers__task="bravo")
         raw_2 = QueuedTaskRawFactory(headers__task="alpha")
-        mock_celery_queues.fetch_tasks.return_value = make_dto_list([raw_2, raw_1])
+        tasks = make_dto_list([raw_2, raw_1])
+        qs = QueuedTask.objects.from_dto_list(tasks)
         # when
-        qs = QueuedTask.objects.order_by("-name")
+        result = qs.order_by("-name")
         # then
-        task_ids = [obj.id for obj in qs]
+        task_ids = [obj.id for obj in result]
         self.assertEqual(task_ids, raw_task_ids([raw_1, raw_2]))
 
-    def test_order_by_multi(self, mock_celery_queues):
+    def test_order_by_multi(self):
         # given
         self.maxDiff = None
         raw_1 = QueuedTaskRawFactory(headers__task="bravo", properties__priority=7)
         raw_2 = QueuedTaskRawFactory(headers__task="bravo", properties__priority=1)
         raw_3 = QueuedTaskRawFactory(headers__task="alpha", properties__priority=4)
-        mock_celery_queues.fetch_tasks.return_value = make_dto_list(
-            [raw_1, raw_2, raw_3]
-        )
+        tasks = make_dto_list([raw_1, raw_2, raw_3])
+        qs = QueuedTask.objects.from_dto_list(tasks)
         # when
-        qs = QueuedTask.objects.order_by("name", "priority")
+        result = qs.order_by("name", "priority")
         # then
-        task_ids = [obj.id for obj in qs]
+        task_ids = [obj.id for obj in result]
         self.assertEqual(task_ids, raw_task_ids([raw_3, raw_2, raw_1]))
 
-    def test_filter(self, mock_celery_queues):
+    def test_should_support_filter(self):
         # given
         raw_1 = QueuedTaskRawFactory(headers__task="bravo")
         raw_2 = QueuedTaskRawFactory(headers__task="bravo")
         raw_3 = QueuedTaskRawFactory(headers__task="alpha")
-        mock_celery_queues.fetch_tasks.return_value = make_dto_list(
-            [raw_1, raw_2, raw_3]
-        )
+        tasks = make_dto_list([raw_1, raw_2, raw_3])
+        qs = QueuedTask.objects.from_dto_list(tasks)
         # when
-        qs = QueuedTask.objects.filter(name="alpha")
+        result = qs.filter(name="alpha")
         # then
-        task_ids = [obj.id for obj in qs]
+        task_ids = [obj.id for obj in result]
         self.assertEqual(task_ids, raw_task_ids([raw_3]))
 
-    def test_values(self, mock_celery_queues):
+    def test_should_raise_error_when_filter_with_unsupported_params(self):
+        # given
+        raw_1 = QueuedTaskRawFactory(headers__task="bravo")
+        raw_2 = QueuedTaskRawFactory(headers__task="bravo")
+        raw_3 = QueuedTaskRawFactory(headers__task="alpha")
+        tasks = make_dto_list([raw_1, raw_2, raw_3])
+        qs = QueuedTask.objects.from_dto_list(tasks)
+        # when
+        result = qs.filter(name="alpha")
+        # then
+        task_ids = [obj.id for obj in result]
+        self.assertEqual(task_ids, raw_task_ids([raw_3]))
+
+    def test_should_support_values(self):
         # given
         raw_1 = QueuedTaskRawFactory(headers__task="alpha", properties__priority=5)
         raw_2 = QueuedTaskRawFactory(headers__task="bravo", properties__priority=5)
-        mock_celery_queues.fetch_tasks.return_value = make_dto_list([raw_1, raw_2])
+        tasks = make_dto_list([raw_1, raw_2])
+        qs = QueuedTask.objects.from_dto_list(tasks)
         # when
-        result = QueuedTask.objects.values("name", "priority")
+        result = qs.values("name", "priority")
         # then
         self.assertEqual(
             result, [{"name": "alpha", "priority": 5}, {"name": "bravo", "priority": 5}]
         )
 
-    def test_values_list_1(self, mock_celery_queues):
+    def test_should_support_values_list(self):
         # given
         raw_1 = QueuedTaskRawFactory(headers__task="alpha", properties__priority=5)
         raw_2 = QueuedTaskRawFactory(headers__task="bravo", properties__priority=5)
-        mock_celery_queues.fetch_tasks.return_value = make_dto_list([raw_1, raw_2])
+        tasks = make_dto_list([raw_1, raw_2])
+        qs = QueuedTask.objects.from_dto_list(tasks)
         # when
-        result = QueuedTask.objects.values_list("name", "priority")
+        result = qs.values_list("name", "priority")
         # then
         self.assertEqual(result, [("alpha", 5), ("bravo", 5)])
 
-    def test_values_list_2(self, mock_celery_queues):
+    def test_should_support_flat_values_list(self):
         # given
         raw_1 = QueuedTaskRawFactory(headers__task="alpha")
         raw_2 = QueuedTaskRawFactory(headers__task="bravo")
-        mock_celery_queues.fetch_tasks.return_value = make_dto_list([raw_1, raw_2])
+        tasks = make_dto_list([raw_1, raw_2])
+        qs = QueuedTask.objects.from_dto_list(tasks)
         # when
-        result = QueuedTask.objects.values_list("name", flat=True)
+        result = qs.values_list("name", flat=True)
         # then
         self.assertEqual(result, ["alpha", "bravo"])
 

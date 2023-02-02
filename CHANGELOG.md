@@ -7,15 +7,21 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased] - yyyy-mm-dd
 
-## [0.9.1] - 2023-02-01
+## [0.10.0] - 2023-02-02
 
 ### Added
+
+- Show counts for apps and tasks for queued tasks
+
+### Changed
+
+- Reduced default cache timeout for queued tasks to 10 seconds
+
+## [0.9.1] - 2023-02-01
 
 ### Changed
 
 - Added caching for queued tasks to further improve performance
-
-### Fixed
 
 ## [0.9.0] - 2023-01-31
 

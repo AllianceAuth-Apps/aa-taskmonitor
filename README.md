@@ -94,7 +94,7 @@ Name | Description | Default
 -- | -- | --
 `TASKMONITOR_DATA_MAX_AGE`| Max age of logged tasks in hours. Older logs be deleted automatically. | `24`
 `TASKMONITOR_HOUSEKEEPING_FREQUENCY`| Frequency of house keeping runs in minutes. | `15`
-`TASKMONITOR_QUEUED_TASKS_CACHE_TIMEOUT`| Timeout for caching queued tasks in seconds. | `60`
+`TASKMONITOR_QUEUED_TASKS_CACHE_TIMEOUT`| Timeout for caching queued tasks in seconds. | `10`
 `TASKMONITOR_REPORTS_MAX_AGE`| Max age of cached reports in minutes. | `15`
 `TASKMONITOR_REPORTS_MAX_TOP`| Max items to show in the top reports. e.g. 10 will shop the top ten items. | `15`
 `TASKMONITOR_TRUNCATE_NESTED_DATA`| Whether deeply nested task params and results are truncated. Please see FAQ for details. | `True`

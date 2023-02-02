@@ -38,6 +38,9 @@ class ListAsQuerySet(list):
         self._id_mapper = {str(obj.id): n for n, obj in enumerate(self)}
         self._list_size = len(self)
 
+    def all(self) -> models.QuerySet:
+        return self
+
     def get(self, *args, **kwargs):
         try:
             return self[self._id_mapper[str(kwargs["id"])]]
@@ -67,15 +70,20 @@ class ListAsQuerySet(list):
         return self[0] if self else None
 
     def filter(self, *args, **kwargs):
-        if kwargs:
-            new_list = []
-            for obj in self:
-                if all([getattr(obj, key) == value for key, value in kwargs.items()]):
-                    new_list.append(obj)
-            return ListAsQuerySet(new_list, model=self.model)
-        return self
+        if args:
+            raise NotImplementedError("filter with positional args not supported.")
+        if not kwargs:
+            return self
+        new_list = [
+            obj
+            for obj in self
+            if all([str(getattr(obj, k)) == str(v) for k, v in kwargs.items()])
+        ]
+        return ListAsQuerySet(new_list, model=self.model)
 
     def order_by(self, *args, **kwargs):
+        if kwargs:
+            raise NotImplementedError("order with kw args not supported.")
         if args:
             for prop in reversed(args):
                 if prop[0:1] == "-":
@@ -99,12 +107,15 @@ class QueuedTaskQuerySet(models.QuerySet):
 
 
 class QueuedTaskManagerBase(models.Manager):
-    def get_queryset(self):
+    def get_queryset(self) -> models.QuerySet:
+        return self.from_dto_list(celery_queues.fetch_tasks())
+
+    def from_dto_list(self, tasks: list) -> models.QuerySet:
+        """Create from a list of QueuedTaskShort objects."""
         from .models import QueuedTask
 
         objs = [
-            QueuedTask.from_dto(obj, position)
-            for position, obj in enumerate(celery_queues.fetch_tasks())
+            QueuedTask.from_dto(obj, position) for position, obj in enumerate(tasks)
         ]
         return ListAsQuerySet(objs, model=QueuedTask)
 

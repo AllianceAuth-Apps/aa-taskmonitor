@@ -107,5 +107,5 @@ def admin_queued_task_purge(request):
 @staff_member_required
 def admin_queued_task_clear_cache(request):
     """Clear the cache for queued tasks."""
-    celery_queues.local_cache.clear()
+    celery_queues.tasks_cache.clear()
     return redirect("admin:taskmonitor_queuedtask_changelist")

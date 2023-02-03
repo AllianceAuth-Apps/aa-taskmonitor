@@ -19,7 +19,7 @@ django.setup()
 from taskmonitor.core import celery_queues
 from taskmonitor.tests.factories import QueuedTaskRawFactory
 
-TASK_AMOUNT = 1_000
+TASK_AMOUNT = 50_000
 MAX_CHUNK_SIZE = 50_000  # upper limit to safe memory consumption
 
 

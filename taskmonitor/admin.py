@@ -3,6 +3,7 @@ from collections import Counter
 from typing import Optional
 
 from django.contrib import admin
+from django.db.models import Count
 from django.shortcuts import get_object_or_404, redirect
 from django.utils import html, safestring, timezone
 from django.utils.translation import gettext_lazy as _
@@ -12,39 +13,44 @@ from .core import celery_queues
 from .models import QueuedTask, TaskLog, TaskReport
 
 
-class WordCounterListFilter(admin.SimpleListFilter):
-    """Admin filter to filter by words and show counts."""
+class FieldFilterCountsMemory(admin.SimpleListFilter):
+    """Filter by field and show counts.
 
-    filter_by_field_name = ""
+    Counts are calculated in memory.
+    """
+
+    field_name = ""  # field to filter by
 
     def lookups(self, request, model_admin: admin.ModelAdmin):
-        words = model_admin.get_queryset(request).values_list(
-            self.filter_by_field_name, flat=True
+        field_in_rows = model_admin.get_queryset(request).values_list(
+            self.field_name, flat=True
         )
-        words_counter = Counter(words)
-        result = [(word, f"{word} ({count})") for word, count in words_counter.items()]
+        field_counts = Counter(field_in_rows)
+        result = [
+            (field, f"{field} ({count:,})") for field, count in field_counts.items()
+        ]
         return sorted(result, key=lambda obj: obj[0])
 
     def queryset(self, request, queryset):
         if self.value():
-            params = {self.filter_by_field_name: self.value()}
+            params = {self.field_name: self.value()}
             return queryset.filter(**params)
 
 
-class AppsListFilter(WordCounterListFilter):
+class QueuedTaskAppsListFilter(FieldFilterCountsMemory):
     """Filter by app name and show name with counts."""
 
     title = _("app name")
-    parameter_name = "app"
-    filter_by_field_name = "app_name"
+    parameter_name = "app_name"
+    field_name = "app_name"
 
 
-class TasksListFilter(WordCounterListFilter):
+class QueuedTaskTasksListFilter(FieldFilterCountsMemory):
     """Filter by task name and show name with counts."""
 
     title = _("task name")
-    parameter_name = "task"
-    filter_by_field_name = "name"
+    parameter_name = "task_name"
+    field_name = "name"
 
 
 @admin.register(QueuedTask)
@@ -57,7 +63,7 @@ class QueuedTaskAdmin(admin.ModelAdmin):
         "app_name",
     )
     list_display_links = None
-    list_filter = (AppsListFilter, "priority", TasksListFilter)
+    list_filter = (QueuedTaskAppsListFilter, "priority", QueuedTaskTasksListFilter)
     ordering = ["position"]
 
     def has_add_permission(self, *args, **kwargs):
@@ -97,6 +103,72 @@ class TaskReportAdmin(admin.ModelAdmin):
         return redirect("taskmonitor:admin_taskmonitor_reports")
 
 
+class FieldFilterCountsDb(admin.SimpleListFilter):
+    """Filter by field and show counts.
+
+    Counts are calculated by the database.
+    """
+
+    field_name = ""  # field to filter by
+
+    def lookups(self, request, model_admin: admin.ModelAdmin):
+        qs = model_admin.get_queryset(request)
+        field_counts = (
+            qs.values(self.field_name)
+            .annotate(num_words=Count(self.field_name))
+            .order_by(self.field_name)
+        )
+        field = qs.model._meta.get_field(self.field_name)
+        if field.choices:
+            field_counts = self._map_choices_field(field, field_counts)
+        result = [
+            (obj[self.field_name], f'{obj[self.field_name]} ({obj["num_words"]:,})')
+            for obj in field_counts
+        ]
+        return result
+
+    def _map_choices_field(self, field, field_counts):
+        """Map choices field values to corresponding labels."""
+        mapper = {obj[0]: obj[1] for obj in field.choices}
+        field_counts = [
+            {
+                self.field_name: mapper[obj[self.field_name]],
+                "num_words": obj["num_words"],
+            }
+            for obj in field_counts
+        ]
+        return field_counts
+
+    def queryset(self, request, queryset):
+        if self.value():
+            params = {self.field_name: self.value()}
+            return queryset.filter(**params)
+
+
+class TaskLogAppsListFilter(FieldFilterCountsDb):
+    """Filter by app name and show name with counts."""
+
+    title = _("app name")
+    parameter_name = "app"
+    field_name = "app_name"
+
+
+class TaskLogStatesListFilter(FieldFilterCountsDb):
+    """Filter by app name and show name with counts."""
+
+    title = _("state")
+    parameter_name = "state"
+    field_name = "state"
+
+
+class TaskLogTasksListFilter(FieldFilterCountsDb):
+    """Filter by app name and show name with counts."""
+
+    title = _("task name")
+    parameter_name = "task"
+    field_name = "task_name"
+
+
 @admin.register(TaskLog)
 class TaskLogAdmin(admin.ModelAdmin):
     class Media:
@@ -111,7 +183,13 @@ class TaskLogAdmin(admin.ModelAdmin):
         "_runtime",
         "_exception",
     )
-    list_filter = ("state", "timestamp", "app_name", "task_name")
+    list_filter = (
+        TaskLogStatesListFilter,
+        "timestamp",
+        TaskLogAppsListFilter,
+        "priority",
+        TaskLogTasksListFilter,
+    )
     search_fields = ("task_name", "app_name", "task_id")
     actions = ["delete_selected_2"]
     show_full_result_count = False

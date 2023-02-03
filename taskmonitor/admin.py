@@ -22,12 +22,12 @@ class FieldFilterCountsMemory(admin.SimpleListFilter):
     field_name = ""  # field to filter by
 
     def lookups(self, request, model_admin: admin.ModelAdmin):
-        words = model_admin.get_queryset(request).values_list(
+        field_in_rows = model_admin.get_queryset(request).values_list(
             self.field_name, flat=True
         )
-        words_counter = Counter(words)
+        field_counts = Counter(field_in_rows)
         result = [
-            (word, f"{word} ({count:,})") for word, count in words_counter.items()
+            (field, f"{field} ({count:,})") for field, count in field_counts.items()
         ]
         return sorted(result, key=lambda obj: obj[0])
 
@@ -41,7 +41,7 @@ class QueuedTaskAppsListFilter(FieldFilterCountsMemory):
     """Filter by app name and show name with counts."""
 
     title = _("app name")
-    parameter_name = "app"
+    parameter_name = "app_name"
     field_name = "app_name"
 
 
@@ -49,7 +49,7 @@ class QueuedTaskTasksListFilter(FieldFilterCountsMemory):
     """Filter by task name and show name with counts."""
 
     title = _("task name")
-    parameter_name = "task"
+    parameter_name = "task_name"
     field_name = "name"
 
 
@@ -109,20 +109,35 @@ class FieldFilterCountsDb(admin.SimpleListFilter):
     Counts are calculated by the database.
     """
 
-    field_name = ""
+    field_name = ""  # field to filter by
 
     def lookups(self, request, model_admin: admin.ModelAdmin):
-        words = (
-            model_admin.get_queryset(request)
-            .values(self.field_name)
+        qs = model_admin.get_queryset(request)
+        field_counts = (
+            qs.values(self.field_name)
             .annotate(num_words=Count(self.field_name))
             .order_by(self.field_name)
         )
+        field = qs.model._meta.get_field(self.field_name)
+        if field.choices:
+            field_counts = self._map_choices_field(field, field_counts)
         result = [
             (obj[self.field_name], f'{obj[self.field_name]} ({obj["num_words"]:,})')
-            for obj in words
+            for obj in field_counts
         ]
         return result
+
+    def _map_choices_field(self, field, field_counts):
+        """Map choices field values to corresponding labels."""
+        mapper = {obj[0]: obj[1] for obj in field.choices}
+        field_counts = [
+            {
+                self.field_name: mapper[obj[self.field_name]],
+                "num_words": obj["num_words"],
+            }
+            for obj in field_counts
+        ]
+        return field_counts
 
     def queryset(self, request, queryset):
         if self.value():

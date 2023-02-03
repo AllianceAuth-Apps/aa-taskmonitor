@@ -9,7 +9,6 @@ myauth_dir = Path(__file__).parent.parent.parent.parent / "myauth"
 sys.path.insert(0, str(myauth_dir))
 
 import django
-from django.apps import apps
 
 # init and setup django project
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "myauth.settings.local")
@@ -36,3 +35,4 @@ generate_tasks(TASK_AMOUNT % MAX_CHUNK_SIZE)
 print(f"Using queue name: {q_name}")
 print(f"Added {TASK_AMOUNT:,} to queued tasks.")
 celery_queues.tasks_cache.clear()
+print("DONE!")

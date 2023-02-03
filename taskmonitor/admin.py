@@ -187,6 +187,7 @@ class TaskLogAdmin(admin.ModelAdmin):
         TaskLogStatesListFilter,
         "timestamp",
         TaskLogAppsListFilter,
+        "priority",
         TaskLogTasksListFilter,
     )
     search_fields = ("task_name", "app_name", "task_id")

@@ -7,11 +7,18 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased] - yyyy-mm-dd
 
+## [0.11.0] - 2023-02-03
+
+### Added
+
+- Show counts of apps and tasks for task log
+- Add priority filter to task log
+
 ## [0.10.0] - 2023-02-02
 
 ### Added
 
-- Show counts for apps and tasks for queued tasks
+- Show counts of apps and tasks for queued tasks
 
 ### Changed
 

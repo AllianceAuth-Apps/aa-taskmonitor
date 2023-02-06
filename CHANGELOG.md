@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased] - yyyy-mm-dd
 
+## [0.11.1] - 2023-02-06
+
+### Fixed
+
+- State filter broken for task logs
+
 ## [0.11.0] - 2023-02-03
 
 ### Added

@@ -121,18 +121,26 @@ class FieldFilterCountsDb(admin.SimpleListFilter):
         field = qs.model._meta.get_field(self.field_name)
         if field.choices:
             field_counts = self._map_choices_field(field, field_counts)
-        result = [
-            (obj[self.field_name], f'{obj[self.field_name]} ({obj["num_words"]:,})')
-            for obj in field_counts
-        ]
+            result = [
+                (
+                    obj[self.field_name][0],
+                    f'{obj[self.field_name][1]} ({obj["num_words"]:,})',
+                )
+                for obj in field_counts
+            ]
+        else:
+            result = [
+                (obj[self.field_name], f'{obj[self.field_name]} ({obj["num_words"]:,})')
+                for obj in field_counts
+            ]
         return result
 
     def _map_choices_field(self, field, field_counts):
-        """Map choices field values to corresponding labels."""
+        """Map choices field values to corresponding labels and keep values."""
         mapper = {obj[0]: obj[1] for obj in field.choices}
         field_counts = [
             {
-                self.field_name: mapper[obj[self.field_name]],
+                self.field_name: (obj[self.field_name], mapper[obj[self.field_name]]),
                 "num_words": obj["num_words"],
             }
             for obj in field_counts

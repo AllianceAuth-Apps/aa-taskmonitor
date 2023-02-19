@@ -38,6 +38,19 @@ class TestCachedReports(TestCase):
         TaskLogFactory(state=TaskLog.State.RETRY)
         report = cached_reports.QueueLengthOverTime()
         # when
-        result = report._calc_data()
-        # then
-        print(result)
+        report._calc_data()
+
+    def test_should_work_with_null_values(self):
+        # given
+        TaskLogFactory(state=TaskLog.State.FAILURE)
+        log = TaskLogFactory(state=TaskLog.State.SUCCESS, current_queue_length=None)
+        self.assertIsNone(log.current_queue_length)
+        report = cached_reports.QueueLengthOverTime()
+        # when
+        report._calc_data()
+
+    def test_should_work_without_data(self):
+        # given
+        report = cached_reports.QueueLengthOverTime()
+        # when
+        report._calc_data()

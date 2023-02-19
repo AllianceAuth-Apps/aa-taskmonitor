@@ -281,8 +281,12 @@ class QueueLengthOverTime(_CachedReport):
     is_included = False
 
     def _calc_data(self):
+        def mean_or_zero(lst):
+            return mean(lst) if lst else 0
+
         qs = (
-            TaskLog.objects.order_by("timestamp")
+            TaskLog.objects.exclude(current_queue_length__isnull=True)
+            .order_by("timestamp")
             .annotate(x=TruncMinute("timestamp"))
             .values("x")
             .annotate(y=Avg("current_queue_length"))
@@ -293,7 +297,9 @@ class QueueLengthOverTime(_CachedReport):
         for obj in qs:
             data_raw[int(obj["x"].timestamp() * 1000)].append(obj["y"])
         data_raw = dict(sorted(data_raw.items()))
-        data = [[x, int(round(mean(values), 0))] for x, values in data_raw.items()]
+        data = [
+            [x, int(round(mean_or_zero(values), 0))] for x, values in data_raw.items()
+        ]
         return [{"name": "length", "data": data}]
 
 

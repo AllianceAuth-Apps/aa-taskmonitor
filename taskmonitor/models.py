@@ -81,6 +81,11 @@ class TaskLog(models.Model):
             "Positional arguments the task was called with. Nested items might be truncated to [] or {}."
         ),
     )
+    current_queue_length = models.IntegerField(
+        default=None,
+        null=True,
+        help_text="Length of the queue at the time this log was created.",
+    )
     exception = models.TextField(help_text="Message of the raised exception if any.")
     kwargs = models.JSONField(
         default=dict,

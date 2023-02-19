@@ -171,6 +171,7 @@ class TaskLogManagerBase(models.Manager):
         parent_id: str = None,
         exception=None,
         result=None,
+        current_queue_length: int = None,
     ) -> models.Model:
         """Create new object from a celery task."""
         params = {
@@ -184,6 +185,7 @@ class TaskLogManagerBase(models.Manager):
             "task_id": UUID(task_id),
             "task_name": task_name,
             "timestamp": timezone.now(),
+            "current_queue_length": current_queue_length,
         }
         params["args"] = (
             truncate_list(args) if TASKMONITOR_TRUNCATE_NESTED_DATA else args

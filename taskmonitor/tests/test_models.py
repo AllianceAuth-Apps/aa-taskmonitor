@@ -30,7 +30,9 @@ class TestTaskLog(TestCase):
 class TestManagerCreateFromTask(TestCase):
     def test_should_create_from_succeeded_task(self):
         # given
-        expected = TaskLogFactory.build(state=TaskLog.State.SUCCESS)
+        expected = TaskLogFactory.build(
+            state=TaskLog.State.SUCCESS, current_queue_length=42
+        )
         # when
         with patch("django.utils.timezone.now") as mock_now:
             mock_now.return_value = expected.timestamp
@@ -45,6 +47,7 @@ class TestManagerCreateFromTask(TestCase):
                 args=expected.args,
                 kwargs=expected.kwargs,
                 result=expected.result,
+                current_queue_length=42,
             )
         # then
         self._assert_equal_objs(expected, result)

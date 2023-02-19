@@ -26,7 +26,7 @@ def admin_taskmonitor_download_csv(request) -> StreamingHttpResponse:
     """Return all tasklogs as CSV file for download."""
     queryset = TaskLog.objects.order_by("pk")
     model = queryset.model
-    exclude_fields = ("traceback", "args", "kwargs", "result")
+    exclude_fields = ("traceback", "args", "kwargs", "result", "current_queue_length")
 
     logger.info("Preparing to export the task log with %s entries.", queryset.count())
 

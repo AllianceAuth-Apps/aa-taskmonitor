@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased] - yyyy-mm-dd
 
+## [0.12.0] - TBD
+
+### Added
+
+- Show report for queue length over time
+
 ## [0.11.1] - 2023-02-06
 
 ### Fixed

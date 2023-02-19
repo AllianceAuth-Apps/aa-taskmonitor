@@ -35,6 +35,7 @@ class TaskLogFactory(factory.django.DjangoModelFactory):
         model = TaskLog
 
     app_name = factory.fuzzy.FuzzyChoice(fake_tasks.keys())
+    current_queue_length = factory.fuzzy.FuzzyInteger(0, 1_000)
     received = factory.fuzzy.FuzzyDateTime(timezone.now() - dt.timedelta(hours=3))
     started = factory.LazyAttribute(
         lambda o: factory.fuzzy.FuzzyDateTime(start_dt=o.received).fuzz()

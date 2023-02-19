@@ -30,3 +30,14 @@ class TestCachedReports(TestCase):
     #     result = cached_reports.report_data("basic_information")
     #     # then
     #     self.assertTrue(result)
+
+    def test_should_create_queue_report(self):
+        # given
+        TaskLogFactory(state=TaskLog.State.SUCCESS)
+        TaskLogFactory(state=TaskLog.State.FAILURE)
+        TaskLogFactory(state=TaskLog.State.RETRY)
+        report = cached_reports.QueueLengthOverTime()
+        # when
+        result = report._calc_data()
+        # then
+        print(result)

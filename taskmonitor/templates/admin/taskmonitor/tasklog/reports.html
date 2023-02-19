@@ -63,6 +63,10 @@
                     <li><a class="tabLinks" href="#" onclick="openTab(event, 'throughput-by-app')">Throughput by app</a></li>
                     <li><a class="tabLinks" href="#" onclick="openTab(event, 'task-througput')">Througput overview</a></li>
                 </ul>
+                <h3>Queue</h3>
+                <ul>
+                    <li><a class="tabLinks" href="#" onclick="openTab(event, 'queue-length')">Queue Length over time</a></li>
+                </ul>
             </div>
 
             <div class="changelist-form-container">
@@ -109,6 +113,11 @@
                 <div id="throughput-by-app" class="tabContent">
                     <h2>Task throughput per minute by app</h2>
                     {% include "admin/taskmonitor/tasklog/chart_throughput_partial.html" with report_name="tasks_throughput_by_app" %}
+                </div>
+
+                <div id="queue-length" class="tabContent">
+                    <h2>Queue length over time</h2>
+                    {% include "admin/taskmonitor/tasklog/chart_throughput_partial.html" with report_name="queue_length_over_time" %}
                 </div>
 
                 <br>

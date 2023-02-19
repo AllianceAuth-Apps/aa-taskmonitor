@@ -4,10 +4,12 @@ import datetime as dt
 import inspect
 import re
 import sys
+from collections import defaultdict
+from statistics import mean
 from typing import List, Optional
 
 from django.core.cache import cache
-from django.db.models import Count, F, Max, Min, Sum, Value
+from django.db.models import Avg, Count, F, Max, Min, Sum, Value
 from django.db.models.functions import Concat, TruncMinute
 from django.urls import reverse
 from django.utils import functional, timezone
@@ -242,6 +244,7 @@ class TasksThroughputByState(_CachedReport):
         for state in TaskLog.State:
             result = (
                 TaskLog.objects.filter(state=state)
+                .order_by("timestamp")
                 .annotate(x=TruncMinute("timestamp"))
                 .values("x")
                 .annotate(y=Count("id"))
@@ -264,13 +267,34 @@ class TasksThroughputByApp(_CachedReport):
             else:
                 app_qs = TaskLog.objects.exclude(app_name__in=real_app_name)
             result = (
-                app_qs.annotate(x=TruncMinute("timestamp"))
+                app_qs.order_by("timestamp")
+                .annotate(x=TruncMinute("timestamp"))
                 .values("x")
                 .annotate(y=Count("id"))
             )
             data = [[int(obj["x"].timestamp() * 1000), obj["y"]] for obj in result]
             series.append({"name": app_name, "data": data})
         return series
+
+
+class QueueLengthOverTime(_CachedReport):
+    is_included = False
+
+    def _calc_data(self):
+        qs = (
+            TaskLog.objects.order_by("timestamp")
+            .annotate(x=TruncMinute("timestamp"))
+            .values("x")
+            .annotate(y=Avg("current_queue_length"))
+        )
+        # need to manually group again,
+        # because grouping by avg does not seam to work with this query
+        data_raw = defaultdict(list)
+        for obj in qs:
+            data_raw[int(obj["x"].timestamp() * 1000)].append(obj["y"])
+        data_raw = dict(sorted(data_raw.items()))
+        data = [[x, int(round(mean(values), 0))] for x, values in data_raw.items()]
+        return [{"name": "length", "data": data}]
 
 
 def refresh_cache() -> None:

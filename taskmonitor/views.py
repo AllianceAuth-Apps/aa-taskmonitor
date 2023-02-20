@@ -86,8 +86,9 @@ def admin_taskmonitor_reports_recalculation(request):
 @staff_member_required
 def admin_taskmonitor_report_data(request, report_name: str):
     """Data for a report."""
+    use_cache = request.GET.get("use_cache") != "false"
     try:
-        data = {"data": cached_reports.report_data(report_name)}
+        data = {"data": cached_reports.report_data(report_name, use_cache=use_cache)}
     except KeyError:
         raise Http404(f'No report with name: "{report_name}"')
     return JsonResponse(data)

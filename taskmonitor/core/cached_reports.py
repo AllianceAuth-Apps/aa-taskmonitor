@@ -32,8 +32,11 @@ class _CachedReport:
     is_included = True  # whether a report is included in the main group
 
     def __init__(self) -> None:
-        # Set name as Class name in snake case
-        self.name = re.sub(r"(?<!^)(?=[A-Z])", "_", self.__class__.__name__).lower()
+        self.name = self._to_snake_case(self.__class__.__name__)
+
+    @staticmethod
+    def _to_snake_case(name: str) -> str:
+        return re.sub(r"(?<!^)(?=[A-Z])", "_", name).lower()
 
     @functional.cached_property
     def changelist_url(self) -> str:
@@ -63,12 +66,18 @@ class _CachedReport:
         """Timeout in seconds."""
         return TASKMONITOR_REPORTS_MAX_AGE * 60
 
-    @functional.cached_property
+    @property
     def now(self) -> dt.datetime:
         return timezone.now()
 
-    def data(self) -> list:
-        return cache.get_or_set(self.cache_key, self._calc_data, timeout=self.timeout)
+    def data(self, use_cache=True) -> list:
+        if use_cache:
+            return cache.get_or_set(
+                self.cache_key, self._calc_data, timeout=self.timeout
+            )
+        data = self._calc_data()
+        cache.set(self.cache_key, data, timeout=self.timeout)
+        return data
 
     def refresh_cache(self) -> None:
         """Refresh the cache."""
@@ -350,9 +359,9 @@ def data() -> dict:
     }
 
 
-def report_data(report_name: str):
+def report_data(report_name: str, use_cache: bool = True):
     """Data of an cached report."""
-    return report(report_name).data()
+    return report(report_name).data(use_cache)
 
 
 def reports() -> List[_CachedReport]:

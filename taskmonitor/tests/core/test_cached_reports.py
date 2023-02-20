@@ -1,5 +1,6 @@
 import datetime as dt
 from statistics import mean
+from unittest.mock import patch
 
 from pytz import utc
 
@@ -10,6 +11,39 @@ from taskmonitor.core import cached_reports
 from taskmonitor.models import TaskLog
 
 from ..factories import TaskLogFactory
+
+MODULE_PATH = "taskmonitor.core.cached_reports"
+
+
+@patch(MODULE_PATH + ".cache")
+class TestCachedReports2(TestCase):
+    class DummyReport(cached_reports._CachedReport):
+        def _calc_data(self):
+            return "not cached"
+
+    def test_should_create_obj(self, mock):
+        # when
+        obj = self.DummyReport()
+        # then
+        self.assertEqual(obj.name, "dummy_report")
+
+    def test_should_return_data_from_cache(self, mock_cache):
+        # given
+        mock_cache.get_or_set.return_value = "cached"
+        report = self.DummyReport()
+        # when
+        data = report.data()
+        # then
+        self.assertEqual(data, "cached")
+
+    def test_should_return_data_and_update_cache(self, mock_cache):
+        # given
+        report = self.DummyReport()
+        # when
+        data = report.data(use_cache=False)
+        # then
+        self.assertEqual(data, "not cached")
+        self.assertTrue(mock_cache.set.called)
 
 
 class TestCachedReports(TestCase):

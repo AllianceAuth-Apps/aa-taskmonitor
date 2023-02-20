@@ -16,6 +16,7 @@ from app_utils.logging import LoggerAddTag
 
 from taskmonitor import __title__
 from taskmonitor.app_settings import TASKMONITOR_QUEUED_TASKS_CACHE_TIMEOUT
+from taskmonitor.helpers import memcached
 
 from .tasks_cache import QueuedTasksCache, QueuedTaskShort
 
@@ -51,6 +52,12 @@ def queue_length() -> int:
     """Length of the celery queue."""
     r = _redis_client()
     return sum(r.llen(name) for name in _redis_queue_names())
+
+
+@memcached(timeout=10)
+def queue_length_cached() -> int:
+    """Current queue length, but cached for a couple seconds to reduce load on Redis."""
+    return queue_length()
 
 
 def fetch_tasks() -> List[QueuedTaskShort]:

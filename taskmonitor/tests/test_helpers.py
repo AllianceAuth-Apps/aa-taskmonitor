@@ -1,9 +1,12 @@
+from time import sleep
+
 from django.test import TestCase
 
 from taskmonitor.helpers import (
     compress_list,
     dict_sort_keys,
     extract_app_name,
+    memcached,
     truncate_dict,
     truncate_list,
     truncate_result,
@@ -166,3 +169,36 @@ class TestCompressList(TestCase):
         result = compress_list([False, []])
         # then
         self.assertListEqual(result, [False, []])
+
+
+class TestMemcachedDecorator(TestCase):
+    def test_should_cache_result(self):
+        # given
+        num_called = 0
+
+        @memcached(timeout=1)
+        def my_func():
+            nonlocal num_called
+            num_called += 1
+            return num_called
+
+        # when/then
+        self.assertEqual(my_func(), 1)
+        self.assertEqual(my_func(), 1)
+        sleep(2)
+        self.assertEqual(my_func(), 2)
+
+    def test_should_cache_result_for_several_functions(self):
+        # given
+
+        @memcached()
+        def my_func_1():
+            return "my_func_1"
+
+        @memcached()
+        def my_func_2():
+            return "my_func_2"
+
+        # when/then
+        self.assertEqual(my_func_1(), "my_func_1")
+        self.assertEqual(my_func_2(), "my_func_2")

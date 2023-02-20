@@ -54,7 +54,7 @@ def task_success_handler_2(sender, result):
             args=request.args,
             kwargs=request.kwargs,
             result=result,
-            current_queue_length=celery_queues.queue_length(),
+            current_queue_length=celery_queues.queue_length_cached(),
         )
     run_housekeeping_if_stale()
 
@@ -75,7 +75,7 @@ def task_retry_handler_2(sender, request, reason):
             args=request.args,
             kwargs=request.kwargs,
             exception=reason,
-            current_queue_length=celery_queues.queue_length(),
+            current_queue_length=celery_queues.queue_length_cached(),
         )
     run_housekeeping_if_stale()
 
@@ -96,7 +96,7 @@ def task_failure_handler_2(sender, task_id, exception):
             args=request.args,
             kwargs=request.kwargs,
             exception=exception,
-            current_queue_length=celery_queues.queue_length(),
+            current_queue_length=celery_queues.queue_length_cached(),
         )
     run_housekeeping_if_stale()
 

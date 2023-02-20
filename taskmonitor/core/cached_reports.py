@@ -6,7 +6,7 @@ import re
 import sys
 from collections import defaultdict
 from statistics import mean
-from typing import List, Optional
+from typing import Callable, Iterable, List, Optional, Tuple
 
 from django.core.cache import cache
 from django.db.models import Avg, Count, F, Max, Min, Sum, Value
@@ -99,6 +99,29 @@ class _CachedReport:
     def _calc_data(self):
         """Calculate data."""
         raise NotImplementedError()
+
+    @staticmethod
+    def _truncate_minute(func: Callable, qs: Iterable[dict]) -> List[Tuple[int, int]]:
+        """Truncate data to one aggregated value per minute.
+
+        Result will be sorted ascending by datetime.
+
+        This function is necessary, because tests show that the ORM grouping
+        with TruncMinute is not reliable.
+        """
+
+        def _func_or_zero(func, lst) -> int:
+            return func(lst) if lst else 0
+
+        data_raw = defaultdict(list)
+        for obj in qs:
+            data_raw[int(obj["x"].timestamp() * 1000)].append(obj["y"])
+        data_raw = dict(sorted(data_raw.items()))
+        data = [
+            tuple([x, int(round(_func_or_zero(func, values), 0))])
+            for x, values in data_raw.items()
+        ]
+        return data
 
     @classmethod
     def report_classes(cls):
@@ -242,14 +265,14 @@ class TasksThroughputByState(_CachedReport):
     def _calc_data(self):
         series = []
         for state in TaskLog.State:
-            result = (
+            qs = (
                 TaskLog.objects.filter(state=state)
                 .order_by("timestamp")
                 .annotate(x=TruncMinute("timestamp"))
                 .values("x")
                 .annotate(y=Count("id"))
             )
-            data = [[int(obj["x"].timestamp() * 1000), obj["y"]] for obj in result]
+            data = self._truncate_minute(sum, qs)
             series.append({"name": state.label, "data": data})
         return series
 
@@ -266,13 +289,13 @@ class TasksThroughputByApp(_CachedReport):
                 app_qs = TaskLog.objects.filter(app_name=app_name)
             else:
                 app_qs = TaskLog.objects.exclude(app_name__in=real_app_name)
-            result = (
+            qs = (
                 app_qs.order_by("timestamp")
                 .annotate(x=TruncMinute("timestamp"))
                 .values("x")
                 .annotate(y=Count("id"))
             )
-            data = [[int(obj["x"].timestamp() * 1000), obj["y"]] for obj in result]
+            data = self._truncate_minute(sum, qs)
             series.append({"name": app_name, "data": data})
         return series
 
@@ -281,9 +304,6 @@ class QueueLengthOverTime(_CachedReport):
     is_included = False
 
     def _calc_data(self):
-        def mean_or_zero(lst):
-            return mean(lst) if lst else 0
-
         qs = (
             TaskLog.objects.exclude(current_queue_length__isnull=True)
             .order_by("timestamp")
@@ -291,15 +311,7 @@ class QueueLengthOverTime(_CachedReport):
             .values("x")
             .annotate(y=Avg("current_queue_length"))
         )
-        # need to manually group again,
-        # because grouping by avg does not seam to work with this query
-        data_raw = defaultdict(list)
-        for obj in qs:
-            data_raw[int(obj["x"].timestamp() * 1000)].append(obj["y"])
-        data_raw = dict(sorted(data_raw.items()))
-        data = [
-            [x, int(round(mean_or_zero(values), 0))] for x, values in data_raw.items()
-        ]
+        data = self._truncate_minute(mean, qs)
         return [{"name": "length", "data": data}]
 
 

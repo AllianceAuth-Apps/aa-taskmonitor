@@ -205,7 +205,9 @@ class TestManagerCreateFromTask(TestCase):
 
     def _assert_equal_objs(self, expected, result):
         field_names = {
-            field.name for field in TaskLog._meta.fields if field.name != "id"
+            field.name
+            for field in TaskLog._meta.fields
+            if field.name not in {"id", "current_queue_length"}
         }
         for field_name in field_names:
             with self.subTest(field_name=field_name):

@@ -1,3 +1,8 @@
+import datetime as dt
+from statistics import mean
+
+from pytz import utc
+
 from django.core.cache import cache
 from django.test import TestCase
 
@@ -31,14 +36,48 @@ class TestCachedReports(TestCase):
     #     # then
     #     self.assertTrue(result)
 
+
+class TestQueueLengthOverTime(TestCase):
+    def setUp(self) -> None:
+        cache.clear()
+
     def test_should_create_queue_report(self):
         # given
-        TaskLogFactory(state=TaskLog.State.SUCCESS)
-        TaskLogFactory(state=TaskLog.State.FAILURE)
-        TaskLogFactory(state=TaskLog.State.RETRY)
+        start_dt = dt.datetime(2023, 1, 1, 12, 0, tzinfo=utc)
+        TaskLogFactory(
+            received=start_dt,
+            started=start_dt,
+            timestamp=start_dt + dt.timedelta(seconds=5),
+            current_queue_length=30,
+        )
+        TaskLogFactory(
+            received=start_dt + dt.timedelta(seconds=5),
+            started=start_dt + dt.timedelta(seconds=5),
+            timestamp=start_dt + dt.timedelta(seconds=10),
+            current_queue_length=10,
+        )
+        start_dt += dt.timedelta(minutes=1)
+        TaskLogFactory(
+            received=start_dt,
+            started=start_dt,
+            timestamp=start_dt + dt.timedelta(seconds=5),
+            current_queue_length=50,
+        )
+        TaskLogFactory(
+            received=start_dt + dt.timedelta(seconds=5),
+            started=start_dt + dt.timedelta(seconds=5),
+            timestamp=start_dt + dt.timedelta(seconds=10),
+            current_queue_length=30,
+        )
         report = cached_reports.QueueLengthOverTime()
         # when
-        report._calc_data()
+        result = report._calc_data()
+        # then
+        series = result[0]
+        self.assertEqual(series["name"], "length")
+        data = series["data"]
+        expected = [(1672574400000, 20), (1672574460000, 40)]
+        self.assertEqual(data, expected)
 
     def test_should_work_with_null_values(self):
         # given
@@ -54,3 +93,45 @@ class TestCachedReports(TestCase):
         report = cached_reports.QueueLengthOverTime()
         # when
         report._calc_data()
+
+
+class TestTruncateMinute(TestCase):
+    @staticmethod
+    def _to_data(list) -> list:
+        return [{"x": obj[0], "y": obj[1]} for obj in list]
+
+    def test_should_calc_mean(self):
+        # given
+        start_dt = dt.datetime(2023, 1, 1, 12, 0, tzinfo=utc)
+        data = self._to_data(
+            [
+                (start_dt, 1),
+                (start_dt, 3),
+                (start_dt + dt.timedelta(minutes=2), 3),
+                (start_dt + dt.timedelta(minutes=1), 3),
+                (start_dt + dt.timedelta(minutes=1), 6),
+            ]
+        )
+        # when
+        result = cached_reports._CachedReport._truncate_minute(mean, data)
+        # then
+        expected = [(1672574400000, 2), (1672574460000, 4), (1672574520000, 3)]
+        self.assertListEqual(result, expected)
+
+    def test_should_calc_sum(self):
+        # given
+        start_dt = dt.datetime(2023, 1, 1, 12, 0, tzinfo=utc)
+        data = self._to_data(
+            [
+                (start_dt, 1),
+                (start_dt, 3),
+                (start_dt + dt.timedelta(minutes=1), 3),
+                (start_dt + dt.timedelta(minutes=1), 6),
+                (start_dt + dt.timedelta(minutes=2), 3),
+            ]
+        )
+        # when
+        result = cached_reports._CachedReport._truncate_minute(sum, data)
+        # then
+        expected = [(1672574400000, 4), (1672574460000, 9), (1672574520000, 3)]
+        self.assertListEqual(result, expected)

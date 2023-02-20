@@ -101,10 +101,18 @@ class _CachedReport:
         raise NotImplementedError()
 
     @staticmethod
-    def _truncate_minute(func: Callable, qs: Iterable[dict]) -> List[Tuple[int, int]]:
-        """Truncate data to one aggregated value per minute.
+    def _truncate_minutes(
+        func: Callable, values: Iterable[dict], minutes: int = 1
+    ) -> List[Tuple[int, int]]:
+        """Truncate data to one aggregated value over a span of minutes.
 
         Result will be sorted ascending by datetime.
+
+        Args:
+            - func: function which takes a list of values and returns one value
+            - values: iterable of values in the format: [{"x": 1, "y": 2}, ...]
+            - minutes: number of minutes to apply the function over.
+            Must be a divider of 60.
 
         This function is necessary, because tests show that the ORM grouping
         with TruncMinute is not reliable.
@@ -113,9 +121,15 @@ class _CachedReport:
         def _func_or_zero(func, lst) -> int:
             return func(lst) if lst else 0
 
+        if 60 % minutes > 0:
+            raise ValueError("minutes must be a divider of 60.")
         data_raw = defaultdict(list)
-        for obj in qs:
-            data_raw[int(obj["x"].timestamp() * 1000)].append(obj["y"])
+        for obj in values:
+            x = obj["x"]
+            new_minutes = x.minute // minutes * minutes
+            new_x = x.replace(minute=new_minutes, second=0, microsecond=0)
+            x_timestamp = int(new_x.timestamp() * 1000)
+            data_raw[x_timestamp].append(obj["y"])
         data_raw = dict(sorted(data_raw.items()))
         data = [
             tuple([x, int(round(_func_or_zero(func, values), 0))])
@@ -272,7 +286,7 @@ class TasksThroughputByState(_CachedReport):
                 .values("x")
                 .annotate(y=Count("id"))
             )
-            data = self._truncate_minute(sum, qs)
+            data = self._truncate_minutes(sum, qs, 5)
             series.append({"name": state.label, "data": data})
         return series
 
@@ -295,7 +309,7 @@ class TasksThroughputByApp(_CachedReport):
                 .values("x")
                 .annotate(y=Count("id"))
             )
-            data = self._truncate_minute(sum, qs)
+            data = self._truncate_minutes(sum, qs, 5)
             series.append({"name": app_name, "data": data})
         return series
 
@@ -311,7 +325,7 @@ class QueueLengthOverTime(_CachedReport):
             .values("x")
             .annotate(y=Avg("current_queue_length"))
         )
-        data = self._truncate_minute(mean, qs)
+        data = self._truncate_minutes(mean, qs, 5)
         return [{"name": "length", "data": data}]
 
 

@@ -56,7 +56,7 @@ class TestQueueLengthOverTime(TestCase):
             timestamp=start_dt + dt.timedelta(seconds=10),
             current_queue_length=10,
         )
-        start_dt += dt.timedelta(minutes=1)
+        start_dt += dt.timedelta(minutes=5)
         TaskLogFactory(
             received=start_dt,
             started=start_dt,
@@ -76,7 +76,7 @@ class TestQueueLengthOverTime(TestCase):
         series = result[0]
         self.assertEqual(series["name"], "length")
         data = series["data"]
-        expected = [(1672574400000, 20), (1672574460000, 40)]
+        expected = [(1672574400000, 20), (1672574700000, 40)]
         self.assertEqual(data, expected)
 
     def test_should_work_with_null_values(self):
@@ -113,7 +113,7 @@ class TestTruncateMinute(TestCase):
             ]
         )
         # when
-        result = cached_reports._CachedReport._truncate_minute(mean, data)
+        result = cached_reports._CachedReport._truncate_minutes(mean, data)
         # then
         expected = [(1672574400000, 2), (1672574460000, 4), (1672574520000, 3)]
         self.assertListEqual(result, expected)
@@ -126,12 +126,30 @@ class TestTruncateMinute(TestCase):
                 (start_dt, 1),
                 (start_dt, 3),
                 (start_dt + dt.timedelta(minutes=1), 3),
-                (start_dt + dt.timedelta(minutes=1), 6),
+                (start_dt + dt.timedelta(minutes=1, seconds=5), 6),
                 (start_dt + dt.timedelta(minutes=2), 3),
             ]
         )
         # when
-        result = cached_reports._CachedReport._truncate_minute(sum, data)
+        result = cached_reports._CachedReport._truncate_minutes(sum, data)
         # then
         expected = [(1672574400000, 4), (1672574460000, 9), (1672574520000, 3)]
+        self.assertListEqual(result, expected)
+
+    def test_should_calc_sum_over_5_minutes(self):
+        # given
+        start_dt = dt.datetime(2023, 1, 1, 12, 0, tzinfo=utc)
+        data = self._to_data(
+            [
+                (start_dt, 1),
+                (start_dt, 3),
+                (start_dt + dt.timedelta(minutes=1), 3),
+                (start_dt + dt.timedelta(minutes=1, seconds=5), 6),
+                (start_dt + dt.timedelta(minutes=6), 3),
+            ]
+        )
+        # when
+        result = cached_reports._CachedReport._truncate_minutes(sum, data, 5)
+        # then
+        expected = [(1672574400000, 13), (1672574700000, 3)]
         self.assertListEqual(result, expected)

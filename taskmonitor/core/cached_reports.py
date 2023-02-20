@@ -111,7 +111,7 @@ class _CachedReport:
 
     @staticmethod
     def _truncate_minutes(
-        func: Callable, values: Iterable[dict], minutes: int = 1
+        func: Callable, qs: Iterable, minutes: int = 1
     ) -> List[Tuple[int, int]]:
         """Truncate data to one aggregated value over a span of minutes.
 
@@ -133,12 +133,11 @@ class _CachedReport:
         if 60 % minutes > 0:
             raise ValueError("minutes must be a divider of 60.")
         data_raw = defaultdict(list)
-        for obj in values:
-            x = obj["x"]
+        for x, y in qs.values_list("x", "y").iterator():
             new_minutes = x.minute // minutes * minutes
             new_x = x.replace(minute=new_minutes, second=0, microsecond=0)
             x_timestamp = int(new_x.timestamp() * 1000)
-            data_raw[x_timestamp].append(obj["y"])
+            data_raw[x_timestamp].append(y)
         data_raw = dict(sorted(data_raw.items()))
         data = [
             tuple([x, int(round(_func_or_zero(func, values), 0))])

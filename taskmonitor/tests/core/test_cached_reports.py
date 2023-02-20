@@ -1,6 +1,6 @@
 import datetime as dt
 from statistics import mean
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from pytz import utc
 
@@ -131,13 +131,15 @@ class TestQueueLengthOverTime(TestCase):
 
 class TestTruncateMinute(TestCase):
     @staticmethod
-    def _to_data(list) -> list:
-        return [{"x": obj[0], "y": obj[1]} for obj in list]
+    def _make_qs(lst) -> MagicMock:
+        m = MagicMock()
+        m.values_list.return_value.iterator.return_value = lst
+        return m
 
     def test_should_calc_mean(self):
         # given
         start_dt = dt.datetime(2023, 1, 1, 12, 0, tzinfo=utc)
-        data = self._to_data(
+        qs = self._make_qs(
             [
                 (start_dt, 1),
                 (start_dt, 3),
@@ -147,7 +149,7 @@ class TestTruncateMinute(TestCase):
             ]
         )
         # when
-        result = cached_reports._CachedReport._truncate_minutes(mean, data)
+        result = cached_reports._CachedReport._truncate_minutes(mean, qs)
         # then
         expected = [(1672574400000, 2), (1672574460000, 4), (1672574520000, 3)]
         self.assertListEqual(result, expected)
@@ -155,7 +157,7 @@ class TestTruncateMinute(TestCase):
     def test_should_calc_sum(self):
         # given
         start_dt = dt.datetime(2023, 1, 1, 12, 0, tzinfo=utc)
-        data = self._to_data(
+        qs = self._make_qs(
             [
                 (start_dt, 1),
                 (start_dt, 3),
@@ -165,7 +167,7 @@ class TestTruncateMinute(TestCase):
             ]
         )
         # when
-        result = cached_reports._CachedReport._truncate_minutes(sum, data)
+        result = cached_reports._CachedReport._truncate_minutes(sum, qs)
         # then
         expected = [(1672574400000, 4), (1672574460000, 9), (1672574520000, 3)]
         self.assertListEqual(result, expected)
@@ -173,7 +175,7 @@ class TestTruncateMinute(TestCase):
     def test_should_calc_sum_over_5_minutes(self):
         # given
         start_dt = dt.datetime(2023, 1, 1, 12, 0, tzinfo=utc)
-        data = self._to_data(
+        qs = self._make_qs(
             [
                 (start_dt, 1),
                 (start_dt, 3),
@@ -183,7 +185,7 @@ class TestTruncateMinute(TestCase):
             ]
         )
         # when
-        result = cached_reports._CachedReport._truncate_minutes(sum, data, 5)
+        result = cached_reports._CachedReport._truncate_minutes(sum, qs, 5)
         # then
         expected = [(1672574400000, 13), (1672574700000, 3)]
         self.assertListEqual(result, expected)

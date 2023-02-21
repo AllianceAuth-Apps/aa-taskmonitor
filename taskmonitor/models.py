@@ -97,7 +97,10 @@ class TaskLog(models.Model):
         null=True, default=None, help_text="ID of the parent task if any."
     )
     priority = models.IntegerField(
-        null=True, default=None, help_text="Priority this task was executed with."
+        null=True,
+        default=None,
+        db_index=True,
+        help_text="Priority this task was executed with.",
     )
     result = models.JSONField(default=None, null=True, help_text="Result of the task.")
     retries = models.IntegerField(help_text="Number of retries.")

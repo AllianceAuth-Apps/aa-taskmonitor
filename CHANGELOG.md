@@ -15,7 +15,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Changed
 
-- Better loading performance of reports page with all report data now fetched async
+- Faster loading of reports page with all report data now fetched async
+- Faster loading of task log admin page with new index
 
 ### Fixed
 

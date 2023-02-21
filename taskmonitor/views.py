@@ -104,14 +104,30 @@ def admin_taskmonitor_reports_recalculation(request):
 
 @login_required
 @staff_member_required
-def admin_taskmonitor_report_data(request, report_name: str):
-    """Data for a report."""
+def admin_taskmonitor_report_json(request, report_name: str):
+    """Render report in JSON."""
     use_cache = request.GET.get("use_cache") != "false"
     try:
         data = {"data": cached_reports.report_data(report_name, use_cache=use_cache)}
     except KeyError:
         raise Http404(f'No report with name: "{report_name}"')
     return JsonResponse(data)
+
+
+@login_required
+@staff_member_required
+def admin_taskmonitor_report_html(request, report_name: str):
+    """Render report in HTML."""
+    use_cache = request.GET.get("use_cache") != "false"
+    try:
+        data = cached_reports.report_data(report_name, use_cache=use_cache)
+    except KeyError:
+        raise Http404(f'No report with name: "{report_name}"')
+    disable_percent = request.GET.get("disable_percent") == "yes"
+    context = {"data": data, "disable_percent": disable_percent}
+    return render(
+        request, "admin/taskmonitor/tasklog/render_report_table_partial.html", context
+    )
 
 
 @login_required

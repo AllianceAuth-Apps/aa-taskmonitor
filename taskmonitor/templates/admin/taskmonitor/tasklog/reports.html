@@ -64,7 +64,7 @@
                 <ul>
                     <li><a class="tabLinks" href="#" onclick="openTab(event, 'throughput-by-state')">Throughput by state</a></li>
                     <li><a class="tabLinks" href="#" onclick="openTab(event, 'throughput-by-app')">Throughput by app</a></li>
-                    {% comment %} <li><a class="tabLinks" href="#" onclick="openTab(event, 'task-througput')">Througput overview</a></li> {% endcomment %}
+                    <li><a class="tabLinks" href="#" onclick="openTab(event, 'task-througput')">Througput overview</a></li>
                 </ul>
                 <h3>Queue</h3>
                 <ul>
@@ -83,10 +83,10 @@
                     {% include "admin/taskmonitor/tasklog/report_piechart_partial.html" with report_name="task_runs_by_app" %}
                 </div>
 
-                {% comment %} <div id="task-througput" class="tabContent">
+                <div id="task-througput" class="tabContent">
                     <h2>Throughput in task executions per minute</h2>
-                    {% include "admin/taskmonitor/tasklog/report_table_partial.html" with report_name="tasks_throughput" disable_percent=True %}
-                </div> {% endcomment %}
+                    {% include "admin/taskmonitor/tasklog/report_table_partial.html" with report_name="tasks_throughput" disable_percent="yes" %}
+                </div>
 
                 <div id="top-tasks-by-runs" class="tabContent">
                     <h2>Top {{ MAX_TOP }} tasks by runs</h2>

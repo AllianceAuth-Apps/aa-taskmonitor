@@ -1,34 +1,16 @@
-{% load humanize %}
+{% load taskmonitor %}
 
-<table class="dummy">
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th class="text-right">Amount</th>
-            {% if not disable_percent %}
-                <th class="text-right">% total</th>
-            {% endif %}
-        </tr>
-    </thead>
-    <tbody>
-        {% for row in rows %}
-            <tr>
-                <td>
-                    {% if row.url %}
-                        <a href="{{ row.url }}">{{ row.name }}</a>
-                    {% else %}
-                        {{ row.name }}
-                    {% endif %}
-                </td>
-                <td class="text-right">{{ row.y|floatformat:"0g" }}</td>
-                {% if not disable_percent %}
-                    <td class="text-right">{{ row.percent|floatformat:"1" }}</td>
-                {% endif %}
-            </tr>
-        {% empty %}
-            <tr>
-                <td colspan="3">No data</td>
-            </tr>
-        {% endfor %}
-    </tbody>
-</table>
+{% random_id as data_id %}
+
+<div id="{{ data_id }}-container" style="width: 100%;"></div>
+
+<script>
+    fetch("{% url 'taskmonitor:admin_taskmonitor_report_html' report_name %}?disable_percent={{ disable_percent }}")
+        .then((response) => {
+            return response.text();
+        })
+        .then((html) => {
+            let div = document.getElementById("{{ data_id }}-container");
+            div.innerHTML = html
+        });
+</script>

@@ -26,9 +26,14 @@ urlpatterns = [
         name="admin_taskmonitor_reports_recalculation",
     ),
     path(
-        "admin_taskmonitor_report_data/<str:report_name>",
-        views.admin_taskmonitor_report_data,
-        name="admin_taskmonitor_report_data",
+        "admin_taskmonitor_report_json/<str:report_name>",
+        views.admin_taskmonitor_report_json,
+        name="admin_taskmonitor_report_json",
+    ),
+    path(
+        "admin_taskmonitor_report_html/<str:report_name>",
+        views.admin_taskmonitor_report_html,
+        name="admin_taskmonitor_report_html",
     ),
     path(
         "admin_queued_task_purge",

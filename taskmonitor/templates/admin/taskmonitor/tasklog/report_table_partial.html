@@ -2,15 +2,22 @@
 
 {% random_id as data_id %}
 
-<div id="{{ data_id }}-container" style="width: 100%;"></div>
+<div id="{{ data_id }}-container" style="width: 100%;">Loading...</div>
 
 <script>
     fetch("{% url 'taskmonitor:admin_taskmonitor_report_html' report_name %}?disable_percent={{ disable_percent }}")
         .then((response) => {
-            return response.text();
+            if (response.ok) {
+                return response.text();
+            }
+            throw new Error(`${response.status} ${response.statusText}: ${response.url}`);
         })
         .then((html) => {
             let div = document.getElementById("{{ data_id }}-container");
             div.innerHTML = html
+        })
+        .catch((error) => {
+            let div = document.getElementById("{{ data_id }}-container");
+            div.innerHTML = `<p class="state-failure">${error}</p>`
         });
 </script>

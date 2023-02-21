@@ -4,10 +4,15 @@
 
 {{ data|json_script:data_id }}
 <figure class="highcharts-figure">
-    <div id="{{ data_id }}-container" style="width: 100%;"></div>
+    <div id="{{ data_id }}-container" style="width: 100%;">Loading...</div>
     <script>
         fetch("{% url 'taskmonitor:admin_taskmonitor_report_json' report_name %}")
-            .then((response) => response.json())
+            .then((response) => {
+                if (response.ok) {
+                    return response.json();
+                }
+                throw new Error(`${response.status} ${response.statusText}: ${response.url}`);
+            })
             .then((data) => {
                 Highcharts.chart('{{ data_id }}-container', {
                     chart: {
@@ -50,6 +55,10 @@
                         data: data.data
                         }]
                     });
+            })
+            .catch((error) => {
+                let div = document.getElementById("{{ data_id }}-container");
+                div.innerHTML = `<p class="state-failure">${error}</p>`
             });
     </script>
 </figure>

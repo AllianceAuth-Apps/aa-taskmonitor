@@ -11,7 +11,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Added
 
-- Show report for queue length over time
+- New report for queue length over time
+- New report for top tasks by average runtime
 
 ### Changed
 

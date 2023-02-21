@@ -200,13 +200,27 @@ class TasksTopRuns(_CachedReport):
         )
 
 
-class TasksTopRuntime(_CachedReport):
+class TasksTopMaxRuntime(_CachedReport):
     def _calc_data(self):
         if not self.total_runtime:
             return None
         return list(
             TaskLog.objects.values(name=F("task_name"))
             .annotate(y=Max("runtime"))
+            .annotate(
+                url=Concat(Value(f"{self.changelist_url}?o=5&task_name="), F("name"))
+            )
+            .order_by("-y")[:TASKMONITOR_REPORTS_MAX_TOP]
+        )
+
+
+class TasksTopAvgRuntime(_CachedReport):
+    def _calc_data(self):
+        if not self.total_runtime:
+            return None
+        return list(
+            TaskLog.objects.values(name=F("task_name"))
+            .annotate(y=Avg("runtime"))
             .annotate(
                 url=Concat(Value(f"{self.changelist_url}?o=5&task_name="), F("name"))
             )

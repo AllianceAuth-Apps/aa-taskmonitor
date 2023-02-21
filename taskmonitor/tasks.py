@@ -10,14 +10,13 @@ from app_utils.helpers import chunks
 from app_utils.logging import LoggerAddTag
 
 from . import __title__
-from .app_settings import TASKMONITOR_DATA_MAX_AGE
+from .app_settings import TASKMONITOR_DATA_MAX_AGE, TASKMONITOR_DELETE_STALE_BATCH_SIZE
 from .core import cached_reports
 from .models import TaskLog
 
 logger = LoggerAddTag(get_extension_logger(__name__), __title__)
 
 DEFAULT_TASK_PRIORITY = 4
-MAX_SIZE_DELETE_CHUNK = 5_000
 
 
 @shared_task(base=QueueOnce)
@@ -33,14 +32,12 @@ def delete_stale_tasklogs():
     log_pks = TaskLog.objects.filter(
         timestamp__lte=timezone.now() - dt.timedelta(hours=TASKMONITOR_DATA_MAX_AGE)
     ).values_list("pk", flat=True)
-    for log_pks_chunk in chunks(log_pks, MAX_SIZE_DELETE_CHUNK):
-        delete_tasklogs_selection.apply_async(
-            priority=7, kwargs={"log_pks": log_pks_chunk}
-        )
+    for log_pks_chunk in chunks(log_pks, TASKMONITOR_DELETE_STALE_BATCH_SIZE):
+        delete_tasklogs_batch.apply_async(priority=7, kwargs={"log_pks": log_pks_chunk})
 
 
 @shared_task
-def delete_tasklogs_selection(log_pks: list):
+def delete_tasklogs_batch(log_pks: list):
     """Delete a selection of tasklogs."""
     logs_to_delete = TaskLog.objects.filter(pk__in=log_pks)
     logger.info(f"Deleting {logs_to_delete.count():,} stale tasklogs.")

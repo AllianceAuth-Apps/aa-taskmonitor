@@ -9,6 +9,7 @@ from django.shortcuts import redirect, render
 
 from allianceauth import NAME as site_header
 from allianceauth.services.hooks import get_extension_logger
+from app_utils.caching import cached_queryset
 from app_utils.logging import LoggerAddTag
 
 from . import __title__, tasks
@@ -48,18 +49,33 @@ def admin_taskmonitor_download_csv(request) -> StreamingHttpResponse:
 @staff_member_required
 def admin_taskmonitor_reports(request):
     """Show the reports page."""
+    timeout = 60
+    total_runs = cached_queryset(
+        queryset=TaskLog.objects.count(),
+        key="tasklog-reports-total-runs",
+        timeout=timeout,
+    )
+    oldest_date = cached_queryset(
+        queryset=TaskLog.objects.oldest_date(),
+        key="tasklog-reports-oldest-data",
+        timeout=timeout,
+    )
+    newest_date = cached_queryset(
+        queryset=TaskLog.objects.newest_date(),
+        key="tasklog-reports-newest-date",
+        timeout=timeout,
+    )
     context = {
         "title": "Reports",
         "site_header": site_header,
         "cl": {"opts": TaskLog._meta},
         "data_max_age": TASKMONITOR_DATA_MAX_AGE,
         "debug_mode": settings.DEBUG,
-        "total_runs": TaskLog.objects.count(),
-        "oldest_date": TaskLog.objects.oldest_date(),
-        "newest_date": TaskLog.objects.newest_date(),
+        "total_runs": total_runs,
+        "oldest_date": oldest_date,
+        "newest_date": newest_date,
         "MAX_TOP": TASKMONITOR_REPORTS_MAX_TOP,
     }
-    # context.update(cached_reports.data())
     return render(request, "admin/taskmonitor/tasklog/reports.html", context)
 
 

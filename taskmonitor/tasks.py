@@ -6,6 +6,7 @@ from django.utils import timezone
 
 from allianceauth.services.hooks import get_extension_logger
 from allianceauth.services.tasks import QueueOnce
+from app_utils.helpers import chunks
 from app_utils.logging import LoggerAddTag
 
 from . import __title__
@@ -16,6 +17,7 @@ from .models import TaskLog
 logger = LoggerAddTag(get_extension_logger(__name__), __title__)
 
 DEFAULT_TASK_PRIORITY = 4
+MAX_SIZE_DELETE_CHUNK = 5_000
 
 
 @shared_task(base=QueueOnce)
@@ -28,12 +30,21 @@ def run_housekeeping():
 @shared_task
 def delete_stale_tasklogs():
     """Delete all stale tasklogs from the database."""
-    old_entries = TaskLog.objects.filter(
+    log_pks = TaskLog.objects.filter(
         timestamp__lte=timezone.now() - dt.timedelta(hours=TASKMONITOR_DATA_MAX_AGE)
-    )
-    old_entries_count = old_entries.count()
-    old_entries._raw_delete(old_entries.db)
-    logger.info(f"Deleted {old_entries_count:,} stale tasklogs.")
+    ).values_list("pk", flat=True)
+    for log_pks_chunk in chunks(log_pks, MAX_SIZE_DELETE_CHUNK):
+        delete_tasklogs_selection.apply_async(
+            priority=7, kwargs={"log_pks": log_pks_chunk}
+        )
+
+
+@shared_task
+def delete_tasklogs_selection(log_pks: list):
+    """Delete a selection of tasklogs."""
+    logs_to_delete = TaskLog.objects.filter(pk__in=log_pks)
+    logger.info(f"Deleting {logs_to_delete.count():,} stale tasklogs.")
+    logs_to_delete._raw_delete(logs_to_delete.db)
 
 
 @shared_task

@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 - Show report for queue length over time
 
+### Fixed
+
+- Deleting large amount of stale tasklogs fails due to transaction timeout
+
 ## [0.11.1] - 2023-02-06
 
 ### Fixed

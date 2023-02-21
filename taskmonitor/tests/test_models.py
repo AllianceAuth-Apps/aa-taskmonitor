@@ -27,6 +27,38 @@ class TestTaskLog(TestCase):
         self.assertEqual(obj_2["task_id"], str(obj.task_id))
 
 
+class TestTaskLogQuerySet(TestCase):
+    def test_should_return_oldest_date(self):
+        # given
+        log_1 = TaskLogFactory()
+        log_2 = TaskLogFactory(received=log_1.received - dt.timedelta(hours=1))
+        # when
+        result = TaskLog.objects.oldest_date()
+        # then
+        self.assertEqual(result, log_2.timestamp)
+
+    def test_should_return_none_when_no_logs_for_oldest_data(self):
+        # when
+        result = TaskLog.objects.oldest_date()
+        # then
+        self.assertIsNone(result)
+
+    def test_should_return_newest_date(self):
+        # given
+        log_1 = TaskLogFactory()
+        TaskLogFactory(received=log_1.received - dt.timedelta(hours=1))
+        # when
+        result = TaskLog.objects.newest_date()
+        # then
+        self.assertEqual(result, log_1.timestamp)
+
+    def test_should_return_none_when_no_logs_for_newest_data(self):
+        # when
+        result = TaskLog.objects.newest_date()
+        # then
+        self.assertIsNone(result)
+
+
 class TestManagerCreateFromTask(TestCase):
     def test_should_create_from_succeeded_task(self):
         # given

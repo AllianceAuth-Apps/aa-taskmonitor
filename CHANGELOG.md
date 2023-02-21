@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 - Show report for queue length over time
 
+### Changed
+
+- Better loading performance of reports page with all report data now fetched async
+
 ### Fixed
 
 - Deleting large amount of stale tasklogs fails due to transaction timeout

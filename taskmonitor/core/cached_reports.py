@@ -9,7 +9,7 @@ from statistics import mean
 from typing import Callable, Iterable, List, Optional, Tuple
 
 from django.core.cache import cache
-from django.db.models import Avg, Count, F, Max, Min, Sum, Value
+from django.db.models import Avg, Count, F, Max, Sum, Value
 from django.db.models.functions import Concat, TruncMinute
 from django.urls import reverse
 from django.utils import functional, timezone
@@ -152,19 +152,6 @@ class _CachedReport:
             for _, obj in inspect.getmembers(sys.modules[__name__], inspect.isclass)
             if issubclass(obj, cls) and obj is not cls
         ]
-
-
-class BasicInformation(_CachedReport):
-    def _calc_data(self):
-        oldest_date = TaskLog.objects.aggregate(oldest=Min("timestamp"))["oldest"]
-        youngest_date = TaskLog.objects.aggregate(youngest=Max("timestamp"))["youngest"]
-        return {
-            "oldest_date": oldest_date,
-            "youngest_date": youngest_date,
-            "total_runs": self.total_runs,
-            "total_runtime_date": self.total_runtime_date,
-            "MAX_TOP": TASKMONITOR_REPORTS_MAX_TOP,
-        }
 
 
 class TaskRunsByState(_CachedReport):

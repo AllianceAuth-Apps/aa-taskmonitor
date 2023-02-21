@@ -12,7 +12,7 @@ from allianceauth.services.hooks import get_extension_logger
 from app_utils.logging import LoggerAddTag
 
 from . import __title__, tasks
-from .app_settings import TASKMONITOR_DATA_MAX_AGE
+from .app_settings import TASKMONITOR_DATA_MAX_AGE, TASKMONITOR_REPORTS_MAX_TOP
 from .core import cached_reports, celery_queues
 from .helpers import Echo
 from .models import TaskLog
@@ -54,8 +54,12 @@ def admin_taskmonitor_reports(request):
         "cl": {"opts": TaskLog._meta},
         "data_max_age": TASKMONITOR_DATA_MAX_AGE,
         "debug_mode": settings.DEBUG,
+        "total_runs": TaskLog.objects.count(),
+        "oldest_date": TaskLog.objects.oldest_date(),
+        "newest_date": TaskLog.objects.newest_date(),
+        "MAX_TOP": TASKMONITOR_REPORTS_MAX_TOP,
     }
-    context.update(cached_reports.data())
+    # context.update(cached_reports.data())
     return render(request, "admin/taskmonitor/tasklog/reports.html", context)
 
 

@@ -149,7 +149,6 @@
     </div>
 
     <script>
-        // add event listeners to tabLinks
         const tabLinks = document.querySelectorAll('.tabLinks');
         tabLinks.forEach(el => el.addEventListener('click', event => {
             // Hide all tabContent elements
@@ -171,8 +170,18 @@
             event.target.parentNode.className += " selected";
         }));
 
-        const selectedItems = document.querySelectorAll('.selected');
-        selectedItems.item(0).firstChild.click();
+        if(window.location.hash) {
+            // activate tab from hash
+            tabLinks.forEach(el => {
+                if (el.hash == window.location.hash) {
+                    el.click();
+                }
+            });
+        } else {
+            // activate default tab
+            const selectedItems = document.querySelectorAll('.selected');
+            selectedItems.item(0).firstChild.click();
+        }
 
     </script>
 

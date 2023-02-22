@@ -13,11 +13,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 - New report for queue length over time
 - New report for top tasks by average runtime
+- Direct links to report charts
 
 ### Changed
 
 - Faster loading of reports page with all report data now fetched async
 - Faster loading of task log admin page with new index
+- Selected report chart remain selected after page reload
 
 ### Fixed
 

@@ -6,7 +6,7 @@ from uuid import UUID
 
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db import models
-from django.db.models import Avg, Count, Max
+from django.db.models import Avg, Count, Max, Min
 from django.db.models.functions import TruncMinute
 from django.utils import timezone
 
@@ -154,6 +154,12 @@ class TaskLogQuerySet(models.QuerySet):
         qs = self.aggregate_timestamp_trunc().aggregate(Avg("task_runs"))
         return qs["task_runs__avg"]
 
+    def oldest_date(self) -> dt.datetime:
+        return self.aggregate(oldest=Min("timestamp"))["oldest"]
+
+    def newest_date(self) -> dt.datetime:
+        return self.aggregate(youngest=Max("timestamp"))["youngest"]
+
 
 class TaskLogManagerBase(models.Manager):
     def create_from_task(
@@ -171,6 +177,7 @@ class TaskLogManagerBase(models.Manager):
         parent_id: str = None,
         exception=None,
         result=None,
+        current_queue_length: int = None,
     ) -> models.Model:
         """Create new object from a celery task."""
         params = {
@@ -184,6 +191,7 @@ class TaskLogManagerBase(models.Manager):
             "task_id": UUID(task_id),
             "task_name": task_name,
             "timestamp": timezone.now(),
+            "current_queue_length": current_queue_length,
         }
         params["args"] = (
             truncate_list(args) if TASKMONITOR_TRUNCATE_NESTED_DATA else args

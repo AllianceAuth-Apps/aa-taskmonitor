@@ -26,9 +26,12 @@
     <h1>
         {{ title }}
         <span class="float-right">
-        <a href="{% url 'taskmonitor:admin_taskmonitor_reports_recalculation' %}"><input type="button" value="Recalc now"></a>
+        <a href="{% url 'taskmonitor:admin_taskmonitor_reports_recalculation' %}">
+            <input type="button" value="Recalc now"></a>
         {% if debug_mode %}
-            <a href="{% url 'taskmonitor:admin_taskmonitor_reports_clear_cache' %}"><input type="button" value="Clear cache"></a>
+            <a href="{% url 'taskmonitor:admin_taskmonitor_reports_clear_cache' %}">
+                <input type="button" value="Clear cache">
+            </a>
         {% endif %}
         </span>
     </h1>
@@ -47,73 +50,94 @@
 
                 <h3>Distributions</h3>
                 <ul>
-                    <li class="selected"><a class="tabLinks" href="#" onclick="openTab(event, 'task-runs-by-state')" id="defaultTab">Task runs by state</a></li>
-                    <li><a class="tabLinks" href="#" onclick="openTab(event, 'task-runs-by-app')">Task runs by app</a></li>
+                    <li class="selected"><a class="tabLinks" href="#task-runs-by-state">Task runs by state</a></li>
+                    <li><a class="tabLinks" href="#task-runs-by-app">Task runs by app</a></li>
                 </ul>
                 <h3>Top tasks</h3>
                 <ul>
-                    <li><a class="tabLinks" href="#" onclick="openTab(event, 'top-tasks-by-runs')">Top tasks by runs</a></li>
-                    <li><a class="tabLinks" href="#" onclick="openTab(event, 'top-tasks-by-runtime')">Top tasks by runtime</a></li>
-                    <li><a class="tabLinks" href="#" onclick="openTab(event, 'top-failed-tasks')">Top tasks by failed runs</a></li>
-                    <li><a class="tabLinks" href="#" onclick="openTab(event, 'top-retried-tasks')">Top tasks by retried runs</a></li>
+                    <li><a class="tabLinks" href="#top-tasks-by-runs">Top tasks by runs</a></li>
+                    <li><a class="tabLinks" href="#top-tasks-by-max-runtime">Top tasks by max runtime</a></li>
+                    <li><a class="tabLinks" href="#top-tasks-by-avg-runtime">Top tasks by avg runtime</a></li>
+                    <li><a class="tabLinks" href="#top-failed-tasks">Top tasks by failed runs</a></li>
+                    <li><a class="tabLinks" href="#top-retried-tasks">Top tasks by retried runs</a></li>
                 </ul>
                 <h3>Throughput</h3>
                 <ul>
-                    <li><a class="tabLinks" href="#" onclick="openTab(event, 'throughput-by-state')">Throughput by state</a></li>
-                    <li><a class="tabLinks" href="#" onclick="openTab(event, 'throughput-by-app')">Throughput by app</a></li>
-                    <li><a class="tabLinks" href="#" onclick="openTab(event, 'task-througput')">Througput overview</a></li>
+                    <li><a class="tabLinks" href="#throughput-by-state">Throughput by state</a></li>
+                    <li><a class="tabLinks" href="#throughput-by-app">Throughput by app</a></li>
+                    <li><a class="tabLinks" href="#task-througput">Througput overview</a></li>
+                </ul>
+                <h3>Queue</h3>
+                <ul>
+                    <li><a class="tabLinks" href="#queue-length">Queue Length over time</a></li>
                 </ul>
             </div>
 
             <div class="changelist-form-container">
                 <div id="task-runs-by-state" class="tabContent">
                     <h2>Task runs by state</h2>
-                    {% include "admin/taskmonitor/tasklog/report_piechart_partial.html" with data=task_runs_by_state %}
+                    {% include "admin/taskmonitor/tasklog/report_piechart_partial.html" with report_name="task_runs_by_state" %}
                 </div>
 
                 <div id="task-runs-by-app" class="tabContent">
                     <h2>Task runs by app</h2>
-                    {% include "admin/taskmonitor/tasklog/report_piechart_partial.html" with data=task_runs_by_app %}
+                    {% include "admin/taskmonitor/tasklog/report_piechart_partial.html" with report_name="task_runs_by_app" %}
                 </div>
 
                 <div id="task-througput" class="tabContent">
                     <h2>Throughput in task executions per minute</h2>
-                    {% include "admin/taskmonitor/tasklog/report_table_partial.html" with rows=tasks_throughput disable_percent=True %}
+                    {% include "admin/taskmonitor/tasklog/report_table_partial.html" with report_name="tasks_throughput" disable_percent="yes" %}
                 </div>
 
                 <div id="top-tasks-by-runs" class="tabContent">
                     <h2>Top {{ MAX_TOP }} tasks by runs</h2>
-                    {% include "admin/taskmonitor/tasklog/report_barchart_partial.html" with data=tasks_top_runs %}
+                    {% include "admin/taskmonitor/tasklog/report_barchart_partial.html" with report_name="tasks_top_runs" %}
                 </div>
 
-                <div id="top-tasks-by-runtime" class="tabContent">
-                    <h2>Top {{ MAX_TOP }} tasks by instance runtime in seconds</h2>
-                    {% include "admin/taskmonitor/tasklog/report_barchart_partial.html" with data=tasks_top_runtime %}
+                <div id="top-tasks-by-max-runtime" class="tabContent">
+                    <h2>Top {{ MAX_TOP }} tasks by max instance runtime in seconds</h2>
+                    {% include "admin/taskmonitor/tasklog/report_barchart_partial.html" with report_name="tasks_top_max_runtime" %}
+                </div>
+
+                <div id="top-tasks-by-avg-runtime" class="tabContent">
+                    <h2>Top {{ MAX_TOP }} tasks by average instance runtime in seconds</h2>
+                    {% include "admin/taskmonitor/tasklog/report_barchart_partial.html" with report_name="tasks_top_avg_runtime" %}
                 </div>
 
                 <div id="top-failed-tasks" class="tabContent">
                     <h2>Top {{ MAX_TOP }} tasks by failed runs</h2>
-                    {% include "admin/taskmonitor/tasklog/report_barchart_partial.html" with data=tasks_top_failed %}
+                    {% include "admin/taskmonitor/tasklog/report_barchart_partial.html" with report_name="tasks_top_failed" %}
                 </div>
 
                 <div id="top-retried-tasks" class="tabContent">
                     <h2>Top {{ MAX_TOP }} tasks by retried runs</h2>
-                    {% include "admin/taskmonitor/tasklog/report_barchart_partial.html" with data=tasks_top_retried %}
+                    {% include "admin/taskmonitor/tasklog/report_barchart_partial.html" with report_name="tasks_top_retried" %}
                 </div>
 
                 <div id="throughput-by-state" class="tabContent">
                     <h2>Task throughput per minute by state</h2>
-                    {% include "admin/taskmonitor/tasklog/chart_throughput_partial.html" with report_name="tasks_throughput_by_state" %}
+                    {% include "admin/taskmonitor/tasklog/report_throughput_chart_partial.html" with report_name="tasks_throughput_by_state" %}
                 </div>
 
                 <div id="throughput-by-app" class="tabContent">
                     <h2>Task throughput per minute by app</h2>
-                    {% include "admin/taskmonitor/tasklog/chart_throughput_partial.html" with report_name="tasks_throughput_by_app" %}
+                    {% include "admin/taskmonitor/tasklog/report_throughput_chart_partial.html" with report_name="tasks_throughput_by_app" %}
+                </div>
+
+                <div id="queue-length" class="tabContent">
+                    <h2>Queue length over time</h2>
+                    {% include "admin/taskmonitor/tasklog/report_throughput_chart_partial.html" with report_name="queue_length_over_time" %}
                 </div>
 
                 <br>
                 <p>
-                    Total of {% if basic_information.total_runs > 1000000 %}{{ basic_information.total_runs|intword }}{% else %}{{ basic_information.total_runs|intcomma }}{% endif %} task logs spanning {{ basic_information.youngest_date|timeuntil:basic_information.oldest_date }} with a cumulative runtime of {{ basic_information.total_runtime_date|timesince }}.
+                    Total of
+                    {% if total_runs > 1000000 %}
+                        {{ total_runs|intword }}
+                    {% else %}
+                        {{ total_runs|intcomma }}
+                    {% endif %}
+                    task logs spanning {{ newest_date|timeuntil:oldest_date }}.
                     This data is cached.
                     All data of this app is stored for a maxmimum of {{ data_max_age }} hours.
                 </p>
@@ -125,28 +149,39 @@
     </div>
 
     <script>
-        function openTab(evt, tabName) {
-            // Get all elements with class="tabContent" and hide them
-            let tabContent = document.getElementsByClassName("tabContent");
-            for (let i = 0; i < tabContent.length; i++) {
-                tabContent[i].style.display = "none";
-            }
+        const tabLinks = document.querySelectorAll('.tabLinks');
+        tabLinks.forEach(el => el.addEventListener('click', event => {
+            // Hide all tabContent elements
+            const tabContent = document.querySelectorAll('.tabContent');
+            tabContent.forEach(el => {
+                el.style.display = "none";
+            });
 
-            // Get all elements with class="tabLinks" and remove the class "active"
-            let tabLinks = document.getElementsByClassName("tabLinks");
-            for (let i = 0; i < tabLinks.length; i++) {
-                tabLinks[i].className = tabLinks[i].className.replace(" active", "");
-                tabLinks[i].parentElement.className = tabLinks[i].parentElement.className.replace("selected", "");
-
-            }
+            // Remove the class "active" from tabLinks
+            tabLinks.forEach(el => {
+                el.className = el.className.replace(" active", "");
+                el.parentElement.className = el.parentElement.className.replace("selected", "");
+            });
 
             // Show the current tab, and add an "active" class to the button that opened the tab
+            const tabName = event.target.hash.slice(1);
             document.getElementById(tabName).style.display = "block";
-            evt.currentTarget.className += " active";
-            evt.currentTarget.parentNode.className += " selected";
-        }
+            event.target.className += " active";
+            event.target.parentNode.className += " selected";
+        }));
 
-        document.getElementById("defaultTab").click();
+        if(window.location.hash) {
+            // activate tab from hash
+            tabLinks.forEach(el => {
+                if (el.hash == window.location.hash) {
+                    el.click();
+                }
+            });
+        } else {
+            // activate default tab
+            const selectedItems = document.querySelectorAll('.selected');
+            selectedItems.item(0).firstChild.click();
+        }
 
     </script>
 

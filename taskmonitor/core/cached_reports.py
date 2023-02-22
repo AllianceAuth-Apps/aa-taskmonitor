@@ -4,10 +4,12 @@ import datetime as dt
 import inspect
 import re
 import sys
-from typing import List, Optional
+from collections import defaultdict
+from statistics import mean
+from typing import Callable, Iterable, List, Optional, Tuple
 
 from django.core.cache import cache
-from django.db.models import Count, F, Max, Min, Sum, Value
+from django.db.models import Avg, Count, F, Max, Sum, Value
 from django.db.models.functions import Concat, TruncMinute
 from django.urls import reverse
 from django.utils import functional, timezone
@@ -30,8 +32,11 @@ class _CachedReport:
     is_included = True  # whether a report is included in the main group
 
     def __init__(self) -> None:
-        # Set name as Class name in snake case
-        self.name = re.sub(r"(?<!^)(?=[A-Z])", "_", self.__class__.__name__).lower()
+        self.name = self._to_snake_case(self.__class__.__name__)
+
+    @staticmethod
+    def _to_snake_case(name: str) -> str:
+        return re.sub(r"(?<!^)(?=[A-Z])", "_", name).lower()
 
     @functional.cached_property
     def changelist_url(self) -> str:
@@ -61,12 +66,18 @@ class _CachedReport:
         """Timeout in seconds."""
         return TASKMONITOR_REPORTS_MAX_AGE * 60
 
-    @functional.cached_property
+    @property
     def now(self) -> dt.datetime:
         return timezone.now()
 
-    def data(self) -> list:
-        return cache.get_or_set(self.cache_key, self._calc_data, timeout=self.timeout)
+    def data(self, use_cache=True) -> list:
+        if use_cache:
+            return cache.get_or_set(
+                self.cache_key, self._calc_data, timeout=self.timeout
+            )
+        data = self._calc_data()
+        cache.set(self.cache_key, data, timeout=self.timeout)
+        return data
 
     def refresh_cache(self) -> None:
         """Refresh the cache."""
@@ -98,6 +109,42 @@ class _CachedReport:
         """Calculate data."""
         raise NotImplementedError()
 
+    @staticmethod
+    def _truncate_minutes(
+        func: Callable, qs: Iterable, minutes: int = 1
+    ) -> List[Tuple[int, int]]:
+        """Truncate data to one aggregated value over a span of minutes.
+
+        Result will be sorted ascending by datetime.
+
+        Args:
+            - func: function which takes a list of values and returns one value
+            - values: iterable of values in the format: [{"x": 1, "y": 2}, ...]
+            - minutes: number of minutes to apply the function over.
+            Must be a divider of 60.
+
+        This function is necessary, because tests show that the ORM grouping
+        with TruncMinute is not reliable.
+        """
+
+        def _func_or_zero(func, lst) -> int:
+            return func(lst) if lst else 0
+
+        if 60 % minutes > 0:
+            raise ValueError("minutes must be a divider of 60.")
+        data_raw = defaultdict(list)
+        for x, y in qs.values_list("x", "y").iterator():
+            new_minutes = x.minute // minutes * minutes
+            new_x = x.replace(minute=new_minutes, second=0, microsecond=0)
+            x_timestamp = int(new_x.timestamp() * 1000)
+            data_raw[x_timestamp].append(y)
+        data_raw = dict(sorted(data_raw.items()))
+        data = [
+            tuple([x, int(round(_func_or_zero(func, values), 0))])
+            for x, values in data_raw.items()
+        ]
+        return data
+
     @classmethod
     def report_classes(cls):
         return [
@@ -105,19 +152,6 @@ class _CachedReport:
             for _, obj in inspect.getmembers(sys.modules[__name__], inspect.isclass)
             if issubclass(obj, cls) and obj is not cls
         ]
-
-
-class BasicInformation(_CachedReport):
-    def _calc_data(self):
-        oldest_date = TaskLog.objects.aggregate(oldest=Min("timestamp"))["oldest"]
-        youngest_date = TaskLog.objects.aggregate(youngest=Max("timestamp"))["youngest"]
-        return {
-            "oldest_date": oldest_date,
-            "youngest_date": youngest_date,
-            "total_runs": self.total_runs,
-            "total_runtime_date": self.total_runtime_date,
-            "MAX_TOP": TASKMONITOR_REPORTS_MAX_TOP,
-        }
 
 
 class TaskRunsByState(_CachedReport):
@@ -166,13 +200,27 @@ class TasksTopRuns(_CachedReport):
         )
 
 
-class TasksTopRuntime(_CachedReport):
+class TasksTopMaxRuntime(_CachedReport):
     def _calc_data(self):
         if not self.total_runtime:
             return None
         return list(
             TaskLog.objects.values(name=F("task_name"))
             .annotate(y=Max("runtime"))
+            .annotate(
+                url=Concat(Value(f"{self.changelist_url}?o=5&task_name="), F("name"))
+            )
+            .order_by("-y")[:TASKMONITOR_REPORTS_MAX_TOP]
+        )
+
+
+class TasksTopAvgRuntime(_CachedReport):
+    def _calc_data(self):
+        if not self.total_runtime:
+            return None
+        return list(
+            TaskLog.objects.values(name=F("task_name"))
+            .annotate(y=Avg("runtime"))
             .annotate(
                 url=Concat(Value(f"{self.changelist_url}?o=5&task_name="), F("name"))
             )
@@ -240,13 +288,14 @@ class TasksThroughputByState(_CachedReport):
     def _calc_data(self):
         series = []
         for state in TaskLog.State:
-            result = (
+            qs = (
                 TaskLog.objects.filter(state=state)
+                .order_by("timestamp")
                 .annotate(x=TruncMinute("timestamp"))
                 .values("x")
                 .annotate(y=Count("id"))
             )
-            data = [[int(obj["x"].timestamp() * 1000), obj["y"]] for obj in result]
+            data = self._truncate_minutes(sum, qs, 5)
             series.append({"name": state.label, "data": data})
         return series
 
@@ -263,14 +312,30 @@ class TasksThroughputByApp(_CachedReport):
                 app_qs = TaskLog.objects.filter(app_name=app_name)
             else:
                 app_qs = TaskLog.objects.exclude(app_name__in=real_app_name)
-            result = (
-                app_qs.annotate(x=TruncMinute("timestamp"))
+            qs = (
+                app_qs.order_by("timestamp")
+                .annotate(x=TruncMinute("timestamp"))
                 .values("x")
                 .annotate(y=Count("id"))
             )
-            data = [[int(obj["x"].timestamp() * 1000), obj["y"]] for obj in result]
+            data = self._truncate_minutes(sum, qs, 5)
             series.append({"name": app_name, "data": data})
         return series
+
+
+class QueueLengthOverTime(_CachedReport):
+    is_included = False
+
+    def _calc_data(self):
+        qs = (
+            TaskLog.objects.exclude(current_queue_length__isnull=True)
+            .order_by("timestamp")
+            .annotate(x=TruncMinute("timestamp"))
+            .values("x")
+            .annotate(y=Avg("current_queue_length"))
+        )
+        data = self._truncate_minutes(mean, qs, 5)
+        return [{"name": "length", "data": data}]
 
 
 def refresh_cache() -> None:
@@ -294,9 +359,9 @@ def data() -> dict:
     }
 
 
-def report_data(report_name: str):
+def report_data(report_name: str, use_cache: bool = True):
     """Data of an cached report."""
-    return report(report_name).data()
+    return report(report_name).data(use_cache)
 
 
 def reports() -> List[_CachedReport]:

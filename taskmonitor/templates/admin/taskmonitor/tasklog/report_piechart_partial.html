@@ -4,51 +4,63 @@
 
 {{ data|json_script:data_id }}
 <figure class="highcharts-figure">
-    <div id="{{ data_id }}-container" style="width: 100%;"></div>
+    <div id="{{ data_id }}-container" style="width: 100%;">
+        {% include "admin/taskmonitor/tasklog/spinner_partial.html" %}
+    </div>
     <script>
-        ( () => {
-            const data = JSON.parse(document.getElementById("{{ data_id }}").textContent);
-            Highcharts.chart('{{ data_id }}-container', {
-                chart: {
-                    plotBackgroundColor: null,
-                    plotBorderWidth: null,
-                    plotShadow: false,
-                    type: 'pie',
-                },
-                title: null,
-                tooltip: {
-                    pointFormat: '{series.name}: <b>{point.y:.0f}</b> ({point.percentage:.1f}%)'
-                },
-                accessibility: {
-                    point: {
-                    valueSuffix: '%'
-                    }
-                },
-                plotOptions: {
-                    pie: {
-                    allowPointSelect: true,
-                    cursor: 'pointer',
-                    animation: false,
-                    dataLabels: {
-                            enabled: true,
-                            format: '<b>{point.name}</b>: {point.percentage:.1f} %'
-                        }
-                    }
-                },
-                series: [{
-                    name: 'Tasks',
-                    colorByPoint: true,
-                    cursor: 'pointer',
+        fetch("{% url 'taskmonitor:admin_taskmonitor_report_json' report_name %}")
+            .then((response) => {
+                if (response.ok) {
+                    return response.json();
+                }
+                throw new Error(`${response.status} ${response.statusText}: ${response.url}`);
+            })
+            .then((data) => {
+                Highcharts.chart('{{ data_id }}-container', {
+                    chart: {
+                        plotBackgroundColor: null,
+                        plotBorderWidth: null,
+                        plotShadow: false,
+                        type: 'pie',
+                    },
+                    title: null,
+                    tooltip: {
+                        pointFormat: '{series.name}: <b>{point.y:.0f}</b> ({point.percentage:.1f}%)'
+                    },
+                    accessibility: {
                         point: {
-                            events: {
-                                click: function () {
-                                    location.href = this.options.url;
-                                }
+                        valueSuffix: '%'
+                        }
+                    },
+                    plotOptions: {
+                        pie: {
+                        allowPointSelect: true,
+                        cursor: 'pointer',
+                        animation: false,
+                        dataLabels: {
+                                enabled: true,
+                                format: '<b>{point.name}</b>: {point.percentage:.1f} %'
                             }
-                        },
-                    data: data
-                    }]
-                });
-        } )();
+                        }
+                    },
+                    series: [{
+                        name: 'Tasks',
+                        colorByPoint: true,
+                        cursor: 'pointer',
+                            point: {
+                                events: {
+                                    click: function () {
+                                        location.href = this.options.url;
+                                    }
+                                }
+                            },
+                        data: data.data
+                        }]
+                    });
+            })
+            .catch((error) => {
+                let div = document.getElementById("{{ data_id }}-container");
+                div.innerHTML = `<p class="state-failure">${error}</p>`
+            });
     </script>
 </figure>

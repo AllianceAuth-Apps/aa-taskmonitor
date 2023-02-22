@@ -1,0 +1,36 @@
+{% load humanize %}
+
+<table class="dummy">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th class="text-right">Amount</th>
+            {% if not disable_percent %}
+                <th class="text-right">% total</th>
+            {% endif %}
+        </tr>
+    </thead>
+
+    <tbody>
+        {% for row in data %}
+            <tr>
+                <td>
+                    {% if row.url %}
+                        <a href="{{ row.url }}">{{ row.name }}</a>
+                    {% else %}
+                        {{ row.name }}
+                    {% endif %}
+                </td>
+                <td class="text-right">{{ row.y|floatformat:"0g" }}</td>
+                {% if not disable_percent %}
+                    <td class="text-right">{{ row.percent|floatformat:"1" }}</td>
+                {% endif %}
+            </tr>
+        {% empty %}
+            <tr>
+                <td colspan="3">No data</td>
+            </tr>
+        {% endfor %}
+    </tbody>
+
+</table>

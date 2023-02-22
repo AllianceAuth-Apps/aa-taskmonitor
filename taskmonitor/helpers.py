@@ -1,3 +1,5 @@
+import datetime as dt
+import functools
 import itertools
 
 
@@ -92,3 +94,33 @@ def compress_list(lst: list) -> list:
         if item is False or item:
             return lst
     return []
+
+
+def memcached(timeout: int = 30):
+    """Cache result of decorated function in memory until timeout.
+
+    Args:
+    - timeout: Seconds until cache becomes stale
+    """
+
+    def actual_decorator(func):
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            try:
+                my_cache = wrapper._cache
+            except AttributeError:
+                my_cache = None
+            if (
+                not my_cache
+                or (dt.datetime.utcnow() - my_cache["timestamp"]).total_seconds()
+                > timeout
+            ):
+                wrapper._cache = my_cache = {
+                    "timestamp": dt.datetime.utcnow(),
+                    "result": func(*args, **kwargs),
+                }
+            return my_cache["result"]
+
+        return wrapper
+
+    return actual_decorator

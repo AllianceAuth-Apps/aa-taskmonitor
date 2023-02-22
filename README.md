@@ -36,6 +36,7 @@ Task Monitor enables administrators to monitor celery tasks running on their sys
   - Which are the most frequent tasks?
   - Which tasks have the longest runtime?
   - Which tasks failed the most?
+  - How much backlog do I have in task queue over time?
 - Admins can export all task logs to a CSV file for further analysis with 3rd party tools (e.g. Google sheets)
 
 ## Screenshots
@@ -93,6 +94,7 @@ Note that all settings are optional and the app will use the documented default 
 Name | Description | Default
 -- | -- | --
 `TASKMONITOR_DATA_MAX_AGE`| Max age of logged tasks in hours. Older logs be deleted automatically. | `24`
+`TASKMONITOR_DELETE_STALE_BATCH_SIZE`| Size of task logs deleted together in one batch. | `5_000`
 `TASKMONITOR_HOUSEKEEPING_FREQUENCY`| Frequency of house keeping runs in minutes. | `15`
 `TASKMONITOR_QUEUED_TASKS_CACHE_TIMEOUT`| Timeout for caching queued tasks in seconds. | `10`
 `TASKMONITOR_REPORTS_MAX_AGE`| Max age of cached reports in minutes. | `15`

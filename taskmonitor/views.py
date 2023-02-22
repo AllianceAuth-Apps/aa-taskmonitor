@@ -9,10 +9,11 @@ from django.shortcuts import redirect, render
 
 from allianceauth import NAME as site_header
 from allianceauth.services.hooks import get_extension_logger
+from app_utils.caching import cached_queryset
 from app_utils.logging import LoggerAddTag
 
 from . import __title__, tasks
-from .app_settings import TASKMONITOR_DATA_MAX_AGE
+from .app_settings import TASKMONITOR_DATA_MAX_AGE, TASKMONITOR_REPORTS_MAX_TOP
 from .core import cached_reports, celery_queues
 from .helpers import Echo
 from .models import TaskLog
@@ -26,7 +27,7 @@ def admin_taskmonitor_download_csv(request) -> StreamingHttpResponse:
     """Return all tasklogs as CSV file for download."""
     queryset = TaskLog.objects.order_by("pk")
     model = queryset.model
-    exclude_fields = ("traceback", "args", "kwargs", "result")
+    exclude_fields = ("traceback", "args", "kwargs", "result", "current_queue_length")
 
     logger.info("Preparing to export the task log with %s entries.", queryset.count())
 
@@ -48,14 +49,33 @@ def admin_taskmonitor_download_csv(request) -> StreamingHttpResponse:
 @staff_member_required
 def admin_taskmonitor_reports(request):
     """Show the reports page."""
+    timeout = 60
+    total_runs = cached_queryset(
+        queryset=TaskLog.objects.count(),
+        key="tasklog-reports-total-runs",
+        timeout=timeout,
+    )
+    oldest_date = cached_queryset(
+        queryset=TaskLog.objects.oldest_date(),
+        key="tasklog-reports-oldest-data",
+        timeout=timeout,
+    )
+    newest_date = cached_queryset(
+        queryset=TaskLog.objects.newest_date(),
+        key="tasklog-reports-newest-date",
+        timeout=timeout,
+    )
     context = {
         "title": "Reports",
         "site_header": site_header,
         "cl": {"opts": TaskLog._meta},
         "data_max_age": TASKMONITOR_DATA_MAX_AGE,
         "debug_mode": settings.DEBUG,
+        "total_runs": total_runs,
+        "oldest_date": oldest_date,
+        "newest_date": newest_date,
+        "MAX_TOP": TASKMONITOR_REPORTS_MAX_TOP,
     }
-    context.update(cached_reports.data())
     return render(request, "admin/taskmonitor/tasklog/reports.html", context)
 
 
@@ -84,13 +104,30 @@ def admin_taskmonitor_reports_recalculation(request):
 
 @login_required
 @staff_member_required
-def admin_taskmonitor_report_data(request, report_name: str):
-    """Data for a report."""
+def admin_taskmonitor_report_json(request, report_name: str):
+    """Render report in JSON."""
+    use_cache = request.GET.get("use_cache") != "false"
     try:
-        data = {"data": cached_reports.report_data(report_name)}
+        data = {"data": cached_reports.report_data(report_name, use_cache=use_cache)}
     except KeyError:
         raise Http404(f'No report with name: "{report_name}"')
     return JsonResponse(data)
+
+
+@login_required
+@staff_member_required
+def admin_taskmonitor_report_html(request, report_name: str):
+    """Render report in HTML."""
+    use_cache = request.GET.get("use_cache") != "false"
+    try:
+        data = cached_reports.report_data(report_name, use_cache=use_cache)
+    except KeyError:
+        raise Http404(f'No report with name: "{report_name}"')
+    disable_percent = request.GET.get("disable_percent") == "yes"
+    context = {"data": data, "disable_percent": disable_percent}
+    return render(
+        request, "admin/taskmonitor/tasklog/render_report_table_partial.html", context
+    )
 
 
 @login_required

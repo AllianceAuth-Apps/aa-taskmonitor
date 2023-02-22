@@ -6,7 +6,7 @@ from django.utils import timezone
 from ..app_settings import TASKMONITOR_HOUSEKEEPING_FREQUENCY
 from ..models import TaskLog
 from ..tasks import DEFAULT_TASK_PRIORITY, run_housekeeping
-from . import task_records
+from . import celery_queues, task_records
 
 TASK_RECEIVED = "received"
 TASK_STARTED = "started"
@@ -54,6 +54,7 @@ def task_success_handler_2(sender, result):
             args=request.args,
             kwargs=request.kwargs,
             result=result,
+            current_queue_length=celery_queues.queue_length_cached(),
         )
     run_housekeeping_if_stale()
 
@@ -74,6 +75,7 @@ def task_retry_handler_2(sender, request, reason):
             args=request.args,
             kwargs=request.kwargs,
             exception=reason,
+            current_queue_length=celery_queues.queue_length_cached(),
         )
     run_housekeeping_if_stale()
 
@@ -94,6 +96,7 @@ def task_failure_handler_2(sender, task_id, exception):
             args=request.args,
             kwargs=request.kwargs,
             exception=exception,
+            current_queue_length=celery_queues.queue_length_cached(),
         )
     run_housekeeping_if_stale()
 

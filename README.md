@@ -36,6 +36,7 @@ Task Monitor enables administrators to monitor celery tasks running on their sys
   - Which are the most frequent tasks?
   - Which tasks have the longest runtime?
   - Which tasks failed the most?
+  - How much backlog do I have in task queue over time?
 - Admins can export all task logs to a CSV file for further analysis with 3rd party tools (e.g. Google sheets)
 
 ## Screenshots

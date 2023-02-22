@@ -4,7 +4,9 @@
 
 {{ data|json_script:data_id }}
 <figure class="highcharts-figure">
-    <div id="{{ data_id }}-container" style="width: 100%;">Loading...</div>
+    <div id="{{ data_id }}-container" style="width: 100%;">
+        {% include "admin/taskmonitor/tasklog/spinner_partial.html" %}
+    </div>
     <script>
         fetch("{% url 'taskmonitor:admin_taskmonitor_report_json' report_name %}")
             .then((response) => {

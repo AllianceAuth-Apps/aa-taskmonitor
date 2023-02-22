@@ -116,17 +116,17 @@
 
                 <div id="throughput-by-state" class="tabContent">
                     <h2>Task throughput per minute by state</h2>
-                    {% include "admin/taskmonitor/tasklog/chart_throughput_partial.html" with report_name="tasks_throughput_by_state" %}
+                    {% include "admin/taskmonitor/tasklog/report_throughput_chart_partial.html" with report_name="tasks_throughput_by_state" %}
                 </div>
 
                 <div id="throughput-by-app" class="tabContent">
                     <h2>Task throughput per minute by app</h2>
-                    {% include "admin/taskmonitor/tasklog/chart_throughput_partial.html" with report_name="tasks_throughput_by_app" %}
+                    {% include "admin/taskmonitor/tasklog/report_throughput_chart_partial.html" with report_name="tasks_throughput_by_app" %}
                 </div>
 
                 <div id="queue-length" class="tabContent">
                     <h2>Queue length over time</h2>
-                    {% include "admin/taskmonitor/tasklog/chart_throughput_partial.html" with report_name="queue_length_over_time" %}
+                    {% include "admin/taskmonitor/tasklog/report_throughput_chart_partial.html" with report_name="queue_length_over_time" %}
                 </div>
 
                 <br>

@@ -1,0 +1,7 @@
+{% load static %}
+
+{% if NIGHT_MODE %}
+    <img src="{% static 'taskmonitor/images/Spinner-1s-64px-dark.gif' %}"/>
+{% else %}
+    <img src="{% static 'taskmonitor/images/Spinner-1s-64px-light.gif' %}"/>
+{% endif %}

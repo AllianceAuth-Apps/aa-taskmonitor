@@ -17,7 +17,6 @@
     <div class="breadcrumbs">
         <a href="{% url 'admin:index' %}">{% translate 'Home' %}</a>
         &rsaquo; <a href="{% url 'admin:app_list' app_label=cl.opts.app_label %}">{{ cl.opts.app_config.verbose_name }}</a>
-        &rsaquo; <a href="{% url 'admin:taskmonitor_tasklog_changelist' %}">{{ cl.opts.verbose_name_plural|capfirst }}</a>
         &rsaquo; {{ title }}
     </div>
 {% endblock %}
@@ -80,62 +79,62 @@
             <div class="changelist-form-container">
                 <div id="task-runs-by-state" class="tabContent">
                     <h2>Task runs by state</h2>
-                    {% include "admin/taskmonitor/tasklog/chart_pie_partial.html" with report_name="task_runs_by_state" %}
+                    {% include "admin/taskmonitor/report/chart_pie_partial.html" with report_name="task_runs_by_state" %}
                 </div>
 
                 <div id="task-runs-by-app" class="tabContent">
                     <h2>Task runs by app</h2>
-                    {% include "admin/taskmonitor/tasklog/chart_pie_partial.html" with report_name="task_runs_by_app" %}
+                    {% include "admin/taskmonitor/report/chart_pie_partial.html" with report_name="task_runs_by_app" %}
                 </div>
 
                 <div id="task-througput" class="tabContent">
                     <h2>Throughput in task executions per minute</h2>
-                    {% include "admin/taskmonitor/tasklog/table_partial.html" with report_name="tasks_throughput" disable_percent="yes" %}
+                    {% include "admin/taskmonitor/report/table_partial.html" with report_name="tasks_throughput" disable_percent="yes" %}
                 </div>
 
                 <div id="top-tasks-by-runs" class="tabContent">
                     <h2>Top {{ MAX_TOP }} tasks by runs</h2>
-                    {% include "admin/taskmonitor/tasklog/chart_bar_partial.html" with report_name="tasks_top_runs" %}
+                    {% include "admin/taskmonitor/report/chart_bar_partial.html" with report_name="tasks_top_runs" %}
                 </div>
 
                 <div id="top-tasks-by-max-runtime" class="tabContent">
                     <h2>Top {{ MAX_TOP }} tasks by max instance runtime in seconds</h2>
-                    {% include "admin/taskmonitor/tasklog/chart_bar_partial.html" with report_name="tasks_top_max_runtime" %}
+                    {% include "admin/taskmonitor/report/chart_bar_partial.html" with report_name="tasks_top_max_runtime" %}
                 </div>
 
                 <div id="top-tasks-by-avg-runtime" class="tabContent">
                     <h2>Top {{ MAX_TOP }} tasks by average instance runtime in seconds</h2>
-                    {% include "admin/taskmonitor/tasklog/chart_bar_partial.html" with report_name="tasks_top_avg_runtime" %}
+                    {% include "admin/taskmonitor/report/chart_bar_partial.html" with report_name="tasks_top_avg_runtime" %}
                 </div>
 
                 <div id="top-failed-tasks" class="tabContent">
                     <h2>Top {{ MAX_TOP }} tasks by failed runs</h2>
-                    {% include "admin/taskmonitor/tasklog/chart_bar_partial.html" with report_name="tasks_top_failed" %}
+                    {% include "admin/taskmonitor/report/chart_bar_partial.html" with report_name="tasks_top_failed" %}
                 </div>
 
                 <div id="top-retried-tasks" class="tabContent">
                     <h2>Top {{ MAX_TOP }} tasks by retried runs</h2>
-                    {% include "admin/taskmonitor/tasklog/chart_bar_partial.html" with report_name="tasks_top_retried" %}
+                    {% include "admin/taskmonitor/report/chart_bar_partial.html" with report_name="tasks_top_retried" %}
                 </div>
 
                 <div id="throughput-by-state" class="tabContent">
                     <h2>Task throughput per minute by state</h2>
-                    {% include "admin/taskmonitor/tasklog/chart_throughput_partial.html" with report_name="tasks_throughput_by_state" %}
+                    {% include "admin/taskmonitor/report/chart_throughput_partial.html" with report_name="tasks_throughput_by_state" %}
                 </div>
 
                 <div id="throughput-by-app" class="tabContent">
                     <h2>Task throughput per minute by app</h2>
-                    {% include "admin/taskmonitor/tasklog/chart_throughput_partial.html" with report_name="tasks_throughput_by_app" %}
+                    {% include "admin/taskmonitor/report/chart_throughput_partial.html" with report_name="tasks_throughput_by_app" %}
                 </div>
 
                 <div id="queue-length" class="tabContent">
                     <h2>Queue length over time</h2>
-                    {% include "admin/taskmonitor/tasklog/chart_throughput_partial.html" with report_name="queue_length_over_time" %}
+                    {% include "admin/taskmonitor/report/chart_throughput_partial.html" with report_name="queue_length_over_time" %}
                 </div>
 
                 <div id="task-statistics" class="tabContent">
                     <h2>Task runtime vs. occurance</h2>
-                    {% include "admin/taskmonitor/tasklog/chart_scatter_partial.html" with report_name="task_statistics" %}
+                    {% include "admin/taskmonitor/report/chart_scatter_partial.html" with report_name="task_statistics" %}
                 </div>
 
                 <br>

@@ -76,7 +76,7 @@ def admin_taskmonitor_reports(request):
         "newest_date": newest_date,
         "MAX_TOP": TASKMONITOR_REPORTS_MAX_TOP,
     }
-    return render(request, "admin/taskmonitor/tasklog/reports.html", context)
+    return render(request, "admin/taskmonitor/report/reports.html", context)
 
 
 @login_required
@@ -126,7 +126,7 @@ def admin_taskmonitor_report_html(request, report_name: str):
     disable_percent = request.GET.get("disable_percent") == "yes"
     context = {"data": data, "disable_percent": disable_percent}
     return render(
-        request, "admin/taskmonitor/tasklog/render_table_partial.html", context
+        request, "admin/taskmonitor/report/render_table_partial.html", context
     )
 
 

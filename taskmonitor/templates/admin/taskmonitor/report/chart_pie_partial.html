@@ -4,7 +4,7 @@
 
 {{ data|json_script:data_id }}
 <figure class="highcharts-figure">
-    {% include "admin/taskmonitor/tasklog/chart_div_partial.html" with data_id=data_id %}
+    {% include "admin/taskmonitor/report/div_chart_partial.html" with data_id=data_id %}
     <script>
         fetch("{% url 'taskmonitor:admin_taskmonitor_report_json' report_name %}")
             .then((response) => {
@@ -16,29 +16,35 @@
             .then((data) => {
                 Highcharts.chart('{{ data_id }}-container', {
                     chart: {
-                        type: 'bar',
-                    },
-                    credits: {
-                        enabled: false
+                        plotBackgroundColor: null,
+                        plotBorderWidth: null,
+                        plotShadow: false,
+                        type: 'pie',
                     },
                     title: null,
-                    legend: false,
+                    tooltip: {
+                        pointFormat: '{series.name}: <b>{point.y:.0f}</b> ({point.percentage:.1f}%)'
+                    },
+                    accessibility: {
+                        point: {
+                        valueSuffix: '%'
+                        }
+                    },
                     plotOptions: {
-                        bar: {
-                            dataLabels: {
-                                enabled: true
+                        pie: {
+                        allowPointSelect: true,
+                        cursor: 'pointer',
+                        animation: false,
+                        dataLabels: {
+                                enabled: true,
+                                format: '<b>{point.name}</b>: {point.percentage:.1f} %'
                             }
                         }
                     },
-                    xAxis: {
-                        type: 'category',
-                    },
                     series: [{
-                            name: 'Tasks',
-                            dataLabels: {
-                                format: '{point.y:,.0f}'
-                            },
-                            cursor: 'pointer',
+                        name: 'Tasks',
+                        colorByPoint: true,
+                        cursor: 'pointer',
                             point: {
                                 events: {
                                     click: function () {
@@ -46,7 +52,7 @@
                                     }
                                 }
                             },
-                            data: data.data
+                        data: data.data
                         }]
                     });
             })

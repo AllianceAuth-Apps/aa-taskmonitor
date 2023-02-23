@@ -126,7 +126,7 @@ def admin_taskmonitor_report_html(request, report_name: str):
     disable_percent = request.GET.get("disable_percent") == "yes"
     context = {"data": data, "disable_percent": disable_percent}
     return render(
-        request, "admin/taskmonitor/tasklog/render_report_table_partial.html", context
+        request, "admin/taskmonitor/tasklog/render_table_partial.html", context
     )
 
 

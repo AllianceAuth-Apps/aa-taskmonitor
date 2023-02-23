@@ -47,12 +47,12 @@
 
                 <h2>Contents</h2>
 
-                <h3>Distributions</h3>
+                <h3>Task Distributions</h3>
                 <ul>
                     <li class="selected"><a class="tabLinks" href="#task-runs-by-state">Task runs by state</a></li>
                     <li><a class="tabLinks" href="#task-runs-by-app">Task runs by app</a></li>
                 </ul>
-                <h3>Top tasks</h3>
+                <h3>Top Tasks</h3>
                 <ul>
                     <li><a class="tabLinks" href="#top-tasks-by-runs">Top tasks by runs</a></li>
                     <li><a class="tabLinks" href="#top-tasks-by-max-runtime">Top tasks by max runtime</a></li>
@@ -60,19 +60,19 @@
                     <li><a class="tabLinks" href="#top-failed-tasks">Top tasks by failed runs</a></li>
                     <li><a class="tabLinks" href="#top-retried-tasks">Top tasks by retried runs</a></li>
                 </ul>
-                <h3>Throughput</h3>
+                <h3>Task Throughput</h3>
                 <ul>
                     <li><a class="tabLinks" href="#throughput-by-state">Throughput by state</a></li>
                     <li><a class="tabLinks" href="#throughput-by-app">Throughput by app</a></li>
                     <li><a class="tabLinks" href="#task-througput">Througput overview</a></li>
                 </ul>
+                <h3>Task analysis</h3>
+                <ul>
+                    <li><a class="tabLinks" href="#task-statistics">Task runs vs. runtime</a></li>
+                </ul>
                 <h3>Queue</h3>
                 <ul>
                     <li><a class="tabLinks" href="#queue-length">Queue Length over time</a></li>
-                </ul>
-                <h3>Developer</h3>
-                <ul>
-                    <li><a class="tabLinks" href="#task-statistics">Task statistics</a></li>
                 </ul>
             </div>
 
@@ -133,7 +133,7 @@
                 </div>
 
                 <div id="task-statistics" class="tabContent">
-                    <h2>Task runtime vs. occurance</h2>
+                    <h2>Task runs vs. runtime (logarithmic scale)</h2>
                     {% include "admin/taskmonitor/report/chart_scatter_partial.html" with report_name="task_statistics" %}
                 </div>
 

@@ -76,7 +76,7 @@ def admin_taskmonitor_reports(request):
         "newest_date": newest_date,
         "MAX_TOP": TASKMONITOR_REPORTS_MAX_TOP,
     }
-    return render(request, "admin/taskmonitor/report/reports.html", context)
+    return render(request, "admin/taskmonitor/report/index.html", context)
 
 
 @login_required

@@ -1,0 +1,51 @@
+{% load taskmonitor %}
+
+{% random_id as data_id %}
+
+{{ data|json_script:data_id }}
+<figure class="highcharts-figure">
+    {% include "admin/taskmonitor/report/div_chart_partial.html" with data_id=data_id %}
+    <script>
+        fetch("{% url 'taskmonitor:admin_taskmonitor_report_json' report_name %}")
+            .then((response) => {
+                if (response.ok) {
+                    return response.json();
+                }
+                throw new Error(`${response.status} ${response.statusText}: ${response.url}`);
+            })
+            .then((data) => {
+                Highcharts.chart('{{ data_id }}-container', {
+                    chart: {
+                        type: 'scatter',
+                        zoomType: 'xy'
+                    },
+                    credits: {
+                        enabled: false
+                    },
+                    title: null,
+                    xAxis: {
+                        type: 'logarithmic',
+                        enabled: true,
+                        title: {
+                            text: 'Number of runs'
+                        },
+                    },
+                    yAxis: {
+                        type: 'logarithmic',
+                        enabled: true,
+                        title: {
+                            text: 'Runtime in seconds'
+                        },
+                    },
+                    tooltip: {
+                        pointFormat: '{point.task_name}: <b>{point.x:.0f} runs / {point.y:.1f} sec avg</b>'
+                    },
+                    series: data.data
+                });
+            })
+            .catch((error) => {
+                let div = document.getElementById("{{ data_id }}-container");
+                div.innerHTML = `<p class="state-failure">${error}</p>`
+            });
+    </script>
+</figure>

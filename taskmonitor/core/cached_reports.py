@@ -154,6 +154,40 @@ class _CachedReport:
         ]
 
 
+class QueueLengthOverTime(_CachedReport):
+    is_included = False
+
+    def _calc_data(self):
+        qs = (
+            TaskLog.objects.exclude(current_queue_length__isnull=True)
+            .order_by("timestamp")
+            .annotate(x=TruncMinute("timestamp"))
+            .values("x")
+            .annotate(y=Avg("current_queue_length"))
+        )
+        data = self._truncate_minutes(mean, qs, 5)
+        return [{"name": "length", "data": data}]
+
+
+class TaskStatistics(_CachedReport):
+    def _calc_data(self):
+        qs = (
+            TaskLog.objects.values("app_name", "task_name")
+            .annotate(x=Count("pk"))
+            .annotate(y=Avg("runtime"))
+        )
+        grouped_by_app = defaultdict(list)
+        for obj in qs:
+            point = {
+                "x": obj["x"],
+                "y": obj["y"],
+                "task_name": obj["task_name"],
+            }
+            grouped_by_app[obj["app_name"]].append(point)
+        data = [{"name": name, "data": data} for name, data in grouped_by_app.items()]
+        return data
+
+
 class TaskRunsByState(_CachedReport):
     def _calc_data(self):
         if not self.total_runs:
@@ -321,21 +355,6 @@ class TasksThroughputByApp(_CachedReport):
             data = self._truncate_minutes(sum, qs, 5)
             series.append({"name": app_name, "data": data})
         return series
-
-
-class QueueLengthOverTime(_CachedReport):
-    is_included = False
-
-    def _calc_data(self):
-        qs = (
-            TaskLog.objects.exclude(current_queue_length__isnull=True)
-            .order_by("timestamp")
-            .annotate(x=TruncMinute("timestamp"))
-            .values("x")
-            .annotate(y=Avg("current_queue_length"))
-        )
-        data = self._truncate_minutes(mean, qs, 5)
-        return [{"name": "length", "data": data}]
 
 
 def refresh_cache() -> None:

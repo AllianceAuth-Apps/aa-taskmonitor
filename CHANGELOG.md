@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased] - yyyy-mm-dd
 
+## [0.13.0] - 2023-02-22
+
+### Added
+
+- New chart for analyzing task impact
+
+### Changed
+
+- Reports are now accessible through the admin site menu only
+
 ## [0.12.0] - 2023-02-22
 
 ### Added

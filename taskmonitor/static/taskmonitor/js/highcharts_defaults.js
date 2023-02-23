@@ -7,7 +7,7 @@
 'use strict';
 
 // Shared defaults
-let colors = {
+const colors = {
 	primary: '#375a7f',
 	secondary: '#444444',
 	success: '#00bc8c',
@@ -16,7 +16,7 @@ let colors = {
 	danger: '#e74c3c',
 	light: '#adb5bd',
 	dark: '#303030',
-	primary_2: '#37530465e',
+	primary_2: '#375304',
 	secondary_2: '#383838',
 	success_2: '#0c8667',
 	info_2: '#2e6f9a',
@@ -25,6 +25,7 @@ let colors = {
 	light_2: '#7c8287',
 	dark_2: '#2b2b2b',
 }
+
 Highcharts.theme = {
 	credits: {
 		enabled: false
@@ -49,11 +50,11 @@ Highcharts.theme = {
 	],
 }
 
-let matchesDarkMode = window.matchMedia("(prefers-color-scheme: dark)");
+const matchesDarkMode = window.matchMedia("(prefers-color-scheme: dark)");
 if (matchesDarkMode.matches) {
 	// Dark mode styling
-	let normalTextColor = '#eeeeee'; //'#9F9F9F'
-	let backgroundColor = '#121212';
+	const normalTextColor = '#eeeeee'; //'#9F9F9F'
+	const backgroundColor = '#121212';
 	Object.assign(
 		Highcharts.theme, {
 		chart: {
@@ -106,7 +107,6 @@ if (matchesDarkMode.matches) {
 			tickColor: '#404040',
 			tickWidth: 1,
 			title: {
-				enabled: false,
 				style: {
 					color: normalTextColor
 				}

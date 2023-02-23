@@ -2,9 +2,7 @@
 
 {% random_id as data_id %}
 
-<div id="{{ data_id }}-container" style="width: 100%;">
-    {% include "admin/taskmonitor/tasklog/spinner_partial.html" %}
-</div>
+{% include "admin/taskmonitor/report/div_chart_partial.html" with data_id=data_id %}
 
 <script>
     fetch("{% url 'taskmonitor:admin_taskmonitor_report_html' report_name %}?disable_percent={{ disable_percent }}")

@@ -71,6 +71,10 @@
                 <ul>
                     <li><a class="tabLinks" href="#queue-length">Queue Length over time</a></li>
                 </ul>
+                <h3>Developer</h3>
+                <ul>
+                    <li><a class="tabLinks" href="#task-statistics">Task statistics</a></li>
+                </ul>
             </div>
 
             <div class="changelist-form-container">
@@ -127,6 +131,11 @@
                 <div id="queue-length" class="tabContent">
                     <h2>Queue length over time</h2>
                     {% include "admin/taskmonitor/tasklog/report_throughput_chart_partial.html" with report_name="queue_length_over_time" %}
+                </div>
+
+                <div id="task-statistics" class="tabContent">
+                    <h2>Task statistics</h2>
+                    {% include "admin/taskmonitor/tasklog/report_scatter_chart_partial.html" with report_name="task_statistics" %}
                 </div>
 
                 <br>

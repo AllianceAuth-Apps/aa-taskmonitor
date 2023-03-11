@@ -113,12 +113,14 @@ class FieldFilterCountsDb(admin.SimpleListFilter):
 
     def lookups(self, request, model_admin: admin.ModelAdmin):
         qs = model_admin.get_queryset(request)
+        field = qs.model._meta.get_field(self.field_name)
+        if not field.choices:
+            qs = qs.exclude(**{self.field_name: ""})
         field_counts = (
             qs.values(self.field_name)
             .annotate(num_words=Count(self.field_name))
             .order_by(self.field_name)
         )
-        field = qs.model._meta.get_field(self.field_name)
         if field.choices:
             field_counts = self._map_choices_field(field, field_counts)
             result = [

@@ -1,3 +1,4 @@
+from collections import Counter
 from enum import Enum
 
 from django.core.management.base import BaseCommand, CommandError
@@ -91,7 +92,7 @@ class Command(BaseCommand):
             self.stdout.write(self.style.WARNING("Queue is empty. Aborted."))
             exit(1)
         self.user_confirmed(
-            f"Are you sure you purge {num_entries:,} log records from the queue?"
+            f"Are you sure you purge {num_entries:,} tasks from the queue?"
         )
         celery_queues.clear_tasks()
         self.stdout.write(f"Purged {num_entries:,} tasks from queue...")
@@ -100,6 +101,16 @@ class Command(BaseCommand):
     def inspect_queue(self):
         num_entries = celery_queues.queue_length()
         self.stdout.write(f"Current queue size: {num_entries:,}")
+        self.stdout.write("Count of queued tasks per app in descending order:")
+        tasks = celery_queues._fetch_task_from_all_queues()
+        app_in_tasks = [task.app_name for task in tasks]
+        field_counts = Counter(app_in_tasks)
+        field_counts_sorted = dict(
+            sorted(field_counts.items(), key=lambda item: item[1], reverse=True)
+        )
+        max_length = max([len(o) for o in field_counts_sorted.keys()])
+        for app_name, count in field_counts_sorted.items():
+            self.stdout.write(f"  {app_name:{max_length}}: {count:,}")
 
     def inspect_settings(self):
         settings = sorted(

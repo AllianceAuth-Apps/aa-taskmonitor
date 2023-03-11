@@ -8,7 +8,10 @@ from django.shortcuts import get_object_or_404, redirect
 from django.utils import html, safestring, timezone
 from django.utils.translation import gettext_lazy as _
 
-from .app_settings import TASKMONITOR_QUEUED_TASKS_CACHE_TIMEOUT
+from .app_settings import (
+    TASKMONITOR_QUEUED_TASKS_ADMIN_LIMIT,
+    TASKMONITOR_QUEUED_TASKS_CACHE_TIMEOUT,
+)
 from .core import celery_queues
 from .models import QueuedTask, TaskLog, TaskReport
 
@@ -78,11 +81,13 @@ class QueuedTaskAdmin(admin.ModelAdmin):
     def changelist_view(self, request, extra_context=None):
         extra_context = extra_context or {}
         cache_created_at = celery_queues.tasks_cache.created_at() or timezone.now()
+        objs_count = celery_queues.queue_length()
         context = {
             "title": "Currently queued tasks",
             "cache_created_at": cache_created_at,
-            "task_count": QueuedTask.objects.count(),
+            "task_count": objs_count,
             "cache_timeout": TASKMONITOR_QUEUED_TASKS_CACHE_TIMEOUT,
+            "is_below_limit": objs_count < TASKMONITOR_QUEUED_TASKS_ADMIN_LIMIT,
         }
         extra_context.update(context)
         return super().changelist_view(request, extra_context)
@@ -267,7 +272,7 @@ class TaskLogAdmin(admin.ModelAdmin):
     def _state(self, obj) -> str:
         css_class_map = {
             TaskLog.State.RETRY: "state-retry",
-            TaskLog.State.FAILURE: "state-failure",
+            TaskLog.State.FAILURE: "text-danger",
         }
         css_class = css_class_map.get(obj.state, "")
         return html.format_html(

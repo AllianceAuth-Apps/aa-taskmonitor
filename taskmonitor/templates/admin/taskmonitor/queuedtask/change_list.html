@@ -1,24 +1,39 @@
 {% extends "admin/change_list.html" %}
 {% load i18n %}
-{% load humanize %}
+{% load humanize static %}
 
-{% block object-tools %}
-    <p>Snapshot at {{ cache_created_at }} with {{ task_count|intcomma }} tasks.
-    Data is cached for {{ cache_timeout }} seconds.</p>
+{% block extrastyle %}
     {{ block.super }}
-    <ul class="object-tools">
-        <li>
-            <a href="{% url 'taskmonitor:admin_queued_task_clear_cache' %}"
-               class="btn btn-high">
-                {% translate "Clear cache" %}
-            </a>
-        </li>
-        <li>
-            <a href="{% url 'taskmonitor:admin_queued_task_purge' %}"
-               onclick="return confirm('Are you sure you want to purge the queue?')"
-               class="btn btn-high">
-                {% translate "Purge queue" %}
-            </a>
-        </li>
-    </ul>
+    <link rel="stylesheet" type="text/css" href="{% static 'taskmonitor/css/admin.css' %}">
+{% endblock %}
+
+{% block object-tools-items %}
+    {{ block.super }}
+    <li>
+        <a href="{% url 'taskmonitor:admin_queued_task_clear_cache' %}"
+            class="btn btn-high">
+            {% translate "Clear cache" %}
+        </a>
+    </li>
+    <li>
+        <a href="{% url 'taskmonitor:admin_queued_task_purge' %}"
+            onclick="return confirm('Are you sure you want to purge the queue?')"
+            class="btn btn-high">
+            {% translate "Purge queue" %}
+        </a>
+    </li>
+{% endblock %}
+
+{% block content %}
+    <p>
+        Snapshot at {{ cache_created_at }} with {{ task_count|intcomma }} tasks.
+        Data is cached for {{ cache_timeout }} seconds.
+    </p>
+    {% if not is_below_limit %}
+        <p class="text-warning">
+            There are too many tasks in the queue to display!
+            Please also consider using the taskmangerctl utility.
+        </p>
+    {% endif %}
+    {{ block.super }}
 {% endblock %}

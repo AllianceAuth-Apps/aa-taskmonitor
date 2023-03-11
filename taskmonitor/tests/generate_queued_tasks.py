@@ -18,7 +18,7 @@ django.setup()
 from taskmonitor.core import celery_queues
 from taskmonitor.tests.factories import QueuedTaskRawFactory
 
-TASK_AMOUNT = 1_000_000
+TASK_AMOUNT = 50_000
 MAX_CHUNK_SIZE = 50_000  # upper limit to safe memory consumption
 
 
@@ -29,7 +29,9 @@ def generate_tasks(amount: int):
 
 print(f"Started adding {TASK_AMOUNT:,} tasks to queued tasks...")
 q_name = celery_queues.default_queue_name()
-for _ in range(TASK_AMOUNT // MAX_CHUNK_SIZE):
+runs = TASK_AMOUNT // MAX_CHUNK_SIZE
+for num, _ in enumerate(range(runs), 1):
+    print(f"Generating {MAX_CHUNK_SIZE:,} tasks. Run {num} / {runs}")
     generate_tasks(MAX_CHUNK_SIZE)
 generate_tasks(TASK_AMOUNT % MAX_CHUNK_SIZE)
 print(f"Using queue name: {q_name}")

@@ -28,3 +28,10 @@ TASKMONITOR_QUEUED_TASKS_CACHE_TIMEOUT = clean_setting(
     "TASKMONITOR_QUEUED_TASKS_CACHE_TIMEOUT", 10
 )
 """Timeout for caching queued tasks in seconds. 0 will deactivate the cache."""
+
+TASKMONITOR_QUEUED_TASKS_ADMIN_LIMIT = clean_setting(
+    "TASKMONITOR_QUEUED_TASKS_ADMIN_LIMIT", 100_000
+)
+"""The admin page will stop showing the list of queued tasks above this limit
+to protect against using too much memory.
+"""

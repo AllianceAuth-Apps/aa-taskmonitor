@@ -93,7 +93,7 @@ class Command(BaseCommand):
         self.user_confirmed(
             f"Are you sure you purge {num_entries:,} log records from the queue?"
         )
-        num_entries = celery_queues.clear_tasks()
+        celery_queues.clear_tasks()
         self.stdout.write(f"Purged {num_entries:,} tasks from queue...")
         self.stdout.write(self.style.SUCCESS("Done."))
 

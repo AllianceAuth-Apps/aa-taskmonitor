@@ -17,6 +17,7 @@ An Alliance Auth app for monitoring celery tasks.
 - [Features](#features)
 - [Screenshots](#screenshots)
 - [Installation](#installation)
+- [Command line utility](#command-line-utility)
 - [Settings](#settings)
 - [FAQ](#faq)
 - [Change Log](CHANGELOG.md)
@@ -38,6 +39,7 @@ Task Monitor enables administrators to monitor celery tasks running on their sys
   - Which tasks failed the most?
   - How much backlog do I have in task queue over time?
 - Admins can export all task logs to a CSV file for further analysis with 3rd party tools (e.g. Google sheets)
+- Command line utility to manage task logs and queue directly
 
 ## Screenshots
 
@@ -85,6 +87,40 @@ python manage.py collectstatic --noinput
 
 Restart your supervisor services for Auth.
 
+## Command line utility
+
+You can manage your logs and queue also directly via a command line utility.
+
+The basic syntax for using the utility is:
+
+```bash
+python manage.py taskmonitorctl {command} {target}
+```
+
+For example you can inspect your logs with:
+
+```bash
+python manage.py taskmonitorctl inspect logs
+```
+
+Or for example you can purge your task queue with:
+
+```bash
+python manage.py taskmonitorctl purge queue
+```
+
+To get an overview of available commands run:
+
+```bash
+python manage.py taskmonitorctl --help
+```
+
+To get an overview of available targets for a command run:
+
+```bash
+python manage.py taskmonitorctl inspect --help
+```
+
 ## Settings
 
 Here is a list of available settings for this app. They can be configured by adding them to your AA settings file (`local.py`).
@@ -97,7 +133,8 @@ Name | Description | Default
 `TASKMONITOR_DELETE_STALE_BATCH_SIZE`| Size of task logs deleted together in one batch. | `5_000`
 `TASKMONITOR_HOUSEKEEPING_FREQUENCY`| Frequency of house keeping runs in minutes. | `15`
 `TASKMONITOR_QUEUED_TASKS_CACHE_TIMEOUT`| Timeout for caching queued tasks in seconds. | `10`
-`TASKMONITOR_REPORTS_MAX_AGE`| Max age of cached reports in minutes. | `15`
+`TASKMONITOR_QUEUED_TASKS_ADMIN_LIMIT`| The admin page will stop showing the list of queued tasks above this limit to protect against crashing caused by too high memory consumption. | `100_000`
+`TASKMONITOR_REPORTS_MAX_AGE`| Max age of cached reports in minutes. | `30`
 `TASKMONITOR_REPORTS_MAX_TOP`| Max items to show in the top reports. e.g. 10 will shop the top ten items. | `15`
 `TASKMONITOR_TRUNCATE_NESTED_DATA`| Whether deeply nested task params and results are truncated. Please see FAQ for details. | `True`
 
@@ -105,7 +142,7 @@ Name | Description | Default
 
 ### Is it possible to store task logs longer then for just 24 hours?
 
-Yes, there is a setting, which you can increase according to your needs. However, please keep in mind that your storage needs will increase accordingly. The current approx. usage is 0.5 KB per entry, so e.g. you need approx. 500 MB to store 1.000.000 task logs.
+Yes, there is a setting, which you can increase according to your needs. However, please keep in mind that your storage needs will increase accordingly. The current approx. usage is 0.5 KB per entry, so e.g. you need approx. 500 MB to store 1.000.000 task logs. Note that you can use the command line utility to find out how much space your logs are currently using.
 
 ### How is this app different from celery analytics?
 

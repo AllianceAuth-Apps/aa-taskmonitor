@@ -1,10 +1,13 @@
 from collections import Counter
 from enum import Enum
 
+import humanize
+
 from django.core.management.base import BaseCommand, CommandError
 
 from taskmonitor import __title__, app_settings
 from taskmonitor.core import celery_queues
+from taskmonitor.models import TaskLog
 
 CACHE_TIMEOUT_SECONDS = 3600
 
@@ -98,12 +101,32 @@ class Command(BaseCommand):
         self.stdout.write(f"Purged {num_entries:,} tasks from queue...")
         self.stdout.write(self.style.SUCCESS("Done."))
 
+    def inspect_logs(self):
+        log_count = TaskLog.objects.count()
+        try:
+            db_table_size = TaskLog.objects.db_table_size()
+        except RuntimeError:
+            table_size_str = "N/A"
+            average_bytes_str = "N/A"
+        else:
+            table_size_str = humanize.naturalsize(db_table_size)
+            average_bytes_str = humanize.naturalsize(db_table_size / log_count)
+        output = {
+            "Log count in DB": humanize.intword(log_count),
+            "Table size in DB": table_size_str,
+            "Average log size in DB": average_bytes_str,
+        }
+        max_length = max([len(o) for o in output.keys()])
+        for label, value in output.items():
+            self.stdout.write(f"{label:{max_length + 1}}: {value}")
+
     def inspect_queue(self):
         num_entries = celery_queues.queue_length()
         self.stdout.write(f"Current queue size: {num_entries:,}")
-        self.stdout.write("Count of queued tasks per app in descending order:")
-        tasks = celery_queues._fetch_task_from_all_queues()
-        app_in_tasks = [task.app_name for task in tasks]
+        self.stdout.write("Summary of queued tasks by app count in descending order:")
+        app_in_tasks = (
+            task.app_name for task in celery_queues._fetch_task_from_all_queues()
+        )
         field_counts = Counter(app_in_tasks)
         field_counts_sorted = dict(
             sorted(field_counts.items(), key=lambda item: item[1], reverse=True)
@@ -134,6 +157,8 @@ class Command(BaseCommand):
         elif command == UserCommand.INSPECT:
             if target == Target.QUEUE:
                 self.inspect_queue()
+            elif target == Target.LOGS:
+                self.inspect_logs()
             elif target == Target.SETTINGS:
                 self.inspect_settings()
             else:

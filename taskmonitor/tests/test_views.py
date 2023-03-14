@@ -1,5 +1,6 @@
 import pytz
 
+from django.core.cache import cache
 from django.test import RequestFactory, TestCase
 from django.urls import reverse
 
@@ -28,7 +29,7 @@ def _streaming_content_to_string(response):
     return bytes.decode("utf-8")
 
 
-class TestViews(TestCase):
+class TestCsvViews(TestCase):
     def setUp(self) -> None:
         self.request_factory = RequestFactory()
 
@@ -74,3 +75,22 @@ class TestViews(TestCase):
             self.assertEqual(values[10], str(entry.task_id))
             self.assertEqual(values[11], entry.task_name)
             self.assertEqual(values[12], _format_dt(entry.timestamp))
+
+
+class TestAdminUi(TestCase):
+    def setUp(self) -> None:
+        self.request_factory = RequestFactory()
+        cache.clear()
+
+    def test_should_open_reports_view(self):
+        # given
+        TaskLogFactory()
+        user = UserFactory(is_staff=True)
+        request = self.request_factory.get(
+            reverse("taskmonitor:admin_taskmonitor_reports")
+        )
+        request.user = user
+        # when
+        response = views.admin_taskmonitor_reports(request)
+        # then
+        self.assertEqual(response.status_code, 200)

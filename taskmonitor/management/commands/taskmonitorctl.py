@@ -110,7 +110,9 @@ class Command(BaseCommand):
             average_bytes_str = "N/A"
         else:
             table_size_str = humanize.naturalsize(db_table_size)
-            average_bytes_str = humanize.naturalsize(db_table_size / log_count)
+            average_bytes_str = (
+                humanize.naturalsize(db_table_size / log_count) if log_count else "N/A"
+            )
         output = {
             "Log count in DB": humanize.intword(log_count),
             "Table size in DB": table_size_str,
@@ -131,7 +133,11 @@ class Command(BaseCommand):
         field_counts_sorted = dict(
             sorted(field_counts.items(), key=lambda item: item[1], reverse=True)
         )
-        max_length = max([len(o) for o in field_counts_sorted.keys()])
+        max_length = (
+            max([len(o) for o in field_counts_sorted.keys()])
+            if field_counts_sorted
+            else 0
+        )
         for app_name, count in field_counts_sorted.items():
             self.stdout.write(f"  {app_name:{max_length}}: {count:,}")
 

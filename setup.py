@@ -37,7 +37,7 @@ setup(
     python_requires="~=3.8",
     install_requires=[
         "allianceauth>=2.9",
-        "allianceauth-app-utils>=1.14.2",
+        "allianceauth-app-utils>=1.16",
         "humanize",
     ],
 )

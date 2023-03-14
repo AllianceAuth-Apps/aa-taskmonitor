@@ -11,10 +11,14 @@ from django.db.models.functions import TruncMinute
 from django.utils import timezone
 
 from allianceauth.services.hooks import get_extension_logger
+from app_utils.database import TableSizeMixin
 from app_utils.logging import LoggerAddTag
 
 from . import __title__
-from .app_settings import TASKMONITOR_TRUNCATE_NESTED_DATA
+from .app_settings import (
+    TASKMONITOR_QUEUED_TASKS_ADMIN_LIMIT,
+    TASKMONITOR_TRUNCATE_NESTED_DATA,
+)
 from .core import celery_queues
 from .helpers import extract_app_name, truncate_dict, truncate_list, truncate_result
 
@@ -40,6 +44,9 @@ class ListAsQuerySet(list):
 
     def all(self) -> models.QuerySet:
         return self
+
+    def none(self) -> models.QuerySet:
+        return ListAsQuerySet([], model=self.model)
 
     def get(self, *args, **kwargs):
         try:
@@ -108,9 +115,18 @@ class QueuedTaskQuerySet(models.QuerySet):
 
 class QueuedTaskManagerBase(models.Manager):
     def get_queryset(self) -> models.QuerySet:
+        if celery_queues.queue_length() > TASKMONITOR_QUEUED_TASKS_ADMIN_LIMIT:
+            return self._none()
         return self.from_dto_list(celery_queues.fetch_tasks())
 
-    def from_dto_list(self, tasks: list) -> models.QuerySet:
+    @staticmethod
+    def _none():
+        from .models import QueuedTask
+
+        return ListAsQuerySet([], model=QueuedTask)
+
+    @staticmethod
+    def from_dto_list(tasks: list) -> models.QuerySet:
         """Create from a list of QueuedTaskShort objects."""
         from .models import QueuedTask
 
@@ -161,7 +177,7 @@ class TaskLogQuerySet(models.QuerySet):
         return self.aggregate(youngest=Max("timestamp"))["youngest"]
 
 
-class TaskLogManagerBase(models.Manager):
+class TaskLogManagerBase(TableSizeMixin, models.Manager):
     def create_from_task(
         self,
         *,

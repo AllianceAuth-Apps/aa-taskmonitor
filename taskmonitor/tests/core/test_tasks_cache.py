@@ -6,6 +6,18 @@ from taskmonitor.core.tasks_cache import QueuedTasksCache, QueuedTaskShort
 from ..factories import QueuedTaskRawFactory
 
 
+class TestQueuedTaskShort(TestCase):
+    def test_should_create_from_dict(self):
+        # given
+        raw = QueuedTaskRawFactory()
+        # when
+        obj = QueuedTaskShort.from_dict(raw)
+        # then
+        self.assertEqual(obj.id, raw["headers"]["id"])
+        self.assertEqual(obj.name, raw["headers"]["task"])
+        self.assertEqual(obj.priority, raw["properties"]["priority"])
+
+
 class TestCacheAPi(TestCase):
     CACHE_KEY = "test-cache-api-cache-key"
 

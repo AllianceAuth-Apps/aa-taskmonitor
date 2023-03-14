@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased] - yyyy-mm-dd
 
+## [0.14.0] - 2023-03-14
+
+### Added
+
+- CLI utility to manage task log and queue
+
+### Changed
+
+- Added upper limit for amount of queued tasks to protect against crashed caused by too high memory consumption when trying to render 100K+ tasks. Can be configured with new setting: `TASKMONITOR_QUEUED_TASKS_ADMIN_LIMIT`
+- Changed default for updating reports to 30 min
+
 ## [0.13.0] - 2023-02-22
 
 ### Added

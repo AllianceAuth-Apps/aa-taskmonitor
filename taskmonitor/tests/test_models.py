@@ -304,10 +304,11 @@ def make_dto_list(objs) -> List[QueuedTaskShort]:
 
 
 class TestQueuedTaskManager(TestCase):
-    @patch("taskmonitor.managers.celery_queues")
+    @patch("taskmonitor.managers.celery_queues", spec=True)
     def test_get_queryset_should_fetch_from_celery_queues(self, mock_celery_queues):
         # given
         queued_task_raw = QueuedTaskRawFactory()
+        mock_celery_queues.queue_length.return_value = 2
         mock_celery_queues.fetch_tasks.return_value = make_dto_list(
             [queued_task_raw, QueuedTaskRawFactory()]
         )
@@ -463,6 +464,18 @@ class TestQueuedTaskManager(TestCase):
         result = qs.values_list("name", flat=True)
         # then
         self.assertEqual(result, ["alpha", "bravo"])
+
+    @patch("taskmonitor.managers.TASKMONITOR_QUEUED_TASKS_ADMIN_LIMIT", 100)
+    @patch("taskmonitor.managers.celery_queues", spec=True)
+    def test_get_queryset_should_return_empty_list_when_over_limit(
+        self, mock_celery_queues
+    ):
+        # given
+        mock_celery_queues.queue_length.return_value = 101
+        # when
+        qs = QueuedTask.objects.all()
+        # then
+        self.assertEqual(len(qs), 0)
 
 
 def raw_task_ids(lst):

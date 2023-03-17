@@ -124,12 +124,29 @@ class Command(BaseCommand):
 
     def inspect_queue(self):
         num_entries = celery_queues.queue_length()
+        if not num_entries:
+            self.stdout.write("Queue is empty.")
+            return
         self.stdout.write(f"Current queue size: {num_entries:,}")
-        self.stdout.write("Summary of queued tasks by app count in descending order:")
-        app_in_tasks = (
-            task.app_name for task in celery_queues._fetch_task_from_all_queues()
-        )
-        field_counts = Counter(app_in_tasks)
+        if num_entries > app_settings.TASKMONITOR_QUEUED_TASKS_ADMIN_LIMIT:
+            self.user_confirmed(
+                "The queue is very large. Do you still want to gather statistics?"
+            )
+        self.stdout.write("Fetching data from queue...", ending="\r")
+        self.stdout.write("" * 70, ending="\r")
+        tasks = [
+            (task.app_name, task.name)
+            for task in celery_queues._fetch_task_from_all_queues()
+        ]
+        self.stdout.write("Queued tasks grouped by app counts in descending order:")
+        grouped_names = (o[0] for o in tasks)
+        self._render_field_counts(grouped_names)
+        self.stdout.write("Queued tasks grouped by task counts in descending order:")
+        grouped_names = (o[1] for o in tasks)
+        self._render_field_counts(grouped_names)
+
+    def _render_field_counts(self, grouped_names):
+        field_counts = Counter(grouped_names)
         field_counts_sorted = dict(
             sorted(field_counts.items(), key=lambda item: item[1], reverse=True)
         )

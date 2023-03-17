@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased] - yyyy-mm-dd
 
+### Added
+
+- Task grouped counts to inspect queue cli command
+
+### Fixed
+
+- Breaks on undefined args/kwargs for internal errors
+
 ## [0.14.0] - 2023-03-14
 
 ### Added

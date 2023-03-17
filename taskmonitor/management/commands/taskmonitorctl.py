@@ -6,7 +6,7 @@ import humanize
 from django.core.management.base import BaseCommand, CommandError
 
 from taskmonitor import __title__, app_settings
-from taskmonitor.core import celery_queues
+from taskmonitor.core import cached_reports, celery_queues
 from taskmonitor.models import TaskLog
 
 CACHE_TIMEOUT_SECONDS = 3600
@@ -63,7 +63,7 @@ class Command(BaseCommand):
         parser_purge.add_argument(
             Token.TARGET.value,
             type=str,
-            choices=[Target.QUEUE.value],
+            choices=[Target.QUEUE.value, Target.LOGS.value],
             help="target to purge",
         )
 
@@ -83,25 +83,41 @@ class Command(BaseCommand):
             help="Fore re-calculation of values and update caches.",
         )
 
-    def user_confirmed(self, question_text):
+    def _user_confirmed(self, question_text):
+        """Ask user about confirmation and exit
+        when he does not reply in the affirmative.
+        """
         user_input = input(f"{question_text} (y/N)?")
         if user_input.lower() != "y":
             self.stdout.write(self.style.WARNING("Aborted by user request."))
             exit(1)
 
-    def purge_queue(self):
+    def purge_queue(self, **options):
         num_entries = celery_queues.queue_length()
         if not num_entries:
             self.stdout.write(self.style.WARNING("Queue is empty. Aborted."))
             exit(1)
-        self.user_confirmed(
+        self._user_confirmed(
             f"Are you sure you purge {num_entries:,} tasks from the queue?"
         )
         celery_queues.clear_tasks()
         self.stdout.write(f"Purged {num_entries:,} tasks from queue...")
         self.stdout.write(self.style.SUCCESS("Done."))
 
-    def inspect_logs(self):
+    def purge_logs(self, **options):
+        all_logs = TaskLog.objects.all()
+        self.stdout.write("Calculating...", ending="\r")
+        num_logs = all_logs.count()
+        if not num_logs:
+            self.stdout.write(self.style.WARNING("No logs found. Aborted."))
+            exit(1)
+        self._user_confirmed(f"Are you sure you purge {num_logs:,} task logs?")
+        self.stdout.write("Deleting task logs...")
+        all_logs._raw_delete(all_logs.db)
+        cached_reports.clear_cache()
+        self.stdout.write(self.style.SUCCESS("Done."))
+
+    def inspect_logs(self, **options):
         log_count = TaskLog.objects.count()
         try:
             db_table_size = TaskLog.objects.db_table_size()
@@ -122,14 +138,14 @@ class Command(BaseCommand):
         for label, value in output.items():
             self.stdout.write(f"{label:{max_length + 1}}: {value}")
 
-    def inspect_queue(self):
+    def inspect_queue(self, **options):
         num_entries = celery_queues.queue_length()
         if not num_entries:
             self.stdout.write("Queue is empty.")
             return
         self.stdout.write(f"Current queue size: {num_entries:,}")
         if num_entries > app_settings.TASKMONITOR_QUEUED_TASKS_ADMIN_LIMIT:
-            self.user_confirmed(
+            self._user_confirmed(
                 "The queue is very large. Do you still want to gather statistics?"
             )
         self.stdout.write("Fetching data from queue...", ending="\r")
@@ -158,7 +174,7 @@ class Command(BaseCommand):
         for app_name, count in field_counts_sorted.items():
             self.stdout.write(f"  {app_name:{max_length}}: {count:,}")
 
-    def inspect_settings(self):
+    def inspect_settings(self, **options):
         settings = sorted(
             [o for o in dir(app_settings) if not o.startswith("__") and o == o.upper()]
         )
@@ -171,21 +187,8 @@ class Command(BaseCommand):
         command = options[Token.COMMAND.value]
         target = options[Token.TARGET.value]
 
-        if command == UserCommand.PURGE:
-            if target == Target.QUEUE:
-                self.purge_queue()
-            else:
-                raise NotImplementedError()
-
-        elif command == UserCommand.INSPECT:
-            if target == Target.QUEUE:
-                self.inspect_queue()
-            elif target == Target.LOGS:
-                self.inspect_logs()
-            elif target == Target.SETTINGS:
-                self.inspect_settings()
-            else:
-                raise NotImplementedError()
-
-        else:
-            raise NotImplementedError()
+        method = f"{command}_{target}"
+        try:
+            getattr(self, method)(**options)
+        except AttributeError:
+            raise NotImplementedError(method) from None

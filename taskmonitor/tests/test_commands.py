@@ -5,6 +5,7 @@ from django.core.management import call_command
 from django.test import TestCase
 
 from taskmonitor.core.celery_queues import QueuedTaskShort
+from taskmonitor.models import TaskLog
 
 from .factories import QueuedTaskRawFactory, TaskLogFactory
 
@@ -68,9 +69,22 @@ class TestCommands(TestCase):
         out = StringIO()
         # when
         with patch(
-            MODULE_PATH + ".taskmonitorctl.Command.user_confirmed", spec=True
+            MODULE_PATH + ".taskmonitorctl.Command._user_confirmed", spec=True
         ) as m:
             m.return_value = None
             call_command("taskmonitorctl", "purge", "queue", stdout=out)
         # then
         self.assertTrue(mock_celery_queues.clear_tasks.called)
+
+    def test_should_purge_logs(self):
+        # given
+        TaskLogFactory()
+        out = StringIO()
+        # when
+        with patch(
+            MODULE_PATH + ".taskmonitorctl.Command._user_confirmed", spec=True
+        ) as m:
+            m.return_value = None
+            call_command("taskmonitorctl", "purge", "logs", stdout=out)
+        # then
+        self.assertEqual(TaskLog.objects.count(), 0)

@@ -9,7 +9,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Added
 
-- Task grouped counts to inspect queue cli command
+- Task grouped counts added to "inspect queue" in cli tool
+- Can purge task logs with cli tool
 
 ### Fixed
 

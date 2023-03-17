@@ -100,6 +100,56 @@ def _fetch_tasks_from_redis(
     return reversed(tasks)
 
 
+def delete_task_by_id(task_id: str) -> bool:
+    """Delete task from queue by task ID. Returns True if deleted, False if not found."""
+    r = _redis_client()
+    for queue_name in _redis_queue_names():
+        for obj_encoded in r.lrange(queue_name, 0, -1):
+            obj = json.loads(obj_encoded.decode("utf8"))
+            try:
+                task = QueuedTaskShort.from_dict(obj)
+            except ValueError:
+                continue
+            if task.id == task_id:
+                r.lrem(queue_name, 1, obj_encoded)
+                return True
+    return False
+
+
+def delete_task_by_name(task_name: str) -> int:
+    """Delete task from queue by task name. Returns count of deleted entries."""
+    r = _redis_client()
+    deleted_count = 0
+    for queue_name in _redis_queue_names():
+        for obj_encoded in r.lrange(queue_name, 0, -1):
+            obj = json.loads(obj_encoded.decode("utf8"))
+            try:
+                task = QueuedTaskShort.from_dict(obj)
+            except ValueError:
+                continue
+            if task.name == task_name:
+                r.lrem(queue_name, 1, obj_encoded)
+                deleted_count += 1
+    return deleted_count
+
+
+def delete_task_by_app_name(app_name: str) -> int:
+    """Delete task from queue by app name. Returns count of deleted entries."""
+    r = _redis_client()
+    deleted_count = 0
+    for queue_name in _redis_queue_names():
+        for obj_encoded in r.lrange(queue_name, 0, -1):
+            obj = json.loads(obj_encoded.decode("utf8"))
+            try:
+                task = QueuedTaskShort.from_dict(obj)
+            except ValueError:
+                continue
+            if task.app_name == app_name:
+                r.lrem(queue_name, 1, obj_encoded)
+                deleted_count += 1
+    return deleted_count
+
+
 def clear_tasks(queue_name: str = None):
     """Clear tasks from all queues."""
     r = _redis_client()

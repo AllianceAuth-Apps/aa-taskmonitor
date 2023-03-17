@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 - Task grouped counts added to "inspect queue" in cli tool
 - Can purge task logs with cli tool
+- Can purge selected tasks from queue with the cli tool, e.g. by task name and app name
 
 ### Fixed
 

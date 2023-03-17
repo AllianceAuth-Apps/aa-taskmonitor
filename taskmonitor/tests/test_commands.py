@@ -72,11 +72,12 @@ class TestCommands(TestCase):
             MODULE_PATH + ".taskmonitorctl.Command._user_confirmed", spec=True
         ) as m:
             m.return_value = None
-            call_command("taskmonitorctl", "purge", "queue", stdout=out)
+            call_command("taskmonitorctl", "purge", "queue", "--all", stdout=out)
         # then
         self.assertTrue(mock_celery_queues.clear_tasks.called)
 
-    def test_should_purge_logs(self):
+    @patch(MODULE_PATH + ".taskmonitorctl.cached_reports", spec=True)
+    def test_should_purge_logs(self, mock_cached_reports):
         # given
         TaskLogFactory()
         out = StringIO()
@@ -85,6 +86,7 @@ class TestCommands(TestCase):
             MODULE_PATH + ".taskmonitorctl.Command._user_confirmed", spec=True
         ) as m:
             m.return_value = None
-            call_command("taskmonitorctl", "purge", "logs", stdout=out)
+            call_command("taskmonitorctl", "purge", "logs", "--all", stdout=out)
         # then
         self.assertEqual(TaskLog.objects.count(), 0)
+        self.assertTrue(mock_cached_reports.refresh_cache.called)

@@ -66,6 +66,15 @@ class Command(BaseCommand):
             choices=[Target.QUEUE.value, Target.LOGS.value],
             help="target to purge",
         )
+        parser_purge.add_argument(
+            "--task-name", help="Limit purge to tasks with a specific name"
+        )
+        parser_purge.add_argument(
+            "--app-name", help="Limit purge to tasks from an specific app"
+        )
+        parser_purge.add_argument(
+            "--all", action="store_true", help="You want to purge everything."
+        )
 
         parser_inspect = subparsers.add_parser(
             UserCommand.INSPECT.value,
@@ -97,11 +106,34 @@ class Command(BaseCommand):
         if not num_entries:
             self.stdout.write(self.style.WARNING("Queue is empty. Aborted."))
             exit(1)
-        self._user_confirmed(
-            f"Are you sure you purge {num_entries:,} tasks from the queue?"
+        self.stdout.write(f"Current queue size: {num_entries:,}")
+        found_flags = sum(
+            [1 for key in ["task_name", "app_name", "all"] if bool(options[key])]
         )
-        celery_queues.clear_tasks()
-        self.stdout.write(f"Purged {num_entries:,} tasks from queue...")
+        if found_flags != 1:
+            raise CommandError(
+                "Please specify exactly one option about what to purge. "
+                "For more info see 'purge --help'."
+            )
+        if options["task_name"]:
+            task_name = options["task_name"]
+            self._user_confirmed(
+                f"Are you sure you purge all tasks with the TASK NAME {task_name} from the queue?"
+            )
+            deleted_entries = celery_queues.delete_task_by_name(task_name)
+        elif options["app_name"]:
+            app_name = options["app_name"]
+            self._user_confirmed(
+                f"Are you sure you purge all tasks by the APP {app_name} from the queue?"
+            )
+            deleted_entries = celery_queues.delete_task_by_app_name(app_name)
+        elif options["all"]:
+            self._user_confirmed("Are you sure you purge ALL TASKS from the queue?")
+            celery_queues.clear_tasks()
+            deleted_entries = num_entries
+        else:
+            raise RuntimeError("This should not happen")
+        self.stdout.write(f"Purged {deleted_entries:,} tasks from queue...")
         self.stdout.write(self.style.SUCCESS("Done."))
 
     def purge_logs(self, **options):
@@ -111,10 +143,14 @@ class Command(BaseCommand):
         if not num_logs:
             self.stdout.write(self.style.WARNING("No logs found. Aborted."))
             exit(1)
-        self._user_confirmed(f"Are you sure you purge {num_logs:,} task logs?")
-        self.stdout.write("Deleting task logs...")
-        all_logs._raw_delete(all_logs.db)
-        cached_reports.clear_cache()
+        self.stdout.write(f"Current task logs count: {num_logs:,}")
+        if options["all"]:
+            self._user_confirmed("Are you sure you purge ALL task logs?")
+            self.stdout.write("Deleting task logs...")
+            all_logs._raw_delete(all_logs.db)
+        else:
+            raise CommandError("Currently only the --all option is supported")
+        cached_reports.refresh_cache()
         self.stdout.write(self.style.SUCCESS("Done."))
 
     def inspect_logs(self, **options):

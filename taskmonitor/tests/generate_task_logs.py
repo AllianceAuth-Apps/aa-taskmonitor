@@ -18,7 +18,7 @@ django.setup()
 from taskmonitor.models import TaskLog
 from taskmonitor.tests.factories import TaskLogFactory
 
-MAX_ENTRIES = 50_000
+MAX_ENTRIES = 5_000
 
 print(f"Generating {MAX_ENTRIES:,} task logs...")
 objs = TaskLogFactory.build_batch(size=MAX_ENTRIES)

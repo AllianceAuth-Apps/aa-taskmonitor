@@ -120,17 +120,23 @@ class Command(BaseCommand):
             self._user_confirmed(
                 f"Are you sure you purge all tasks with the TASK NAME {task_name} from the queue?"
             )
+            self.stdout.write("Purged tasks from queue...", ending="\r")
             deleted_entries = celery_queues.delete_task_by_name(task_name)
+            self.stdout.write("" * 70, ending="\r")
         elif options["app_name"]:
             app_name = options["app_name"]
             self._user_confirmed(
                 f"Are you sure you purge all tasks by the APP {app_name} from the queue?"
             )
+            self.stdout.write("Purged tasks from queue...", ending="\r")
             deleted_entries = celery_queues.delete_task_by_app_name(app_name)
+            self.stdout.write("" * 70, ending="\r")
         elif options["all"]:
             self._user_confirmed("Are you sure you purge ALL TASKS from the queue?")
+            self.stdout.write("Purged tasks from queue...", ending="\r")
             celery_queues.clear_tasks()
             deleted_entries = num_entries
+            self.stdout.write("" * 70, ending="\r")
         else:
             raise RuntimeError("This should not happen")
         self.stdout.write(f"Purged {deleted_entries:,} tasks from queue...")

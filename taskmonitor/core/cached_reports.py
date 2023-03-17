@@ -338,8 +338,11 @@ class TasksThroughputByApp(_CachedReport):
     is_included = False
 
     def _calc_data(self):
+        apps = report("task_runs_by_app").data()
+        if not apps:
+            return []
         series = []
-        app_names = [app["name"] for app in report("task_runs_by_app").data()]
+        app_names = [app["name"] for app in apps]
         real_app_name = {name for name in app_names if name != APP_NAME_OTHERS}
         for app_name in app_names:
             if app_name in real_app_name:

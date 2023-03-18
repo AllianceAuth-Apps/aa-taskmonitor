@@ -1,3 +1,5 @@
+import json
+
 from django.core.cache import cache
 from django.test import TestCase
 
@@ -9,13 +11,25 @@ from ..factories import QueuedTaskRawFactory
 class TestQueuedTaskShort(TestCase):
     def test_should_create_from_dict(self):
         # given
-        raw = QueuedTaskRawFactory()
+        task = QueuedTaskRawFactory()
         # when
-        obj = QueuedTaskShort.from_dict(raw)
+        obj = QueuedTaskShort.from_dict(task)
         # then
-        self.assertEqual(obj.id, raw["headers"]["id"])
-        self.assertEqual(obj.name, raw["headers"]["task"])
-        self.assertEqual(obj.priority, raw["properties"]["priority"])
+        self.assertEqual(obj.id, task["headers"]["id"])
+        self.assertEqual(obj.name, task["headers"]["task"])
+        self.assertEqual(obj.priority, task["properties"]["priority"])
+
+    def test_should_create_from_redis_entry(self):
+        # given
+        task = QueuedTaskRawFactory()
+        obj_json = json.dumps(task)
+        obj_encoded = obj_json.encode("utf-8")
+        # when
+        obj = QueuedTaskShort.from_binary_json(obj_encoded)
+        # then
+        self.assertEqual(obj.id, task["headers"]["id"])
+        self.assertEqual(obj.name, task["headers"]["task"])
+        self.assertEqual(obj.priority, task["properties"]["priority"])
 
 
 class TestCacheAPi(TestCase):

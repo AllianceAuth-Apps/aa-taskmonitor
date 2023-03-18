@@ -73,3 +73,51 @@ class TestCeleryQueues(TestCase):
         result = celery_queues.fetch_tasks()
         # then
         self.assertEqual(result[0], QueuedTaskShort.from_dict(tasks[0]))
+
+    def test_should_delete_task_by_id(self, mock_queue_base_name):
+        # given
+        mock_queue_base_name.return_value = CELERY_QUEUE_NAME
+        task_1 = QueuedTaskRawFactory()
+        task_2 = QueuedTaskRawFactory()
+        celery_queues.add_tasks(CELERY_QUEUE_NAME, [task_1, task_2])
+        task_1_dto = QueuedTaskShort.from_dict(task_1)
+        task_2_dto = QueuedTaskShort.from_dict(task_2)
+        # when
+        result = celery_queues.delete_task_by_id(task_1_dto.id)
+        # then
+        self.assertEqual(result, 1)
+        tasks = celery_queues.fetch_tasks()
+        self.assertNotIn(task_1_dto, tasks)
+        self.assertIn(task_2_dto, tasks)
+
+    def test_should_delete_task_by_name(self, mock_queue_base_name):
+        # given
+        mock_queue_base_name.return_value = CELERY_QUEUE_NAME
+        task_1 = QueuedTaskRawFactory()
+        task_2 = QueuedTaskRawFactory()
+        celery_queues.add_tasks(CELERY_QUEUE_NAME, [task_1, task_2])
+        task_1_dto = QueuedTaskShort.from_dict(task_1)
+        task_2_dto = QueuedTaskShort.from_dict(task_2)
+        # when
+        result = celery_queues.delete_task_by_name(task_1_dto.name)
+        # then
+        self.assertEqual(result, 1)
+        tasks = celery_queues.fetch_tasks()
+        self.assertNotIn(task_1_dto, tasks)
+        self.assertIn(task_2_dto, tasks)
+
+    def test_should_delete_task_by_app_name(self, mock_queue_base_name):
+        # given
+        mock_queue_base_name.return_value = CELERY_QUEUE_NAME
+        task_1 = QueuedTaskRawFactory()
+        task_2 = QueuedTaskRawFactory()
+        celery_queues.add_tasks(CELERY_QUEUE_NAME, [task_1, task_2])
+        task_1_dto = QueuedTaskShort.from_dict(task_1)
+        task_2_dto = QueuedTaskShort.from_dict(task_2)
+        # when
+        result = celery_queues.delete_task_by_app_name(task_1_dto.app_name)
+        # then
+        self.assertEqual(result, 1)
+        tasks = celery_queues.fetch_tasks()
+        self.assertNotIn(task_1_dto, tasks)
+        self.assertIn(task_2_dto, tasks)

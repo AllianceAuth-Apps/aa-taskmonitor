@@ -19,7 +19,6 @@ from taskmonitor.app_settings import (
 from taskmonitor.core import cached_reports, celery_queues
 from taskmonitor.helpers import Echo
 from taskmonitor.models import TaskLog
-from taskmonitor.utils import cached_queryset
 
 logger = LoggerAddTag(get_extension_logger(__name__), __title__)
 
@@ -52,22 +51,10 @@ def admin_taskmonitor_download_csv(request) -> StreamingHttpResponse:
 @staff_member_required
 def admin_taskmonitor_reports(request):
     """Show the reports page."""
-    timeout = 60
-    total_runs = cached_queryset(
-        queryset_func=TaskLog.objects.count,
-        key="tasklog-reports-total-runs",
-        timeout=timeout,
-    )
-    oldest_date = cached_queryset(
-        queryset_func=TaskLog.objects.oldest_date,
-        key="tasklog-reports-oldest-data",
-        timeout=timeout,
-    )
-    newest_date = cached_queryset(
-        queryset_func=TaskLog.objects.newest_date,
-        key="tasklog-reports-newest-date",
-        timeout=timeout,
-    )
+    report = cached_reports.report("tasks_basics").data()
+    total_runs = report["total_runs"]
+    oldest_date = report["oldest_date"]
+    newest_date = report["newest_date"]
     context = {
         "title": "Reports",
         "site_header": site_header,

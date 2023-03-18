@@ -42,12 +42,6 @@ class _CachedReport:
     def changelist_url() -> str:
         return reverse("admin:taskmonitor_tasklog_changelist")
 
-    def total_runs(self) -> int:
-        return TaskLog.objects.count()
-
-    def total_runtime(self):
-        return TaskLog.objects.aggregate(total_runtime=Sum("runtime"))["total_runtime"]
-
     @property
     def cache_key(self):
         return f"{CACHE_KEY}_{self.name}"
@@ -61,7 +55,7 @@ class _CachedReport:
     def now(self) -> dt.datetime:
         return timezone.now()
 
-    def data(self, use_cache=True) -> list:
+    def data(self, use_cache=True):
         if use_cache:
             return cache.get_or_set(
                 self.cache_key, self._calc_data, timeout=self.timeout
@@ -145,6 +139,24 @@ class _CachedReport:
         ]
 
 
+class TasksBasics(_CachedReport):
+    """Basic information about tasks used by many other reports."""
+
+    def _calc_data(self):
+        total_runs = TaskLog.objects.count()
+        total_runtime = TaskLog.objects.aggregate(total_runtime=Sum("runtime"))[
+            "total_runtime"
+        ]
+        oldest_date = TaskLog.objects.oldest_date()
+        newest_date = TaskLog.objects.newest_date()
+        return {
+            "total_runs": total_runs,
+            "total_runtime": total_runtime,
+            "oldest_date": oldest_date,
+            "newest_date": newest_date,
+        }
+
+
 class QueueLengthOverTime(_CachedReport):
     is_included = False
 
@@ -181,7 +193,7 @@ class TaskStatistics(_CachedReport):
 
 class TaskRunsByState(_CachedReport):
     def _calc_data(self):
-        if not self.total_runs():
+        if not report("tasks_basics").data()["total_runs"]:
             return None
         return [
             {
@@ -195,7 +207,7 @@ class TaskRunsByState(_CachedReport):
 
 class TaskRunsByApp(_CachedReport):
     def _calc_data(self):
-        if not self.total_runs():
+        if not report("tasks_basics").data()["total_runs"]:
             return None
         data = list(
             TaskLog.objects.values(name=F("app_name"))
@@ -215,7 +227,7 @@ class TaskRunsByApp(_CachedReport):
 
 class TasksTopRuns(_CachedReport):
     def _calc_data(self):
-        if not self.total_runs():
+        if not report("tasks_basics").data()["total_runs"]:
             return None
         return list(
             TaskLog.objects.values(name=F("task_name"))
@@ -227,7 +239,7 @@ class TasksTopRuns(_CachedReport):
 
 class TasksTopMaxRuntime(_CachedReport):
     def _calc_data(self):
-        if not self.total_runtime():
+        if not report("tasks_basics").data()["total_runtime"]:
             return None
         return list(
             TaskLog.objects.values(name=F("task_name"))
@@ -241,7 +253,7 @@ class TasksTopMaxRuntime(_CachedReport):
 
 class TasksTopAvgRuntime(_CachedReport):
     def _calc_data(self):
-        if not self.total_runtime():
+        if not report("tasks_basics").data()["total_runtime"]:
             return None
         return list(
             TaskLog.objects.values(name=F("task_name"))

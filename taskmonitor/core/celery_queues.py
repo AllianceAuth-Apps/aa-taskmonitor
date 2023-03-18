@@ -92,12 +92,44 @@ def _fetch_tasks_from_redis(
     """Fetch tasks from redis."""
     tasks = []
     for obj_encoded in r.lrange(redis_queue_name, 0, -1):
-        obj = json.loads(obj_encoded.decode("utf8"))
         try:
-            tasks.append(QueuedTaskShort.from_dict(obj))
+            tasks.append(QueuedTaskShort.from_binary_json(obj_encoded))
         except ValueError:
             pass
     return reversed(tasks)
+
+
+def delete_task_by_id(task_id: str) -> int:
+    """Delete task from queue by task ID. Returns count of deleted entries."""
+    return _delete_task_by_condition("id", task_id)
+
+
+def delete_task_by_name(task_name: str) -> int:
+    """Delete task from queue by task name. Returns count of deleted entries."""
+    return _delete_task_by_condition("name", task_name)
+
+
+def delete_task_by_app_name(app_name: str) -> int:
+    """Delete task from queue by app name. Returns count of deleted entries."""
+    return _delete_task_by_condition("app_name", app_name)
+
+
+def _delete_task_by_condition(field: str, value) -> int:
+    """Delete task from queue which match the condition.
+    Returns count of deleted entries.
+    """
+    r = _redis_client()
+    deleted_count = 0
+    for queue_name in _redis_queue_names():
+        for obj_encoded in r.lrange(queue_name, 0, -1):
+            try:
+                task = QueuedTaskShort.from_binary_json(obj_encoded)
+            except ValueError:
+                continue
+            if getattr(task, field) == value:
+                r.lrem(queue_name, 1, obj_encoded)
+                deleted_count += 1
+    return deleted_count
 
 
 def clear_tasks(queue_name: str = None):

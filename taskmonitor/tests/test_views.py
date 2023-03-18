@@ -1,8 +1,11 @@
+from unittest.mock import patch
+
 import pytz
 
 from django.core.cache import cache
 from django.test import RequestFactory, TestCase
 from django.urls import reverse
+from django.utils.timezone import now
 
 from app_utils.testdata_factories import UserFactory
 
@@ -10,6 +13,8 @@ from taskmonitor import views
 from taskmonitor.models import TaskLog
 
 from .factories import TaskLogFactory
+
+MODULE_PATH = "taskmonitor.views"
 
 
 def _format_dt(my_dt) -> str:
@@ -77,13 +82,20 @@ class TestCsvViews(TestCase):
             self.assertEqual(values[12], _format_dt(entry.timestamp))
 
 
+@patch(MODULE_PATH + ".cached_reports.report", spec=True)
 class TestAdminUi(TestCase):
     def setUp(self) -> None:
         self.request_factory = RequestFactory()
         cache.clear()
 
-    def test_should_open_reports_view(self):
+    def test_should_open_reports_view(self, mock_report):
         # given
+        mock_report.return_value.data.return_value = {
+            "total_runs": 1,
+            "total_runtime": 1,
+            "oldest_date": now(),
+            "newest_date": now(),
+        }
         TaskLogFactory()
         user = UserFactory(is_staff=True)
         request = self.request_factory.get(

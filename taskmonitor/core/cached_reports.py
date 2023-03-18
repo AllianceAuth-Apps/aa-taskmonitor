@@ -12,7 +12,7 @@ from django.core.cache import cache
 from django.db.models import Avg, Count, F, Max, Sum, Value
 from django.db.models.functions import Concat, TruncMinute
 from django.urls import reverse
-from django.utils import functional, timezone
+from django.utils import timezone
 
 from ..app_settings import (
     TASKMONITOR_HOUSEKEEPING_FREQUENCY,
@@ -38,24 +38,9 @@ class _CachedReport:
     def _to_snake_case(name: str) -> str:
         return re.sub(r"(?<!^)(?=[A-Z])", "_", name).lower()
 
-    @functional.cached_property
-    def changelist_url(self) -> str:
+    @staticmethod
+    def changelist_url() -> str:
         return reverse("admin:taskmonitor_tasklog_changelist")
-
-    @functional.cached_property
-    def total_runs(self) -> int:
-        return TaskLog.objects.count()
-
-    @functional.cached_property
-    def total_runtime(self):
-        return TaskLog.objects.aggregate(total_runtime=Sum("runtime"))["total_runtime"]
-
-    @property
-    def total_runtime_date(self):
-        try:
-            return self.now - dt.timedelta(seconds=self.total_runtime)
-        except TypeError:
-            return None
 
     @property
     def cache_key(self):
@@ -70,7 +55,7 @@ class _CachedReport:
     def now(self) -> dt.datetime:
         return timezone.now()
 
-    def data(self, use_cache=True) -> list:
+    def data(self, use_cache=True):
         if use_cache:
             return cache.get_or_set(
                 self.cache_key, self._calc_data, timeout=self.timeout
@@ -154,6 +139,24 @@ class _CachedReport:
         ]
 
 
+class TasksBasics(_CachedReport):
+    """Basic information about tasks used by many other reports."""
+
+    def _calc_data(self):
+        total_runs = TaskLog.objects.count()
+        total_runtime = TaskLog.objects.aggregate(total_runtime=Sum("runtime"))[
+            "total_runtime"
+        ]
+        oldest_date = TaskLog.objects.oldest_date()
+        newest_date = TaskLog.objects.newest_date()
+        return {
+            "total_runs": total_runs,
+            "total_runtime": total_runtime,
+            "oldest_date": oldest_date,
+            "newest_date": newest_date,
+        }
+
+
 class QueueLengthOverTime(_CachedReport):
     is_included = False
 
@@ -190,7 +193,7 @@ class TaskStatistics(_CachedReport):
 
 class TaskRunsByState(_CachedReport):
     def _calc_data(self):
-        if not self.total_runs:
+        if not report("tasks_basics").data()["total_runs"]:
             return None
         return [
             {
@@ -204,7 +207,7 @@ class TaskRunsByState(_CachedReport):
 
 class TaskRunsByApp(_CachedReport):
     def _calc_data(self):
-        if not self.total_runs:
+        if not report("tasks_basics").data()["total_runs"]:
             return None
         data = list(
             TaskLog.objects.values(name=F("app_name"))
@@ -224,7 +227,7 @@ class TaskRunsByApp(_CachedReport):
 
 class TasksTopRuns(_CachedReport):
     def _calc_data(self):
-        if not self.total_runs:
+        if not report("tasks_basics").data()["total_runs"]:
             return None
         return list(
             TaskLog.objects.values(name=F("task_name"))
@@ -236,7 +239,7 @@ class TasksTopRuns(_CachedReport):
 
 class TasksTopMaxRuntime(_CachedReport):
     def _calc_data(self):
-        if not self.total_runtime:
+        if not report("tasks_basics").data()["total_runtime"]:
             return None
         return list(
             TaskLog.objects.values(name=F("task_name"))
@@ -250,7 +253,7 @@ class TasksTopMaxRuntime(_CachedReport):
 
 class TasksTopAvgRuntime(_CachedReport):
     def _calc_data(self):
-        if not self.total_runtime:
+        if not report("tasks_basics").data()["total_runtime"]:
             return None
         return list(
             TaskLog.objects.values(name=F("task_name"))
@@ -338,8 +341,11 @@ class TasksThroughputByApp(_CachedReport):
     is_included = False
 
     def _calc_data(self):
+        apps = report("task_runs_by_app").data()
+        if not apps:
+            return []
         series = []
-        app_names = [app["name"] for app in report("task_runs_by_app").data()]
+        app_names = [app["name"] for app in apps]
         real_app_name = {name for name in app_names if name != APP_NAME_OTHERS}
         for app_name in app_names:
             if app_name in real_app_name:

@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased] - yyyy-mm-dd
 
+## [0.15.0] - 2023-03-18
+
+### Added
+
+- cli tool: Can purge selected tasks from queue, by task name, task id or app name
+- cli tool: "inspect queue" now also shows grouped task counts in addition to the grouped app counts
+- cli too: Can now also purge task logs
+
+### Changed
+
+- Improved page load times for reports page
+
+### Fixed
+
+- Breaks on undefined args/kwargs for internal errors
+- Report counts might have been slightly off
+
 ## [0.14.0] - 2023-03-14
 
 ### Added

@@ -164,3 +164,15 @@ class TestTruncateMinute(TestCase):
         # then
         expected = [(1672574400000, 13), (1672574700000, 3)]
         self.assertListEqual(result, expected)
+
+
+@patch(MODULE_PATH + ".report")
+class TestTasksThroughputByApp(TestCase):
+    def test_should_calc_with_no_data(self, mock_report):
+        # given
+        mock_report.return_value.data.return_value = None
+        obj = cached_reports.TasksThroughputByApp()
+        # when
+        result = obj._calc_data()
+        # then
+        self.assertListEqual(result, [])

@@ -1,6 +1,7 @@
 """API for caching queued tasks."""
 
 import datetime as dt
+import json
 from dataclasses import dataclass
 from typing import List, NamedTuple, Optional
 
@@ -32,6 +33,12 @@ class QueuedTaskShort(NamedTuple):
             name=task_name,
             priority=properties.get("priority"),
         )
+
+    @classmethod
+    def from_binary_json(cls, obj_encoded: bytes) -> "QueuedTaskShort":
+        """Create new object from a binary task object retrieved from Redis."""
+        obj = json.loads(obj_encoded.decode("utf8"))
+        return cls.from_dict(obj)
 
 
 class QueuedTaskCacheEntry(NamedTuple):

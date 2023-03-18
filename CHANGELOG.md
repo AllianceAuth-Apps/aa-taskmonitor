@@ -7,11 +7,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased] - yyyy-mm-dd
 
+## [0.15.0] - 2023-03-18
+
 ### Added
 
-- Task grouped counts added to "inspect queue" in cli tool
-- Can purge selected tasks from queue with the cli tool, by task name, task id or app name
-- Can purge task logs with cli tool
+- cli tool: Can purge selected tasks from queue, by task name, task id or app name
+- cli tool: "inspect queue" now also shows grouped task counts in addition to the grouped app counts
+- cli too: Can now also purge task logs
 
 ### Fixed
 

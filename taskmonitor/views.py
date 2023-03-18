@@ -9,14 +9,17 @@ from django.shortcuts import redirect, render
 
 from allianceauth import NAME as site_header
 from allianceauth.services.hooks import get_extension_logger
-from app_utils.caching import cached_queryset
 from app_utils.logging import LoggerAddTag
 
-from . import __title__, tasks
-from .app_settings import TASKMONITOR_DATA_MAX_AGE, TASKMONITOR_REPORTS_MAX_TOP
-from .core import cached_reports, celery_queues
-from .helpers import Echo
-from .models import TaskLog
+from taskmonitor import __title__, tasks
+from taskmonitor.app_settings import (
+    TASKMONITOR_DATA_MAX_AGE,
+    TASKMONITOR_REPORTS_MAX_TOP,
+)
+from taskmonitor.core import cached_reports, celery_queues
+from taskmonitor.helpers import Echo
+from taskmonitor.models import TaskLog
+from taskmonitor.utils import cached_queryset
 
 logger = LoggerAddTag(get_extension_logger(__name__), __title__)
 
@@ -51,17 +54,17 @@ def admin_taskmonitor_reports(request):
     """Show the reports page."""
     timeout = 60
     total_runs = cached_queryset(
-        queryset=TaskLog.objects.count(),
+        queryset_func=TaskLog.objects.count,
         key="tasklog-reports-total-runs",
         timeout=timeout,
     )
     oldest_date = cached_queryset(
-        queryset=TaskLog.objects.oldest_date(),
+        queryset_func=TaskLog.objects.oldest_date,
         key="tasklog-reports-oldest-data",
         timeout=timeout,
     )
     newest_date = cached_queryset(
-        queryset=TaskLog.objects.newest_date(),
+        queryset_func=TaskLog.objects.newest_date,
         key="tasklog-reports-newest-date",
         timeout=timeout,
     )

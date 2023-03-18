@@ -12,7 +12,7 @@ from django.core.cache import cache
 from django.db.models import Avg, Count, F, Max, Sum, Value
 from django.db.models.functions import Concat, TruncMinute
 from django.urls import reverse
-from django.utils import functional, timezone
+from django.utils import timezone
 
 from ..app_settings import (
     TASKMONITOR_HOUSEKEEPING_FREQUENCY,
@@ -38,24 +38,15 @@ class _CachedReport:
     def _to_snake_case(name: str) -> str:
         return re.sub(r"(?<!^)(?=[A-Z])", "_", name).lower()
 
-    @functional.cached_property
-    def changelist_url(self) -> str:
+    @staticmethod
+    def changelist_url() -> str:
         return reverse("admin:taskmonitor_tasklog_changelist")
 
-    @functional.cached_property
     def total_runs(self) -> int:
         return TaskLog.objects.count()
 
-    @functional.cached_property
     def total_runtime(self):
         return TaskLog.objects.aggregate(total_runtime=Sum("runtime"))["total_runtime"]
-
-    @property
-    def total_runtime_date(self):
-        try:
-            return self.now - dt.timedelta(seconds=self.total_runtime)
-        except TypeError:
-            return None
 
     @property
     def cache_key(self):
@@ -190,7 +181,7 @@ class TaskStatistics(_CachedReport):
 
 class TaskRunsByState(_CachedReport):
     def _calc_data(self):
-        if not self.total_runs:
+        if not self.total_runs():
             return None
         return [
             {
@@ -204,7 +195,7 @@ class TaskRunsByState(_CachedReport):
 
 class TaskRunsByApp(_CachedReport):
     def _calc_data(self):
-        if not self.total_runs:
+        if not self.total_runs():
             return None
         data = list(
             TaskLog.objects.values(name=F("app_name"))
@@ -224,7 +215,7 @@ class TaskRunsByApp(_CachedReport):
 
 class TasksTopRuns(_CachedReport):
     def _calc_data(self):
-        if not self.total_runs:
+        if not self.total_runs():
             return None
         return list(
             TaskLog.objects.values(name=F("task_name"))
@@ -236,7 +227,7 @@ class TasksTopRuns(_CachedReport):
 
 class TasksTopMaxRuntime(_CachedReport):
     def _calc_data(self):
-        if not self.total_runtime:
+        if not self.total_runtime():
             return None
         return list(
             TaskLog.objects.values(name=F("task_name"))
@@ -250,7 +241,7 @@ class TasksTopMaxRuntime(_CachedReport):
 
 class TasksTopAvgRuntime(_CachedReport):
     def _calc_data(self):
-        if not self.total_runtime:
+        if not self.total_runtime():
             return None
         return list(
             TaskLog.objects.values(name=F("task_name"))

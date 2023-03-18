@@ -93,8 +93,8 @@ class TestCeleryQueues(TestCase):
     def test_should_delete_task_by_name(self, mock_queue_base_name):
         # given
         mock_queue_base_name.return_value = CELERY_QUEUE_NAME
-        task_1 = QueuedTaskRawFactory()
-        task_2 = QueuedTaskRawFactory()
+        task_1 = QueuedTaskRawFactory(headers__task="alpha.tasks.blue")
+        task_2 = QueuedTaskRawFactory(headers__task="alpha.tasks.yellow")
         celery_queues.add_tasks(CELERY_QUEUE_NAME, [task_1, task_2])
         task_1_dto = QueuedTaskShort.from_dict(task_1)
         task_2_dto = QueuedTaskShort.from_dict(task_2)
@@ -109,8 +109,8 @@ class TestCeleryQueues(TestCase):
     def test_should_delete_task_by_app_name(self, mock_queue_base_name):
         # given
         mock_queue_base_name.return_value = CELERY_QUEUE_NAME
-        task_1 = QueuedTaskRawFactory()
-        task_2 = QueuedTaskRawFactory()
+        task_1 = QueuedTaskRawFactory(headers__task="alpha.tasks.blue")
+        task_2 = QueuedTaskRawFactory(headers__task="bravo.tasks.yellow")
         celery_queues.add_tasks(CELERY_QUEUE_NAME, [task_1, task_2])
         task_1_dto = QueuedTaskShort.from_dict(task_1)
         task_2_dto = QueuedTaskShort.from_dict(task_2)

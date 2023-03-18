@@ -110,6 +110,21 @@ class TestCommands(TestCase):
         self.assertTrue(mock_celery_queues.delete_task_by_name.called)
 
     @patch(MODULE_PATH + ".celery_queues", spec=True)
+    def test_should_purge_by_task_id(self, mock_celery_queues):
+        # given
+        mock_celery_queues.queue_length.return_value = 1
+        mock_celery_queues.delete_task_by_id.return_value = 1
+        out = StringIO()
+        # when
+        with patch(MODULE_PATH + ".Command._user_confirmed", spec=True) as m:
+            m.return_value = None
+            call_command(
+                "taskmonitorctl", "purge", "queue", "--task-id", "my-id", stdout=out
+            )
+        # then
+        self.assertTrue(mock_celery_queues.delete_task_by_id.called)
+
+    @patch(MODULE_PATH + ".celery_queues", spec=True)
     def test_should_purge_by_app_name(self, mock_celery_queues):
         # given
         mock_celery_queues.queue_length.return_value = 1

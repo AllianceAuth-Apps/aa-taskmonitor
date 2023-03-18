@@ -71,16 +71,20 @@ class Command(BaseCommand):
             choices=[Target.QUEUE.value, Target.LOGS.value],
             help="target to purge",
         )
-        group = parser_purge.add_mutually_exclusive_group(required=True)
-        group.add_argument(
-            "--task-name", help="Limit purge to tasks with a specific name"
+        purge_group = parser_purge.add_mutually_exclusive_group(required=True)
+        purge_group.add_argument(
+            "--all", action="store_true", help="You want to purge everything"
         )
-        group.add_argument(
+        purge_group.add_argument(
             "--app-name", help="Limit purge to tasks from an specific app"
         )
-        group.add_argument(
-            "--all", action="store_true", help="You want to purge everything."
+        purge_group.add_argument(
+            "--task-id", help="Limit purge to tasks with a specific ID"
         )
+        purge_group.add_argument(
+            "--task-name", help="Limit purge to tasks with a specific name"
+        )
+
         # inspect command
         parser_inspect = subparsers.add_parser(
             UserCommand.INSPECT.value,
@@ -107,6 +111,9 @@ class Command(BaseCommand):
             self.stdout.write(self.style.WARNING("Aborted by user request."))
             exit(1)
 
+    def _clear_line(self):
+        self.stdout.write("" * 70, ending="\r")
+
     def purge_queue(self, options):
         num_entries = celery_queues.queue_length()
         if not num_entries:
@@ -120,23 +127,31 @@ class Command(BaseCommand):
             )
             self.stdout.write("Purged tasks from queue...", ending="\r")
             deleted_entries = celery_queues.delete_task_by_name(task_name)
-            self.stdout.write("" * 70, ending="\r")
+            self._clear_line()
+        elif options["task_id"]:
+            task_id = options["task_id"]
+            self._user_confirmed(
+                f"Are you sure you purge all tasks with the TASK ID {task_id} from the queue?"
+            )
+            self.stdout.write("Purged tasks from queue...", ending="\r")
+            deleted_entries = celery_queues.delete_task_by_id(task_id)
+            self._clear_line()
         elif options["app_name"]:
             app_name = options["app_name"]
             self._user_confirmed(
-                f"Are you sure you purge all tasks by the APP {app_name} from the queue?"
+                f"Are you sure you purge all tasks belonging to the app {app_name} from the queue?"
             )
             self.stdout.write("Purged tasks from queue...", ending="\r")
             deleted_entries = celery_queues.delete_task_by_app_name(app_name)
-            self.stdout.write("" * 70, ending="\r")
+            self._clear_line()
         elif options["all"]:
             self._user_confirmed("Are you sure you purge ALL TASKS from the queue?")
             self.stdout.write("Purged tasks from queue...", ending="\r")
             celery_queues.clear_tasks()
             deleted_entries = num_entries
-            self.stdout.write("" * 70, ending="\r")
+            self._clear_line()
         else:
-            raise RuntimeError("This should not happen")
+            raise NotImplementedError("This option is not yet implemented")
         self.stdout.write(f"Purged {deleted_entries:,} tasks from queue...")
         self.stdout.write(self.style.SUCCESS("Done."))
 
@@ -189,7 +204,7 @@ class Command(BaseCommand):
                 "The queue is very large. Do you still want to gather statistics?"
             )
         self.stdout.write("Fetching data from queue...", ending="\r")
-        self.stdout.write("" * 70, ending="\r")
+        self._clear_line()
         tasks = [
             (task.app_name, task.name)
             for task in celery_queues._fetch_task_from_all_queues()

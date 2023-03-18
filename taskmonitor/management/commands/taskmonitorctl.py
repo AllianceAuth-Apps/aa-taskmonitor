@@ -34,6 +34,11 @@ class Target(str, Enum):
     SETTINGS = "settings"
 
 
+def my_input(*args, **kwargs) -> str:
+    """Input helper to support unit tests."""
+    return input(*args, **kwargs)
+
+
 class Command(BaseCommand):
     help = f"Command utility for {__title__}."
 
@@ -96,25 +101,18 @@ class Command(BaseCommand):
         """Ask user about confirmation and exit
         when he does not reply in the affirmative.
         """
-        user_input = input(f"{question_text} (y/N)?")
+        user_input = my_input(f"{question_text} (y/N)?")
         if user_input.lower() != "y":
             self.stdout.write(self.style.WARNING("Aborted by user request."))
             exit(1)
 
-    def purge_queue(self, **options):
+    def purge_queue(self, options):
+        self._ensure_single_flag(options)
         num_entries = celery_queues.queue_length()
         if not num_entries:
             self.stdout.write(self.style.WARNING("Queue is empty. Aborted."))
             exit(1)
         self.stdout.write(f"Current queue size: {num_entries:,}")
-        found_flags = sum(
-            [1 for key in ["task_name", "app_name", "all"] if bool(options[key])]
-        )
-        if found_flags != 1:
-            raise CommandError(
-                "Please specify exactly one option about what to purge. "
-                "For more info see 'purge --help'."
-            )
         if options["task_name"]:
             task_name = options["task_name"]
             self._user_confirmed(
@@ -142,7 +140,19 @@ class Command(BaseCommand):
         self.stdout.write(f"Purged {deleted_entries:,} tasks from queue...")
         self.stdout.write(self.style.SUCCESS("Done."))
 
-    def purge_logs(self, **options):
+    @staticmethod
+    def _ensure_single_flag(options: dict):
+        """Ensure only one purge flag provided in options."""
+        found_flags = sum(
+            [1 for key in ["task_name", "app_name", "all"] if bool(options[key])]
+        )
+        if found_flags != 1:
+            raise CommandError(
+                "Please specify exactly one option about what to purge. "
+                "For more info see 'purge --help'."
+            )
+
+    def purge_logs(self, options):
         all_logs = TaskLog.objects.all()
         self.stdout.write("Calculating...", ending="\r")
         num_logs = all_logs.count()
@@ -159,7 +169,7 @@ class Command(BaseCommand):
         cached_reports.refresh_cache()
         self.stdout.write(self.style.SUCCESS("Done."))
 
-    def inspect_logs(self, **options):
+    def inspect_logs(self, options):
         log_count = TaskLog.objects.count()
         try:
             db_table_size = TaskLog.objects.db_table_size()
@@ -180,7 +190,7 @@ class Command(BaseCommand):
         for label, value in output.items():
             self.stdout.write(f"{label:{max_length + 1}}: {value}")
 
-    def inspect_queue(self, **options):
+    def inspect_queue(self, options):
         num_entries = celery_queues.queue_length()
         if not num_entries:
             self.stdout.write("Queue is empty.")
@@ -216,7 +226,7 @@ class Command(BaseCommand):
         for app_name, count in field_counts_sorted.items():
             self.stdout.write(f"  {app_name:{max_length}}: {count:,}")
 
-    def inspect_settings(self, **options):
+    def inspect_settings(self, options):
         settings = sorted(
             [o for o in dir(app_settings) if not o.startswith("__") and o == o.upper()]
         )
@@ -231,6 +241,6 @@ class Command(BaseCommand):
 
         method = f"{command}_{target}"
         try:
-            getattr(self, method)(**options)
+            getattr(self, method)(options)
         except AttributeError:
             raise NotImplementedError(method) from None

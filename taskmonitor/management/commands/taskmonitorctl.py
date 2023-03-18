@@ -35,7 +35,7 @@ class Target(str, Enum):
 
 
 def my_input(*args, **kwargs) -> str:
-    """Input helper to support unit tests."""
+    """Helper to enable mocking of input for unit tests."""
     return input(*args, **kwargs)
 
 
@@ -61,7 +61,7 @@ class Command(BaseCommand):
             title="commands",
             help="available commands",
         )
-
+        # purge command
         parser_purge = subparsers.add_parser(
             UserCommand.PURGE.value, help="Purge a target"
         )
@@ -71,16 +71,17 @@ class Command(BaseCommand):
             choices=[Target.QUEUE.value, Target.LOGS.value],
             help="target to purge",
         )
-        parser_purge.add_argument(
+        group = parser_purge.add_mutually_exclusive_group(required=True)
+        group.add_argument(
             "--task-name", help="Limit purge to tasks with a specific name"
         )
-        parser_purge.add_argument(
+        group.add_argument(
             "--app-name", help="Limit purge to tasks from an specific app"
         )
-        parser_purge.add_argument(
+        group.add_argument(
             "--all", action="store_true", help="You want to purge everything."
         )
-
+        # inspect command
         parser_inspect = subparsers.add_parser(
             UserCommand.INSPECT.value,
             help="Inspect a target, e.g. show information about it.",
@@ -107,7 +108,6 @@ class Command(BaseCommand):
             exit(1)
 
     def purge_queue(self, options):
-        self._ensure_single_flag(options)
         num_entries = celery_queues.queue_length()
         if not num_entries:
             self.stdout.write(self.style.WARNING("Queue is empty. Aborted."))
@@ -139,18 +139,6 @@ class Command(BaseCommand):
             raise RuntimeError("This should not happen")
         self.stdout.write(f"Purged {deleted_entries:,} tasks from queue...")
         self.stdout.write(self.style.SUCCESS("Done."))
-
-    @staticmethod
-    def _ensure_single_flag(options: dict):
-        """Ensure only one purge flag provided in options."""
-        found_flags = sum(
-            [1 for key in ["task_name", "app_name", "all"] if bool(options[key])]
-        )
-        if found_flags != 1:
-            raise CommandError(
-                "Please specify exactly one option about what to purge. "
-                "For more info see 'purge --help'."
-            )
 
     def purge_logs(self, options):
         all_logs = TaskLog.objects.all()

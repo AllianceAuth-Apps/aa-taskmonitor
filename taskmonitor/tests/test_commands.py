@@ -1,7 +1,7 @@
 from io import StringIO
 from unittest.mock import patch
 
-from django.core.management import CommandError, call_command
+from django.core.management import call_command
 from django.test import TestCase
 
 from taskmonitor.core.celery_queues import QueuedTaskShort
@@ -70,21 +70,6 @@ class TestCommands(TestCase):
         out = StringIO()
         # when
         call_command("taskmonitorctl", "inspect", "settings", stdout=out)
-
-    def test_should_accept_single_purge_flag(self):
-        # given
-        out = StringIO()
-        cmd = taskmonitorctl.Command(out, out)
-        # when/then
-        cmd._ensure_single_flag({"all": True, "app_name": None, "task_name": None})
-
-    def test_should_about_when_more_then_one_purge_flag(self):
-        # given
-        out = StringIO()
-        cmd = taskmonitorctl.Command(out, out)
-        # when/then
-        with self.assertRaises(CommandError):
-            cmd._ensure_single_flag({"all": True, "app_name": "abc", "task_name": None})
 
     @patch(MODULE_PATH + ".celery_queues", spec=True)
     def test_should_purge_empty_queue(self, mock_celery_queues):

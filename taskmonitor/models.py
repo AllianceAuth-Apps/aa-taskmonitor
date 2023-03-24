@@ -149,6 +149,11 @@ class TaskLog(models.Model):
             self.runtime = (self.timestamp - self.started).total_seconds()
         super().save(*args, **kwargs)
 
+    @property
+    def timestamp_formatted(self) -> str:
+        """Timestamp as string in default format."""
+        return self.timestamp.strftime("%Y-%m-%d %H:%M:%S,%f")[:-3]
+
     def asdict(self) -> dict:
         """Convert to representation as Python dict."""
         struct = {}

@@ -114,7 +114,7 @@ class TaskLogAdmin(admin.ModelAdmin):
         css = {"all": ("taskmonitor/css/admin.css",)}
 
     list_display = (
-        "timestamp",
+        "_timestamp",
         "task_name",
         "_params",
         "priority",
@@ -188,12 +188,16 @@ class TaskLogAdmin(admin.ModelAdmin):
             )
         return None
 
+    @admin.display(description="Exception")
+    def _exception(self, obj) -> str:
+        return html.format_html("<code>{}</code>", obj.exception)
+
     @admin.display(ordering="runtime")
     def _runtime(self, obj) -> Optional[str]:
         return f"{obj.runtime:.1f}" if obj.runtime else None
 
     @admin.display(ordering="state")
-    def _state(self, obj) -> str:
+    def _state(self, obj: TaskLog) -> str:
         css_class_map = {
             TaskLog.State.RETRY: "state-retry",
             TaskLog.State.FAILURE: "text-danger",
@@ -203,9 +207,9 @@ class TaskLogAdmin(admin.ModelAdmin):
             '<span class="{}">{}</span>', css_class, obj.get_state_display()
         )
 
-    @admin.display(description="Exception")
-    def _exception(self, obj) -> str:
-        return html.format_html("<code>{}</code>", obj.exception)
+    @admin.display(ordering="timestamp")
+    def _timestamp(self, obj: TaskLog) -> str:
+        return obj.timestamp_formatted
 
     @admin.action(description="Delete selected entries (NO CONFIRMATION!")
     def delete_selected_2(self, request, queryset):

@@ -127,7 +127,7 @@ class TaskLogAdmin(admin.ModelAdmin):
         "timestamp",
         TaskLogAppsListFilter,
         "priority",
-        TaskLogTasksListFilter,
+        # TaskLogTasksListFilter,
     )
     search_fields = ("task_name", "app_name", "task_id")
     actions = ["delete_selected_2"]

@@ -16,7 +16,7 @@ MODULE_PATH = "taskmonitor.core.cached_reports"
 
 
 @patch(MODULE_PATH + ".cache")
-class TestCachedReports2(TestCase):
+class TestCachedReports(TestCase):
     class DummyReport(cached_reports._CachedReport):
         def _calc_data(self):
             return "not cached"
@@ -26,6 +26,7 @@ class TestCachedReports2(TestCase):
         obj = self.DummyReport()
         # then
         self.assertEqual(obj.name, "dummy_report")
+        self.assertIn("tasklog", obj.changelist_url())
 
     def test_should_return_data_from_cache(self, mock_cache):
         # given

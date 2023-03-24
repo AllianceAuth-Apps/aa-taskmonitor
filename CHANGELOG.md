@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased] - yyyy-mm-dd
 
+## [0.15.1] - 2023-03-24
+
+### Changed
+
+- Reenabled "Reports" button on tasklogs admin page
+- Timestamps now shown with more precision
+
+### Fixed
+
+- Links in reports charts are broken
+
 ## [0.15.0] - 2023-03-18
 
 ### Added

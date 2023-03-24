@@ -34,14 +34,6 @@ class _CachedReport:
     def __init__(self) -> None:
         self.name = self._to_snake_case(self.__class__.__name__)
 
-    @staticmethod
-    def _to_snake_case(name: str) -> str:
-        return re.sub(r"(?<!^)(?=[A-Z])", "_", name).lower()
-
-    @staticmethod
-    def changelist_url() -> str:
-        return reverse("admin:taskmonitor_tasklog_changelist")
-
     @property
     def cache_key(self):
         return f"{CACHE_KEY}_{self.name}"
@@ -54,6 +46,10 @@ class _CachedReport:
     @property
     def now(self) -> dt.datetime:
         return timezone.now()
+
+    @staticmethod
+    def changelist_url() -> str:
+        return reverse("admin:taskmonitor_tasklog_changelist")
 
     def data(self, use_cache=True):
         if use_cache:
@@ -130,6 +126,10 @@ class _CachedReport:
         ]
         return data
 
+    @staticmethod
+    def _to_snake_case(name: str) -> str:
+        return re.sub(r"(?<!^)(?=[A-Z])", "_", name).lower()
+
     @classmethod
     def report_classes(cls):
         return [
@@ -199,7 +199,7 @@ class TaskRunsByState(_CachedReport):
             {
                 "name": state.label,
                 "y": TaskLog.objects.filter(state=state.value).count(),
-                "url": f"{self.changelist_url}?state__exact={state}",
+                "url": f"{self.changelist_url()}?state__exact={state}",
             }
             for state in TaskLog.State
         ]
@@ -212,7 +212,9 @@ class TaskRunsByApp(_CachedReport):
         data = list(
             TaskLog.objects.values(name=F("app_name"))
             .annotate(y=Count("pk"))
-            .annotate(url=Concat(Value(f"{self.changelist_url}?app_name="), F("name")))
+            .annotate(
+                url=Concat(Value(f"{self.changelist_url()}?app_name="), F("name"))
+            )
             .order_by("-y")
         )
         if len(data) > MAX_APPS_COUNT:
@@ -232,7 +234,9 @@ class TasksTopRuns(_CachedReport):
         return list(
             TaskLog.objects.values(name=F("task_name"))
             .annotate(y=Count("pk"))
-            .annotate(url=Concat(Value(f"{self.changelist_url}?task_name="), F("name")))
+            .annotate(
+                url=Concat(Value(f"{self.changelist_url()}?task_name="), F("name"))
+            )
             .order_by("-y")[:TASKMONITOR_REPORTS_MAX_TOP]
         )
 
@@ -245,7 +249,7 @@ class TasksTopMaxRuntime(_CachedReport):
             TaskLog.objects.values(name=F("task_name"))
             .annotate(y=Max("runtime"))
             .annotate(
-                url=Concat(Value(f"{self.changelist_url}?o=5&task_name="), F("name"))
+                url=Concat(Value(f"{self.changelist_url()}?o=5&task_name="), F("name"))
             )
             .order_by("-y")[:TASKMONITOR_REPORTS_MAX_TOP]
         )
@@ -259,7 +263,7 @@ class TasksTopAvgRuntime(_CachedReport):
             TaskLog.objects.values(name=F("task_name"))
             .annotate(y=Avg("runtime"))
             .annotate(
-                url=Concat(Value(f"{self.changelist_url}?o=5&task_name="), F("name"))
+                url=Concat(Value(f"{self.changelist_url()}?o=5&task_name="), F("name"))
             )
             .order_by("-y")[:TASKMONITOR_REPORTS_MAX_TOP]
         )
@@ -276,7 +280,8 @@ class TasksTopFailed(_CachedReport):
             .annotate(y=Count("pk"))
             .annotate(
                 url=Concat(
-                    Value(f"{self.changelist_url}?state__exact=3&task_name="), F("name")
+                    Value(f"{self.changelist_url()}?state__exact=3&task_name="),
+                    F("name"),
                 )
             )
             .order_by("-y")[:TASKMONITOR_REPORTS_MAX_TOP]
@@ -294,7 +299,8 @@ class TasksTopRetried(_CachedReport):
             .annotate(y=Count("pk"))
             .annotate(
                 url=Concat(
-                    Value(f"{self.changelist_url}?state__exact=2&task_name="), F("name")
+                    Value(f"{self.changelist_url()}?state__exact=2&task_name="),
+                    F("name"),
                 )
             )
             .order_by("-y")[:TASKMONITOR_REPORTS_MAX_TOP]

@@ -36,6 +36,11 @@ urlpatterns = [
         name="admin_taskmonitor_report_html",
     ),
     path(
+        "admin_taskmonitor_report_debug/<str:report_name>",
+        views.admin_taskmonitor_report_debug,
+        name="admin_taskmonitor_report_debug",
+    ),
+    path(
         "admin_queued_task_purge",
         views.admin_queued_task_purge,
         name="admin_queued_task_purge",

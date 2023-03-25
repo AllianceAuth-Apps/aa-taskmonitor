@@ -57,6 +57,7 @@
                     <li><a class="tabLinks" href="#top-tasks-by-runs">Top tasks by runs</a></li>
                     <li><a class="tabLinks" href="#top-tasks-by-max-runtime">Top tasks by max runtime</a></li>
                     <li><a class="tabLinks" href="#top-tasks-by-avg-runtime">Top tasks by avg runtime</a></li>
+                    <li><a class="tabLinks" href="#top-tasks-by-cum-runtime">Top tasks by total runtime</a></li>
                     <li><a class="tabLinks" href="#top-failed-tasks">Top tasks by failed runs</a></li>
                     <li><a class="tabLinks" href="#top-retried-tasks">Top tasks by retried runs</a></li>
                 </ul>
@@ -105,6 +106,11 @@
                 <div id="top-tasks-by-avg-runtime" class="tabContent">
                     <h2>Top {{ MAX_TOP }} tasks by average instance runtime in seconds</h2>
                     {% include "admin/taskmonitor/report/chart_bar_partial.html" with report_name="tasks_top_avg_runtime" %}
+                </div>
+
+                <div id="top-tasks-by-cum-runtime" class="tabContent">
+                    <h2>Top {{ MAX_TOP }} tasks by cummulative runtime in seconds</h2>
+                    {% include "admin/taskmonitor/report/chart_bar_partial.html" with report_name="tasks_top_cum_runtime" %}
                 </div>
 
                 <div id="top-failed-tasks" class="tabContent">

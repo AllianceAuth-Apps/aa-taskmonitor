@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased] - yyyy-mm-dd
 
+## [0.16.0] - 2023-03-25
+
+### Added
+
+- New report: Top tasks by cumulative runtime
+
 ### Fixed
 
 - Breaks when creating TaskLog and args or kwargs is None

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased] - yyyy-mm-dd
 
+### Fixed
+
+- TypeError in task failure handler caused by missing delivery info
+
 ## [0.15.1] - 2023-03-24
 
 ### Changed

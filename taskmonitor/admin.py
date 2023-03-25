@@ -174,7 +174,7 @@ class TaskLogAdmin(admin.ModelAdmin):
         return self.readonly_fields
 
     def _params(self, obj):
-        if obj.args and not obj.args:
+        if obj.args and not obj.kwargs:
             return html.format_html("<code>{}</code>", json.dumps(obj.args))
         if not obj.args and obj.kwargs:
             return html.format_html(

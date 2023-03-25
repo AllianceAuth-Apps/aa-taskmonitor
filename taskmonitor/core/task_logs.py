@@ -84,12 +84,15 @@ def task_failure_handler_2(sender, task_id, exception):
     """Handle task failure signal."""
     if sender and task_id:
         request = sender.request
+        priority = (
+            request.delivery_info.get("priority") if request.delivery_info else None
+        )
         TaskLog.objects.create_from_task(
             task_id=task_id,
             task_name=sender.name,
             state=TaskLog.State.FAILURE,
             retries=request.retries,
-            priority=request.delivery_info["priority"],
+            priority=priority,
             parent_id=request.parent_id,
             received=task_records.fetch(task_id, TASK_RECEIVED),
             started=task_records.fetch(task_id, TASK_STARTED),
@@ -104,12 +107,20 @@ def task_failure_handler_2(sender, task_id, exception):
 def task_internal_error_handler_2(sender, task_id, request, exception):
     """Handle task internal error signal."""
     if task_id and request:
+        try:
+            priority = (
+                request["delivery_info"].get("priority")
+                if request["delivery_info"]
+                else None
+            )
+        except KeyError:
+            priority = None
         TaskLog.objects.create_from_task(
             task_id=task_id,
             task_name=sender.name if sender else "?",
             state=TaskLog.State.FAILURE,
             retries=request["retries"],
-            priority=request["delivery_info"].get("priority"),
+            priority=priority,
             parent_id=request.get("parent_id"),
             received=task_records.fetch(task_id, TASK_RECEIVED),
             started=task_records.fetch(task_id, TASK_STARTED),

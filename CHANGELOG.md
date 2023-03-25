@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased] - yyyy-mm-dd
 
+## [0.15.2] - 2023-03-25
+
+### Fixed
+
+- TypeError in task failure handler caused by missing delivery info
+- Solo args not shown in params column of task logs list
+
 ## [0.15.1] - 2023-03-24
 
 ### Changed

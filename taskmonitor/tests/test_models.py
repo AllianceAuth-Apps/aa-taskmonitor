@@ -235,6 +235,52 @@ class TestManagerCreateFromTask(TestCase):
         # then
         self.assertListEqual(obj.result, [1, [1, 2], 3])
 
+    def test_should_handle_args_is_none(self):
+        # given
+        expected = TaskLogFactory.build(
+            state=TaskLog.State.FAILURE, exception="", traceback="", args=[]
+        )
+        # when
+        with patch("django.utils.timezone.now") as mock_now:
+            mock_now.return_value = expected.timestamp
+            result = TaskLog.objects.create_from_task(
+                task_id=str(expected.task_id),
+                task_name=expected.task_name,
+                state=expected.state,
+                priority=expected.priority,
+                retries=expected.retries,
+                received=expected.received,
+                started=expected.started,
+                args=None,
+                kwargs=expected.kwargs,
+                result=expected.result,
+            )
+        # then
+        self._assert_equal_objs(expected, result)
+
+    def test_should_handle_kwargs_is_none(self):
+        # given
+        expected = TaskLogFactory.build(
+            state=TaskLog.State.FAILURE, exception="", traceback="", kwargs={}
+        )
+        # when
+        with patch("django.utils.timezone.now") as mock_now:
+            mock_now.return_value = expected.timestamp
+            result = TaskLog.objects.create_from_task(
+                task_id=str(expected.task_id),
+                task_name=expected.task_name,
+                state=expected.state,
+                priority=expected.priority,
+                retries=expected.retries,
+                received=expected.received,
+                started=expected.started,
+                args=expected.args,
+                kwargs=None,
+                result=expected.result,
+            )
+        # then
+        self._assert_equal_objs(expected, result)
+
     def _assert_equal_objs(self, expected, result):
         field_names = {
             field.name

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased] - yyyy-mm-dd
 
+### Fixed
+
+- Breaks when creating TaskLog and args or kwargs is None
+
 ## [0.15.2] - 2023-03-25
 
 ### Fixed

@@ -122,6 +122,22 @@ def admin_taskmonitor_report_html(request, report_name: str):
 
 @login_required
 @staff_member_required
+def admin_taskmonitor_report_debug(request, report_name: str):
+    """Render report in HTML."""
+    try:
+        cached_reports.report_data(report_name, use_cache=False)
+    except KeyError:
+        raise Http404(f'No report with name: "{report_name}"')
+    context = {
+        "title": "DEBUG Reports",
+        "cl": {"opts": TaskLog._meta},
+        "report_name": report_name,
+    }
+    return render(request, "admin/taskmonitor/report/debug.html", context)
+
+
+@login_required
+@staff_member_required
 def admin_queued_task_purge(request):
     """Purge the task queue."""
     queue_length = celery_queues.queue_length()

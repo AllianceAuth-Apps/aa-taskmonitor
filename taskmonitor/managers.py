@@ -209,9 +209,11 @@ class TaskLogManagerBase(TableSizeMixin, models.Manager):
             "timestamp": timezone.now(),
             "current_queue_length": current_queue_length,
         }
+        args = args or []
         params["args"] = (
             truncate_list(args) if TASKMONITOR_TRUNCATE_NESTED_DATA else args
         )
+        kwargs = kwargs or {}
         params["kwargs"] = (
             truncate_dict(kwargs) if TASKMONITOR_TRUNCATE_NESTED_DATA else kwargs
         )

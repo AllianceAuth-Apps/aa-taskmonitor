@@ -139,6 +139,34 @@ class _CachedReport:
         ]
 
 
+class AppsTopCumRuntime(_CachedReport):
+    def _calc_data(self):
+        if not report("tasks_basics").data()["total_runtime"]:
+            return None
+        return list(
+            TaskLog.objects.values(name=F("app_name"))
+            .annotate(y=Sum("runtime"))
+            .annotate(
+                url=Concat(Value(f"{self.changelist_url()}?o=5&app_name="), F("name"))
+            )
+            .order_by("-y")[:TASKMONITOR_REPORTS_MAX_TOP]
+        )
+
+
+class AppsTopRuns(_CachedReport):
+    def _calc_data(self):
+        if not report("tasks_basics").data()["total_runs"]:
+            return None
+        return list(
+            TaskLog.objects.values(name=F("app_name"))
+            .annotate(y=Count("pk"))
+            .annotate(
+                url=Concat(Value(f"{self.changelist_url()}?app_name="), F("name"))
+            )
+            .order_by("-y")[:TASKMONITOR_REPORTS_MAX_TOP]
+        )
+
+
 class TasksBasics(_CachedReport):
     """Basic information about tasks used by many other reports."""
 
@@ -241,20 +269,6 @@ class TasksTopRuns(_CachedReport):
         )
 
 
-class TasksTopMaxRuntime(_CachedReport):
-    def _calc_data(self):
-        if not report("tasks_basics").data()["total_runtime"]:
-            return None
-        return list(
-            TaskLog.objects.values(name=F("task_name"))
-            .annotate(y=Max("runtime"))
-            .annotate(
-                url=Concat(Value(f"{self.changelist_url()}?o=5&task_name="), F("name"))
-            )
-            .order_by("-y")[:TASKMONITOR_REPORTS_MAX_TOP]
-        )
-
-
 class TasksTopAvgRuntime(_CachedReport):
     def _calc_data(self):
         if not report("tasks_basics").data()["total_runtime"]:
@@ -262,6 +276,34 @@ class TasksTopAvgRuntime(_CachedReport):
         return list(
             TaskLog.objects.values(name=F("task_name"))
             .annotate(y=Avg("runtime"))
+            .annotate(
+                url=Concat(Value(f"{self.changelist_url()}?o=5&task_name="), F("name"))
+            )
+            .order_by("-y")[:TASKMONITOR_REPORTS_MAX_TOP]
+        )
+
+
+class TasksTopCumRuntime(_CachedReport):
+    def _calc_data(self):
+        if not report("tasks_basics").data()["total_runtime"]:
+            return None
+        return list(
+            TaskLog.objects.values(name=F("task_name"))
+            .annotate(y=Sum("runtime"))
+            .annotate(
+                url=Concat(Value(f"{self.changelist_url()}?o=5&task_name="), F("name"))
+            )
+            .order_by("-y")[:TASKMONITOR_REPORTS_MAX_TOP]
+        )
+
+
+class TasksTopMaxRuntime(_CachedReport):
+    def _calc_data(self):
+        if not report("tasks_basics").data()["total_runtime"]:
+            return None
+        return list(
+            TaskLog.objects.values(name=F("task_name"))
+            .annotate(y=Max("runtime"))
             .annotate(
                 url=Concat(Value(f"{self.changelist_url()}?o=5&task_name="), F("name"))
             )

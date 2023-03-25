@@ -47,16 +47,23 @@
 
                 <h2>Contents</h2>
 
-                <h3>Task Distributions</h3>
+                <h3>Overview</h3>
                 <ul>
                     <li class="selected"><a class="tabLinks" href="#task-runs-by-state">Task runs by state</a></li>
                     <li><a class="tabLinks" href="#task-runs-by-app">Task runs by app</a></li>
+                    <li><a class="tabLinks" href="#task-througput">Througput</a></li>
+                </ul>
+                <h3>Top Apps</h3>
+                <ul>
+                    <li><a class="tabLinks" href="#top-apps-by-runs">Top apps by total task runs</a></li>
+                    <li><a class="tabLinks" href="#top-apps-by-cum-runtime">Top apps by total task runtime</a></li>
                 </ul>
                 <h3>Top Tasks</h3>
                 <ul>
                     <li><a class="tabLinks" href="#top-tasks-by-runs">Top tasks by runs</a></li>
                     <li><a class="tabLinks" href="#top-tasks-by-max-runtime">Top tasks by max runtime</a></li>
                     <li><a class="tabLinks" href="#top-tasks-by-avg-runtime">Top tasks by avg runtime</a></li>
+                    <li><a class="tabLinks" href="#top-tasks-by-cum-runtime">Top tasks by total runtime</a></li>
                     <li><a class="tabLinks" href="#top-failed-tasks">Top tasks by failed runs</a></li>
                     <li><a class="tabLinks" href="#top-retried-tasks">Top tasks by retried runs</a></li>
                 </ul>
@@ -64,7 +71,6 @@
                 <ul>
                     <li><a class="tabLinks" href="#throughput-by-state">Throughput by state</a></li>
                     <li><a class="tabLinks" href="#throughput-by-app">Throughput by app</a></li>
-                    <li><a class="tabLinks" href="#task-througput">Througput overview</a></li>
                 </ul>
                 <h3>Task analysis</h3>
                 <ul>
@@ -97,6 +103,11 @@
                     {% include "admin/taskmonitor/report/chart_bar_partial.html" with report_name="tasks_top_runs" %}
                 </div>
 
+                <div id="top-apps-by-runs" class="tabContent">
+                    <h2>Top {{ MAX_TOP }} apps by total task runs</h2>
+                    {% include "admin/taskmonitor/report/chart_bar_partial.html" with report_name="apps_top_runs" %}
+                </div>
+
                 <div id="top-tasks-by-max-runtime" class="tabContent">
                     <h2>Top {{ MAX_TOP }} tasks by max instance runtime in seconds</h2>
                     {% include "admin/taskmonitor/report/chart_bar_partial.html" with report_name="tasks_top_max_runtime" %}
@@ -105,6 +116,16 @@
                 <div id="top-tasks-by-avg-runtime" class="tabContent">
                     <h2>Top {{ MAX_TOP }} tasks by average instance runtime in seconds</h2>
                     {% include "admin/taskmonitor/report/chart_bar_partial.html" with report_name="tasks_top_avg_runtime" %}
+                </div>
+
+                <div id="top-tasks-by-cum-runtime" class="tabContent">
+                    <h2>Top {{ MAX_TOP }} tasks by total runtime in seconds</h2>
+                    {% include "admin/taskmonitor/report/chart_bar_partial.html" with report_name="tasks_top_cum_runtime" %}
+                </div>
+
+                <div id="top-apps-by-cum-runtime" class="tabContent">
+                    <h2>Top {{ MAX_TOP }} apps by total task runtime in seconds</h2>
+                    {% include "admin/taskmonitor/report/chart_bar_partial.html" with report_name="apps_top_cum_runtime" %}
                 </div>
 
                 <div id="top-failed-tasks" class="tabContent">

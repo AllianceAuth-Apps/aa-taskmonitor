@@ -11,7 +11,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Added
 
-- New report: Top tasks by cumulative runtime
+- New report: Top tasks by total runtime
+- New report: Top apps by total task runtime
+- New report: Top apps by by total task runs
+
+### Changed
+
+- Reorganization of report list to accommodate new reports
 
 ### Fixed
 

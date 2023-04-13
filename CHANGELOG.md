@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased] - yyyy-mm-dd
 
+## [0.17.0] - 2023-04-13
+
+### Added
+
+- Global setting to disable task monitor, e.g. when running local tests
+
 ## [0.16.0] - 2023-03-25
 
 ### Added

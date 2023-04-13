@@ -1,7 +1,6 @@
 import os
 
 from setuptools import find_packages, setup
-
 from taskmonitor import __version__
 
 with open(os.path.join(os.path.dirname(__file__), "README.md")) as readme:
@@ -37,7 +36,7 @@ setup(
     python_requires="~=3.8",
     install_requires=[
         "allianceauth>=2.9",
-        "allianceauth-app-utils>=1.16",
+        "allianceauth-app-utils>=1.17.1",
         "humanize",
     ],
 )

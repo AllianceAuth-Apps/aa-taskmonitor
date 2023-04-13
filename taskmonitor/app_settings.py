@@ -1,4 +1,4 @@
-from app_utils.django import clean_setting
+from app_utils.app_settings import clean_setting
 
 TASKMONITOR_DATA_MAX_AGE = clean_setting("TASKMONITOR_DATA_MAX_AGE", 24)
 """Max age of logged tasks in hours. Older logs be deleted automatically."""

@@ -3,7 +3,7 @@
 from django.core.cache import cache
 from django.utils import timezone
 
-from ..app_settings import TASKMONITOR_HOUSEKEEPING_FREQUENCY
+from ..app_settings import TASKMONITOR_ENABLED, TASKMONITOR_HOUSEKEEPING_FREQUENCY
 from ..models import TaskLog
 from ..tasks import DEFAULT_TASK_PRIORITY, run_housekeeping
 from . import celery_queues, task_records
@@ -14,29 +14,31 @@ TASK_STARTED = "started"
 CACHE_KEY = "taskmonitor_last_housekeeping"
 
 
-def run_housekeeping_if_stale():
-    """Spawn a task to run house keeping if last run was too long ago."""
-    was_expired = cache.add(
-        key=CACHE_KEY,
-        value="no-value",
-        timeout=TASKMONITOR_HOUSEKEEPING_FREQUENCY * 60,
-    )
-    if was_expired:
-        run_housekeeping.apply_async(priority=DEFAULT_TASK_PRIORITY)
+def run_when_enabled(func):
+    """Run when Task monitor is enabled only. Else abort silently."""
+
+    def wrapper(*args, **kwargs):
+        if TASKMONITOR_ENABLED:
+            func(*args, **kwargs)
+
+    return wrapper
 
 
+@run_when_enabled
 def task_received_handler_2(request):
     """Handle task received signal."""
     if request:
         task_records.set(request.id, TASK_RECEIVED, timezone.now())
 
 
+@run_when_enabled
 def task_prerun_handler_2(task_id):
     """Handle task prerun signal."""
     if task_id:
         task_records.set(task_id, TASK_STARTED, timezone.now())
 
 
+@run_when_enabled
 def task_success_handler_2(sender, result):
     """Handle task success signal."""
     if sender and sender.request:
@@ -56,9 +58,10 @@ def task_success_handler_2(sender, result):
             result=result,
             current_queue_length=celery_queues.queue_length_cached(),
         )
-    run_housekeeping_if_stale()
+    _run_housekeeping_if_stale()
 
 
+@run_when_enabled
 def task_retry_handler_2(sender, request, reason):
     """Handle task retry signal."""
     if sender and request:
@@ -77,9 +80,10 @@ def task_retry_handler_2(sender, request, reason):
             exception=reason,
             current_queue_length=celery_queues.queue_length_cached(),
         )
-    run_housekeeping_if_stale()
+    _run_housekeeping_if_stale()
 
 
+@run_when_enabled
 def task_failure_handler_2(sender, task_id, exception):
     """Handle task failure signal."""
     if sender and task_id:
@@ -101,9 +105,10 @@ def task_failure_handler_2(sender, task_id, exception):
             exception=exception,
             current_queue_length=celery_queues.queue_length_cached(),
         )
-    run_housekeeping_if_stale()
+    _run_housekeeping_if_stale()
 
 
+@run_when_enabled
 def task_internal_error_handler_2(sender, task_id, request, exception):
     """Handle task internal error signal."""
     if task_id and request:
@@ -128,7 +133,18 @@ def task_internal_error_handler_2(sender, task_id, request, exception):
             kwargs=request.get("kwargs", dict()),
             exception=exception,
         )
-    run_housekeeping_if_stale()
+    _run_housekeeping_if_stale()
+
+
+def _run_housekeeping_if_stale():
+    """Spawn a task to run house keeping if last run was too long ago."""
+    was_expired = cache.add(
+        key=CACHE_KEY,
+        value="no-value",
+        timeout=TASKMONITOR_HOUSEKEEPING_FREQUENCY * 60,
+    )
+    if was_expired:
+        run_housekeeping.apply_async(priority=DEFAULT_TASK_PRIORITY)
 
 
 # def request_asdict(request) -> dict:

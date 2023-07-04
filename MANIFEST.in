@@ -1,7 +1,0 @@
-include LICENSE
-include README.md
-recursive-include taskmonitor/ *.py
-recursive-include taskmonitor/templates *
-recursive-include taskmonitor/static *
-recursive-include taskmonitor/tests *
-recursive-exclude testauth *

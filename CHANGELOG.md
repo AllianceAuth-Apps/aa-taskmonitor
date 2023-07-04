@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased] - yyyy-mm-dd
 
+## [0.17.0] - 2023-07-04
+
+### Update notes
+
+This update includes a data migration that can take a while to complete. We recommend to run this migration during time of low database activity (e.g. if tasks are running wait until task queue is empty).
+
+### Added
+
+- New filter for exceptions
+- Global setting to disable task monitor, e.g. when running local tests
+
+### Changed
+
+- Migrated build process to PEP 621
+- Migrated to AA 3 and dropped support for AA 2
+- Add support for Python 3.11
+- Show exception class name instead of exception string in "exception" field
+
 ## [0.16.0] - 2023-03-25
 
 ### Added

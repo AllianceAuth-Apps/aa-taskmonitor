@@ -8,6 +8,8 @@ from .core.celery_queues import QueuedTaskShort
 from .helpers import extract_app_name
 from .managers import QueuedTaskManager, TaskLogManager
 
+CHAR_FIELD_MAX_LENGTH = 255
+
 
 class QueuedTask(models.Model):
     """A task that has been queued for later execution."""
@@ -15,9 +17,9 @@ class QueuedTask(models.Model):
     class Meta:
         managed = False
 
-    app_name = models.CharField(max_length=255)
+    app_name = models.CharField(max_length=CHAR_FIELD_MAX_LENGTH)
     id = models.UUIDField(default=uuid.uuid4, primary_key=True)
-    name = models.CharField(max_length=255)
+    name = models.CharField(max_length=CHAR_FIELD_MAX_LENGTH)
     priority = models.PositiveIntegerField(null=True, default=None)
     position = models.PositiveIntegerField()
 
@@ -73,7 +75,9 @@ class TaskLog(models.Model):
         FAILURE = 3, "failure"
 
     app_name = models.CharField(
-        max_length=255, db_index=True, help_text="Name of the app this task belongs to."
+        max_length=CHAR_FIELD_MAX_LENGTH,
+        db_index=True,
+        help_text="Name of the app this task belongs to.",
     )
     args = models.JSONField(
         default=list,
@@ -86,7 +90,11 @@ class TaskLog(models.Model):
         null=True,
         help_text="Length of the queue at the time this log was created.",
     )
-    exception = models.TextField(help_text="Message of the raised exception if any.")
+    exception = models.CharField(
+        max_length=CHAR_FIELD_MAX_LENGTH,
+        db_index=True,
+        help_text="Name of the raised exception if any.",
+    )
     kwargs = models.JSONField(
         default=dict,
         help_text=(
@@ -129,7 +137,7 @@ class TaskLog(models.Model):
         default=uuid.uuid4, db_index=True, help_text="Unique ID of this task."
     )
     task_name = models.CharField(
-        max_length=255, db_index=True, help_text="Name of this task."
+        max_length=CHAR_FIELD_MAX_LENGTH, db_index=True, help_text="Name of this task."
     )
 
     timestamp = models.DateTimeField(

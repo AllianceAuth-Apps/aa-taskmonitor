@@ -92,7 +92,7 @@ class TaskLogFactory(factory.django.DjangoModelFactory):
     def exception(self):
         if self.state == TaskLog.State.SUCCESS:
             return ""
-        return faker.sentence()
+        return faker.word().title()
 
     @factory.lazy_attribute
     def traceback(self):

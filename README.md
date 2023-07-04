@@ -129,6 +129,7 @@ Note that all settings are optional and the app will use the documented default 
 
 Name | Description | Default
 -- | -- | --
+`TASKMONITOR_ENABLED`| Global switch to enable/disable task monitor. | `True`
 `TASKMONITOR_DATA_MAX_AGE`| Max age of logged tasks in hours. Older logs be deleted automatically. | `24`
 `TASKMONITOR_DELETE_STALE_BATCH_SIZE`| Size of task logs deleted together in one batch. | `5_000`
 `TASKMONITOR_HOUSEKEEPING_FREQUENCY`| Frequency of house keeping runs in minutes. | `15`

@@ -100,12 +100,12 @@ class TaskLogStatesListFilter(FieldFilterCountsDb):
     field_name = "state"
 
 
-class TaskLogTasksListFilter(FieldFilterCountsDb):
-    """Filter by app name and show name with counts."""
+class TaskLogExceptionsListFilter(FieldFilterCountsDb):
+    """Filter by exception name and show name with counts."""
 
-    title = _("task name")
-    parameter_name = "task"
-    field_name = "task_name"
+    title = _("exception")
+    parameter_name = "exception"
+    field_name = "exception"
 
 
 @admin.register(TaskLog)
@@ -124,10 +124,10 @@ class TaskLogAdmin(admin.ModelAdmin):
     )
     list_filter = (
         TaskLogStatesListFilter,
+        TaskLogExceptionsListFilter,
         "timestamp",
         TaskLogAppsListFilter,
         "priority",
-        # TaskLogTasksListFilter,
     )
     search_fields = ("task_name", "app_name", "task_id")
     actions = ["delete_selected_2"]

@@ -230,7 +230,7 @@ class TaskLogManagerBase(TableSizeMixin, models.Manager):
             truncate_result(result) if TASKMONITOR_TRUNCATE_NESTED_DATA else result
         )
         if exception:
-            params["exception"] = str(exception)
+            params["exception"] = exception.__class__.__name__
             if traceback := getattr(exception, "__traceback__"):
                 params["traceback"] = "".join(
                     tb.format_exception(None, value=exception, tb=traceback)

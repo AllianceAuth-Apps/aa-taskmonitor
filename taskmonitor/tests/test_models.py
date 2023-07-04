@@ -10,6 +10,7 @@ from taskmonitor.core.celery_queues import QueuedTaskShort
 from taskmonitor.models import QueuedTask, TaskLog
 
 from .factories import QueuedTaskRawFactory, TaskLogFactory
+from .fake_exceptions import make_fake_exception
 
 MODELS_PATH = "taskmonitor.models"
 MANAGERS_PATH = "taskmonitor.managers"
@@ -83,11 +84,13 @@ class TestManagerCreateFromTask(TestCase):
             )
         # then
         self._assert_equal_objs(expected, result)
+        self.assertFalse(result.traceback)
 
     def test_should_create_from_failed_task(self):
         # given
+        exception = make_fake_exception()
         expected = TaskLogFactory.build(
-            state=TaskLog.State.FAILURE, exception="", traceback=""
+            state=TaskLog.State.FAILURE, exception="FakeException"
         )
         # when
         with patch("django.utils.timezone.now") as mock_now:
@@ -103,9 +106,11 @@ class TestManagerCreateFromTask(TestCase):
                 args=expected.args,
                 kwargs=expected.kwargs,
                 result=expected.result,
+                exception=exception,
             )
         # then
         self._assert_equal_objs(expected, result)
+        self.assertIn("Traceback", result.traceback)
 
     def test_should_truncate_args(self):
         # given
@@ -285,7 +290,7 @@ class TestManagerCreateFromTask(TestCase):
         field_names = {
             field.name
             for field in TaskLog._meta.fields
-            if field.name not in {"id", "current_queue_length"}
+            if field.name not in {"id", "current_queue_length", "traceback"}
         }
         for field_name in field_names:
             with self.subTest(field_name=field_name):

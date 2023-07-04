@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Update notes
 
-This update includes a data migration that can take a while to complete. We recommend to run this migration this migration during time of lower database activity (e.g. if tasks are running wait until task queue is empty)
+This update includes a data migration that can take a while to complete. We recommend to run this migration during time of low database activity (e.g. if tasks are running wait until task queue is empty).
 
 ### Added
 

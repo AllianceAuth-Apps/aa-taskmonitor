@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [0.18.0] - 2023-07-04
 
+### Added
+
+- New filter for exceptions
+
 ### Changed
 
 - Migrated build process to PEP 621

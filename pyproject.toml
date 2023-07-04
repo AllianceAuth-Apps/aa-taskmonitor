@@ -33,10 +33,13 @@ dependencies = [
 
 [project.urls]
 Homepage = "https://gitlab.com/ErikKalkoken/aa-taskmonitor"
+Source = "https://gitlab.com/ErikKalkoken/aa-taskmonitor"
+Changelog = "https://gitlab.com/ErikKalkoken/aa-taskmonitor/-/blob/master/CHANGELOG.md"
+Tracker = "https://gitlab.com/ErikKalkoken/aa-taskmonitor/-/issues"
+
 
 [tool.flit.module]
 name = "taskmonitor"
-
 
 [tool.isort]
 profile = "black"

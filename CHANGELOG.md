@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 - Migrated build process to PEP 621
 - Migrated to AA 3 and dropped support for AA 2
+- Add support for Python 3.11
 
 ## [0.17.0] - 2023-04-13
 

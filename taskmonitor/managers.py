@@ -188,9 +188,11 @@ class TaskLogQuerySet(models.QuerySet):
         return qs["task_runs__avg"]
 
     def oldest_date(self) -> dt.datetime:
+        """Return oldest timestamp."""
         return self.aggregate(oldest=Min("timestamp"))["oldest"]
 
     def newest_date(self) -> dt.datetime:
+        """Return newest timestamp."""
         return self.aggregate(youngest=Max("timestamp"))["youngest"]
 
     def filter_stale_logs_batch(
@@ -202,6 +204,7 @@ class TaskLogQuerySet(models.QuerySet):
         return qs
 
 
+# pylint: disable = too-many-locals
 class TaskLogManagerBase(TableSizeMixin, models.Manager):
     def create_from_task(
         self,

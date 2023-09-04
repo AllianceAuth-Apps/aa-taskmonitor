@@ -72,6 +72,8 @@ class TaskLog(models.Model):
     """Log entry for an executed celery task."""
 
     class State(models.IntegerChoices):
+        """A state of a task log."""
+
         SUCCESS = 1, "success"
         RETRY = 2, "retry"
         FAILURE = 3, "failure"

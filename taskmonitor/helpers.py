@@ -23,8 +23,7 @@ def extract_app_name(task_name: str) -> str:
     except ValueError:
         if len(parts) == 2:
             return parts[0]
-        else:
-            return ""
+        return ""
     return parts[idx - 1] if idx > 0 else ""
 
 
@@ -46,9 +45,9 @@ def next_number(key: str = None) -> int:
     return next_number._counter[key].__next__()
 
 
-def dict_sort_keys(d: dict) -> dict:
+def dict_sort_keys(dct: dict) -> dict:
     """Return a copy of this dictionary with sorted keys."""
-    return dict(sorted(d.items(), key=lambda x: x[0].lower()))
+    return dict(sorted(dct.items(), key=lambda x: x[0].lower()))
 
 
 def truncate_list(lst: list) -> list:
@@ -82,7 +81,7 @@ def truncate_result(value):
     """Truncate nested items in results and return as new value."""
     if isinstance(value, dict):
         return truncate_dict(value)
-    elif isinstance(value, (list, tuple, set)):
+    if isinstance(value, (list, tuple, set)):
         return compress_list(truncate_list(value))
     return value
 

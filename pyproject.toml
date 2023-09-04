@@ -61,4 +61,4 @@ good-names = ["i", "j", "k", "ex", "r"]
 max-line-length = 120
 
 [tool.pylint.'MESSAGES CONTROL']
-disable = ["too-few-public-methods"]
+disable = ["too-few-public-methods", "import-outside-toplevel"]

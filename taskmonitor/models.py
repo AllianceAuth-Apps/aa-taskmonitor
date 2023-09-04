@@ -1,3 +1,5 @@
+"""Models for Task Monitor."""
+
 import json
 import uuid
 

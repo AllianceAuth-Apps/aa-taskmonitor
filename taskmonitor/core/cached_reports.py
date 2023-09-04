@@ -353,7 +353,7 @@ class TasksThroughput(_CachedReport):
     def _calc_data(self):
         tasklogs_not_failed = TaskLog.objects.exclude(state=TaskLog.State.FAILURE)
         tasks_throughput = []
-        average_last_hours = dict()
+        average_last_hours = {}
         for hours in [1, 3, 6, 12, 24]:
             average_last_hours[hours] = tasklogs_not_failed.filter(
                 timestamp__gt=self.now - dt.timedelta(hours=hours)

@@ -1,3 +1,5 @@
+"""Helpers for Task Monitor."""
+
 import datetime as dt
 import functools
 import itertools
@@ -37,7 +39,7 @@ def next_number(key: str = None) -> int:
     try:
         return next_number._counter[key].__next__()
     except AttributeError:
-        next_number._counter = dict()
+        next_number._counter = {}
     except KeyError:
         pass
     next_number._counter[key] = itertools.count(start=1)
@@ -70,9 +72,9 @@ def truncate_dict(dct: dict) -> dict:
 
 def _replace_nested_element(value):
     if isinstance(value, dict):
-        return dict()
+        return {}
     elif isinstance(value, (list, tuple, set)):
-        return list()
+        return []
     return value
 
 

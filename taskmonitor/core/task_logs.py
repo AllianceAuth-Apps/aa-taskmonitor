@@ -129,8 +129,8 @@ def task_internal_error_handler_2(sender, task_id, request, exception):
             parent_id=request.get("parent_id"),
             received=task_records.fetch(task_id, TASK_RECEIVED),
             started=task_records.fetch(task_id, TASK_STARTED),
-            args=request.get("args", list()),
-            kwargs=request.get("kwargs", dict()),
+            args=request.get("args", []),
+            kwargs=request.get("kwargs", {}),
             exception=exception,
         )
     _run_housekeeping_if_stale()

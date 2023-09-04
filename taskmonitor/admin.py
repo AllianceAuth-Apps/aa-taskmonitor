@@ -1,3 +1,5 @@
+"""Admin site for Task Monitor."""
+
 import json
 from typing import Optional
 

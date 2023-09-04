@@ -1,3 +1,5 @@
+"""Settings for Task Monitor."""
+
 from app_utils.app_settings import clean_setting
 
 TASKMONITOR_ENABLED = clean_setting("TASKMONITOR_ENABLED", True)

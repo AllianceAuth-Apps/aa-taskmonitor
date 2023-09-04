@@ -112,6 +112,7 @@ class ListAsQuerySet(list):
                 else:
                     reverse = False
                     prop_2 = prop
+                # pylint: disable = cell-var-from-loop
                 self.sort(key=lambda d: getattr(d, prop_2), reverse=reverse)
         return self
 

@@ -1,7 +1,7 @@
 import datetime as dt
 import json
 import traceback as tb
-from typing import List
+from typing import List, Optional
 from uuid import UUID
 
 from django.core.serializers.json import DjangoJSONEncoder
@@ -141,7 +141,7 @@ QueuedTaskManager = QueuedTaskManagerBase.from_queryset(QueuedTaskQuerySet)
 
 class TaskLogQuerySet(models.QuerySet):
     def csv_line_generator(self, fields: List[str]):
-        """Return the tasklogs for a CSV file line by line.
+        """Return the task logs for a CSV file line by line.
         And return the field names as first line.
         """
         field_names = [field.name for field in fields]
@@ -176,6 +176,14 @@ class TaskLogQuerySet(models.QuerySet):
     def newest_date(self) -> dt.datetime:
         return self.aggregate(youngest=Max("timestamp"))["youngest"]
 
+    def filter_stale_logs_batch(
+        self, max_hours: int, batch_size: int
+    ) -> models.QuerySet:
+        """Filter batch of stale logs, but not more then given by ``batch_size``."""
+        deadline = timezone.now() - dt.timedelta(hours=max_hours)
+        qs = self.filter(timestamp__lt=deadline).order_by("-pk")[:batch_size]
+        return qs
+
 
 class TaskLogManagerBase(TableSizeMixin, models.Manager):
     def create_from_task(
@@ -188,12 +196,12 @@ class TaskLogManagerBase(TableSizeMixin, models.Manager):
         priority: int,
         args: list,
         kwargs: dict,
-        received: dt.datetime = None,
-        started: dt.datetime = None,
-        parent_id: str = None,
+        received: Optional[dt.datetime] = None,
+        started: Optional[dt.datetime] = None,
+        parent_id: Optional[str] = None,
         exception=None,
         result=None,
-        current_queue_length: int = None,
+        current_queue_length: Optional[int] = None,
     ) -> models.Model:
         """Create new object from a celery task."""
         params = {

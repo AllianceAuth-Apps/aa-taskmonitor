@@ -1,7 +1,7 @@
 import datetime as dt
 from unittest.mock import patch
 
-from django.test import TestCase, override_settings
+from django.test import TestCase
 from django.utils import timezone
 
 from taskmonitor.models import TaskLog
@@ -13,16 +13,17 @@ TASKS_PATH = "taskmonitor.tasks"
 
 
 @patch(TASKS_PATH + ".TASKMONITOR_DATA_MAX_AGE", 3)
-@override_settings(CELERY_ALWAYS_EAGER=True, CELERY_EAGER_PROPAGATES_EXCEPTIONS=True)
 class TestTasks(TestCase):
     def test_should_delete_stale_entries_only(self):
         # given
+        current_dt = timezone.now()
         stale_entry = TaskLogFactory(
-            timestamp=timezone.now() - dt.timedelta(hours=3, seconds=1)
+            timestamp=current_dt - dt.timedelta(hours=3, seconds=1)
         )
-        current_entry = TaskLogFactory(timestamp=timezone.now())
+        current_entry = TaskLogFactory(timestamp=current_dt)
         # when
-        delete_stale_tasklogs()
+        with self.assertRaises(Exception):
+            delete_stale_tasklogs()
         # then
         self.assertFalse(TaskLog.objects.filter(pk=stale_entry.pk).exists())
         self.assertTrue(TaskLog.objects.filter(pk=current_entry.pk).exists())

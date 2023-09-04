@@ -1,8 +1,9 @@
 """Helpers for Task Monitor."""
 
+# pylint: disable = protected-access
+
 import datetime as dt
 import functools
-import itertools
 
 
 class Echo:
@@ -25,24 +26,6 @@ def extract_app_name(task_name: str) -> str:
             return parts[0]
         return ""
     return parts[idx - 1] if idx > 0 else ""
-
-
-def next_number(key: str = None) -> int:
-    """Generate a sequence of numbers starting at 1.
-
-    Args:
-        key: key to generate sequence for.
-    """
-    if key is None:
-        key = "_general"
-    try:
-        return next_number._counter[key].__next__()
-    except AttributeError:
-        next_number._counter = {}
-    except KeyError:
-        pass
-    next_number._counter[key] = itertools.count(start=1)
-    return next_number._counter[key].__next__()
 
 
 def dict_sort_keys(dct: dict) -> dict:
@@ -72,7 +55,7 @@ def truncate_dict(dct: dict) -> dict:
 def _replace_nested_element(value):
     if isinstance(value, dict):
         return {}
-    elif isinstance(value, (list, tuple, set)):
+    if isinstance(value, (list, tuple, set)):
         return []
     return value
 

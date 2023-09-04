@@ -57,7 +57,7 @@ def delete_stale_tasklogs(self: QueueOnce):
         return
 
     num_logs = stale_logs.count()
-    stale_logs._raw_delete(stale_logs.db)
+    stale_logs._raw_delete(stale_logs.db)  # pylint: disable = protected-access
     logger.info("Deleted %d stale task logs.", num_logs)
     self.retry(countdown=1)
 

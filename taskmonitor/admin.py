@@ -218,7 +218,7 @@ class TaskLogAdmin(admin.ModelAdmin):
     @admin.action(description="Delete selected entries (NO CONFIRMATION!")
     def delete_selected_2(self, request, queryset):
         entries_count = queryset.count()
-        queryset._raw_delete(queryset.db)
+        queryset._raw_delete(queryset.db)  # pylint: disable = protected-access
         self.message_user(request, f"Deleted {entries_count} entries.")
 
     @admin.display(description="Result")

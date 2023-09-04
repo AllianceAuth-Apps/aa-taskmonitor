@@ -1,5 +1,7 @@
 """Container for caching the reports data used in views."""
 
+# pylint: disable = missing-class-docstring
+
 import datetime as dt
 import inspect
 import re
@@ -36,6 +38,7 @@ class _CachedReport:
 
     @property
     def cache_key(self):
+        """Return cache key."""
         return f"{CACHE_KEY}_{self.name}"
 
     @property
@@ -45,20 +48,23 @@ class _CachedReport:
 
     @property
     def now(self) -> dt.datetime:
+        """Return current date and time."""
         return timezone.now()
 
     @staticmethod
     def changelist_url() -> str:
+        """Return changelist URL."""
         return reverse("admin:taskmonitor_tasklog_changelist")
 
     def data(self, use_cache=True):
+        """Return data for this report."""
         if use_cache:
             return cache.get_or_set(
                 self.cache_key, self._calc_data, timeout=self.timeout
             )
-        data = self._calc_data()
-        cache.set(self.cache_key, data, timeout=self.timeout)
-        return data
+        calculated_data = self._calc_data()
+        cache.set(self.cache_key, calculated_data, timeout=self.timeout)
+        return calculated_data
 
     def refresh_cache(self) -> None:
         """Refresh the cache."""
@@ -120,11 +126,11 @@ class _CachedReport:
             x_timestamp = int(new_x.timestamp() * 1000)
             data_raw[x_timestamp].append(y)
         data_raw = dict(sorted(data_raw.items()))
-        data = [
+        my_data = [
             tuple([x, int(round(_func_or_zero(func, values), 0))])
             for x, values in data_raw.items()
         ]
-        return data
+        return my_data
 
     @staticmethod
     def _to_snake_case(name: str) -> str:
@@ -132,6 +138,7 @@ class _CachedReport:
 
     @classmethod
     def report_classes(cls):
+        """Return all known report classes."""
         return [
             obj
             for _, obj in inspect.getmembers(sys.modules[__name__], inspect.isclass)
@@ -196,8 +203,8 @@ class QueueLengthOverTime(_CachedReport):
             .values("x")
             .annotate(y=Avg("current_queue_length"))
         )
-        data = self._truncate_minutes(mean, qs, 5)
-        return [{"name": "length", "data": data}]
+        my_data = self._truncate_minutes(mean, qs, 5)
+        return [{"name": "length", "data": my_data}]
 
 
 class TaskStatistics(_CachedReport):
@@ -215,8 +222,10 @@ class TaskStatistics(_CachedReport):
                 "task_name": obj["task_name"],
             }
             grouped_by_app[obj["app_name"]].append(point)
-        data = [{"name": name, "data": data} for name, data in grouped_by_app.items()]
-        return data
+        my_data = [
+            {"name": name, "data": data} for name, data in grouped_by_app.items()
+        ]
+        return my_data
 
 
 class TaskRunsByState(_CachedReport):
@@ -237,7 +246,7 @@ class TaskRunsByApp(_CachedReport):
     def _calc_data(self):
         if not report("tasks_basics").data()["total_runs"]:
             return None
-        data = list(
+        my_data = list(
             TaskLog.objects.values(name=F("app_name"))
             .annotate(y=Count("pk"))
             .annotate(
@@ -245,14 +254,18 @@ class TaskRunsByApp(_CachedReport):
             )
             .order_by("-y")
         )
-        if len(data) > MAX_APPS_COUNT:
+        if len(my_data) > MAX_APPS_COUNT:
             others_y = sum(
-                [app["y"] for i, app in enumerate(data, start=1) if i > MAX_APPS_COUNT]
+                (
+                    app["y"]
+                    for i, app in enumerate(my_data, start=1)
+                    if i > MAX_APPS_COUNT
+                )
             )
-            return data[:MAX_APPS_COUNT] + [
+            return my_data[:MAX_APPS_COUNT] + [
                 {"name": APP_NAME_OTHERS, "y": others_y, "url": "#"}
             ]
-        return data
+        return my_data
 
 
 class TasksTopRuns(_CachedReport):
@@ -335,6 +348,7 @@ class TasksTopRetried(_CachedReport):
         total_retried = TaskLog.objects.filter(state=TaskLog.State.RETRY).count()
         if not total_retried:
             return None
+
         return list(
             TaskLog.objects.filter(state=TaskLog.State.RETRY)
             .values(name=F("task_name"))
@@ -353,7 +367,7 @@ class TasksThroughput(_CachedReport):
     def _calc_data(self):
         tasklogs_not_failed = TaskLog.objects.exclude(state=TaskLog.State.FAILURE)
         tasks_throughput = []
-        average_last_hours = dict()
+        average_last_hours = {}
         for hours in [1, 3, 6, 12, 24]:
             average_last_hours[hours] = tasklogs_not_failed.filter(
                 timestamp__gt=self.now - dt.timedelta(hours=hours)
@@ -380,8 +394,8 @@ class TasksThroughputByState(_CachedReport):
                 .values("x")
                 .annotate(y=Count("id"))
             )
-            data = self._truncate_minutes(sum, qs, 5)
-            series.append({"name": state.label, "data": data})
+            my_data = self._truncate_minutes(sum, qs, 5)
+            series.append({"name": state.label, "data": my_data})
         return series
 
 
@@ -406,29 +420,29 @@ class TasksThroughputByApp(_CachedReport):
                 .values("x")
                 .annotate(y=Count("id"))
             )
-            data = self._truncate_minutes(sum, qs, 5)
-            series.append({"name": app_name, "data": data})
+            my_data = self._truncate_minutes(sum, qs, 5)
+            series.append({"name": app_name, "data": my_data})
         return series
 
 
 def refresh_cache() -> None:
     """Refresh the cache."""
-    for report in reports():
-        report.refresh_cache()
+    for my_report in reports():
+        my_report.refresh_cache()
 
 
 def clear_cache() -> None:
     """Clear the cache."""
-    for report in reports():
-        report.clear_cache()
+    for my_report in reports():
+        my_report.clear_cache()
 
 
 def data() -> dict:
     """Calculate the report data."""
     return {
-        report.name: report_data(report.name)
-        for report in reports()
-        if report.is_included
+        my_report.name: report_data(my_report.name)
+        for my_report in reports()
+        if my_report.is_included
     }
 
 

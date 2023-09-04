@@ -1,11 +1,15 @@
-"""Create tasklogs from executed celery tasks."""
+"""Create task logs from executed celery tasks."""
 
 from django.core.cache import cache
 from django.utils import timezone
 
-from ..app_settings import TASKMONITOR_ENABLED, TASKMONITOR_HOUSEKEEPING_FREQUENCY
-from ..models import TaskLog
-from ..tasks import DEFAULT_TASK_PRIORITY, run_housekeeping
+from taskmonitor.app_settings import (
+    TASKMONITOR_ENABLED,
+    TASKMONITOR_HOUSEKEEPING_FREQUENCY,
+)
+from taskmonitor.models import TaskLog
+from taskmonitor.tasks import DEFAULT_TASK_PRIORITY, run_housekeeping
+
 from . import celery_queues, task_records
 
 TASK_RECEIVED = "received"

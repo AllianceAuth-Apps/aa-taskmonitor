@@ -14,12 +14,12 @@ from django.db.models.functions import Concat, TruncMinute
 from django.urls import reverse
 from django.utils import timezone
 
-from ..app_settings import (
+from taskmonitor.app_settings import (
     TASKMONITOR_HOUSEKEEPING_FREQUENCY,
     TASKMONITOR_REPORTS_MAX_AGE,
     TASKMONITOR_REPORTS_MAX_TOP,
 )
-from ..models import TaskLog
+from taskmonitor.models import TaskLog
 
 CACHE_KEY = "taskmonitor_reports_data"
 MAX_APPS_COUNT = 14

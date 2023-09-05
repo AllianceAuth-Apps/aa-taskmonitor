@@ -4,6 +4,7 @@ from celery import shared_task
 
 from allianceauth.services.hooks import get_extension_logger
 from allianceauth.services.tasks import QueueOnce
+from app_utils.helpers import chunks
 from app_utils.logging import LoggerAddTag
 
 from . import __title__
@@ -41,25 +42,23 @@ def run_housekeeping():
 #     logs_to_delete._raw_delete(logs_to_delete.db)
 
 
-@shared_task(bind=True, base=QueueOnce, max_retries=None)
-def delete_stale_tasklogs(self: QueueOnce):
+@shared_task(base=QueueOnce)
+def delete_stale_tasklogs():
     """Delete stale logs in batches.
 
     Will spawn itself again and again until all stale logs are deleted.
     """
-    stale_logs = TaskLog.objects.filter_stale_logs_batch(
-        max_hours=TASKMONITOR_DATA_MAX_AGE,
-        batch_size=TASKMONITOR_DELETE_STALE_BATCH_SIZE,
-    )
+
+    stale_logs = TaskLog.objects.filter_stale_logs(max_hours=TASKMONITOR_DATA_MAX_AGE)
     if not stale_logs.exists():
         logger.info("There currently are no stale application logs.")
-        refresh_reports_cache.delay()
         return
 
-    num_logs = stale_logs.count()
-    stale_logs._raw_delete(stale_logs.db)  # pylint: disable = protected-access
-    logger.info("Deleted %d stale task logs.", num_logs)
-    self.retry(countdown=1)
+    stale_logs_pks = list(stale_logs.values_list("pk", flat=True))
+    for pks_to_delete in chunks(stale_logs_pks, TASKMONITOR_DELETE_STALE_BATCH_SIZE):
+        qs_to_delete = TaskLog.objects.filter(pk__in=pks_to_delete)
+        qs_to_delete._raw_delete(qs_to_delete.db)  # pylint: disable = protected-access
+        logger.info("Deleted %d stale task logs.", len(pks_to_delete))
 
 
 @shared_task

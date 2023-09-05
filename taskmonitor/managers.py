@@ -196,12 +196,10 @@ class TaskLogQuerySet(models.QuerySet):
         """Return newest timestamp."""
         return self.aggregate(youngest=Max("timestamp"))["youngest"]
 
-    def filter_stale_logs_batch(
-        self, max_hours: int, batch_size: int
-    ) -> models.QuerySet:
-        """Filter batch of stale logs, but not more then given by ``batch_size``."""
+    def filter_stale_logs(self, max_hours: int) -> models.QuerySet:
+        """Filter stale logs."""
         deadline = timezone.now() - dt.timedelta(hours=max_hours)
-        qs = self.filter(timestamp__lt=deadline).order_by("-pk")[:batch_size]
+        qs = self.filter(timestamp__lt=deadline)
         return qs
 
 

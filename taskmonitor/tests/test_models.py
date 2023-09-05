@@ -63,14 +63,13 @@ class TestTaskLogQuerySet(TestCase):
         # given
         current_dt = timezone.now()
         TaskLogFactory(timestamp=current_dt)
-        TaskLogFactory(timestamp=current_dt - dt.timedelta(hours=2))
+        log_2 = TaskLogFactory(timestamp=current_dt - dt.timedelta(hours=2))
         log_3 = TaskLogFactory(timestamp=current_dt - dt.timedelta(hours=3))
-        log_4 = TaskLogFactory(timestamp=current_dt - dt.timedelta(hours=4))
         # when
-        result = TaskLog.objects.filter_stale_logs_batch(max_hours=1, batch_size=2)
+        result = TaskLog.objects.filter_stale_logs(max_hours=1)
         # then
         pks = set(result.values_list("pk", flat=True))
-        self.assertSetEqual(pks, {log_3.pk, log_4.pk})
+        self.assertSetEqual(pks, {log_2.pk, log_3.pk})
 
 
 class TestManagerCreateFromTask(TestCase):

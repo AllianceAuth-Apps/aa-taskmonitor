@@ -20,7 +20,7 @@ DEFAULT_TASK_PRIORITY = 4
 @shared_task(base=QueueOnce)
 def run_housekeeping():
     """Run all housekeeping tasks."""
-    delete_stale_tasklogs.apply_async(priority=7)
+    delete_stale_tasklogs.apply_async(priority=DEFAULT_TASK_PRIORITY)
     refresh_reports_cache.apply_async(priority=DEFAULT_TASK_PRIORITY)
 
 

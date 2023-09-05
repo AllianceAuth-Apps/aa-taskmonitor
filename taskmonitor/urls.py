@@ -1,3 +1,5 @@
+"""Routes for Task Monitor."""
+
 from django.urls import path
 
 from . import views

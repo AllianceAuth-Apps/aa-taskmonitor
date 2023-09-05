@@ -1,3 +1,7 @@
+"""Admin site for Task Monitor."""
+
+# pylint: disable = missing-class-docstring, missing-function-docstring
+
 import json
 from typing import Optional
 
@@ -163,13 +167,13 @@ class TaskLogAdmin(admin.ModelAdmin):
             del actions["delete_selected"]
         return actions
 
-    def get_readonly_fields(self, request, obj):
+    def get_readonly_fields(self, request, obj=None):
         try:
-            field = [f for f in obj._meta.fields if f.name == "kwargs"]
+            field = [f for f in TaskLog._meta.fields if f.name == "kwargs"]
             if len(field) > 0:
                 field = field[0]
                 field.help_text = "some special help text"
-        except Exception:
+        except Exception:  # pylint: disable = broad-exception-caught
             pass
         return self.readonly_fields
 
@@ -214,7 +218,7 @@ class TaskLogAdmin(admin.ModelAdmin):
     @admin.action(description="Delete selected entries (NO CONFIRMATION!")
     def delete_selected_2(self, request, queryset):
         entries_count = queryset.count()
-        queryset._raw_delete(queryset.db)
+        queryset._raw_delete(queryset.db)  # pylint: disable = protected-access
         self.message_user(request, f"Deleted {entries_count} entries.")
 
     @admin.display(description="Result")

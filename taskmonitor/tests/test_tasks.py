@@ -1,7 +1,7 @@
 import datetime as dt
 from unittest.mock import patch
 
-from django.test import TestCase, override_settings
+from django.test import TestCase
 from django.utils import timezone
 
 from taskmonitor.models import TaskLog
@@ -12,17 +12,21 @@ from .factories import TaskLogFactory
 TASKS_PATH = "taskmonitor.tasks"
 
 
-@patch(TASKS_PATH + ".TASKMONITOR_DATA_MAX_AGE", 3)
-@override_settings(CELERY_ALWAYS_EAGER=True, CELERY_EAGER_PROPAGATES_EXCEPTIONS=True)
 class TestTasks(TestCase):
-    def test_should_delete_stale_entries_only(self):
+    @patch(TASKS_PATH + ".TaskLog", wraps=TaskLog)
+    def test_should_delete_stale_entries_only(self, spy_TaskLog):
         # given
-        stale_entry = TaskLogFactory(
-            timestamp=timezone.now() - dt.timedelta(hours=3, seconds=1)
-        )
-        current_entry = TaskLogFactory(timestamp=timezone.now())
+        current_dt = timezone.now()
+        TaskLogFactory(timestamp=current_dt - dt.timedelta(hours=3, seconds=1))
+        TaskLogFactory(timestamp=current_dt - dt.timedelta(hours=3, seconds=1))
+        TaskLogFactory(timestamp=current_dt - dt.timedelta(hours=3, seconds=1))
+        current_entry = TaskLogFactory(timestamp=current_dt)
         # when
-        delete_stale_tasklogs()
+        with patch(TASKS_PATH + ".TASKMONITOR_DELETE_STALE_BATCH_SIZE", 2), patch(
+            TASKS_PATH + ".TASKMONITOR_DATA_MAX_AGE", 3
+        ):
+            delete_stale_tasklogs()
         # then
-        self.assertFalse(TaskLog.objects.filter(pk=stale_entry.pk).exists())
+        self.assertEqual(TaskLog.objects.count(), 1)
         self.assertTrue(TaskLog.objects.filter(pk=current_entry.pk).exists())
+        self.assertEqual(spy_TaskLog.objects.filter.call_count, 2)

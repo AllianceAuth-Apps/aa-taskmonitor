@@ -1,3 +1,5 @@
+"""Template tags for Task Monitor."""
+
 import random
 import string
 

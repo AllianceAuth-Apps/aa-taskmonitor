@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased] - yyyy-mm-dd
 
+## [0.17.1] - 2023-09-04
+
+### Changed
+
+- Add mandatory pylint checks
+- Will only delete one batch of stale task at a time to improve probability of stale tasks being deleted under high load
+- Refactor to fix pylint issues
+
 ## [0.17.0] - 2023-07-04
 
 ### Update notes

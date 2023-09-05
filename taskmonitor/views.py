@@ -1,3 +1,5 @@
+"""Views for Task Monitor."""
+
 import csv
 
 from django.conf import settings
@@ -100,7 +102,7 @@ def admin_taskmonitor_report_json(request, report_name: str):
     try:
         data = {"data": cached_reports.report_data(report_name, use_cache=use_cache)}
     except KeyError:
-        raise Http404(f'No report with name: "{report_name}"')
+        raise Http404(f'No report with name: "{report_name}"') from None
     return JsonResponse(data)
 
 
@@ -112,7 +114,7 @@ def admin_taskmonitor_report_html(request, report_name: str):
     try:
         data = cached_reports.report_data(report_name, use_cache=use_cache)
     except KeyError:
-        raise Http404(f'No report with name: "{report_name}"')
+        raise Http404(f'No report with name: "{report_name}"') from None
     disable_percent = request.GET.get("disable_percent") == "yes"
     context = {"data": data, "disable_percent": disable_percent}
     return render(
@@ -127,7 +129,7 @@ def admin_taskmonitor_report_debug(request, report_name: str):
     try:
         cached_reports.report_data(report_name, use_cache=False)
     except KeyError:
-        raise Http404(f'No report with name: "{report_name}"')
+        raise Http404(f'No report with name: "{report_name}"') from None
     context = {
         "title": "DEBUG Reports",
         "cl": {"opts": TaskLog._meta},

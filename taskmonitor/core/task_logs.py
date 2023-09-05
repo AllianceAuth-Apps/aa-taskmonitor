@@ -1,11 +1,15 @@
-"""Create tasklogs from executed celery tasks."""
+"""Create task logs from executed celery tasks."""
 
 from django.core.cache import cache
 from django.utils import timezone
 
-from ..app_settings import TASKMONITOR_ENABLED, TASKMONITOR_HOUSEKEEPING_FREQUENCY
-from ..models import TaskLog
-from ..tasks import DEFAULT_TASK_PRIORITY, run_housekeeping
+from taskmonitor.app_settings import (
+    TASKMONITOR_ENABLED,
+    TASKMONITOR_HOUSEKEEPING_FREQUENCY,
+)
+from taskmonitor.models import TaskLog
+from taskmonitor.tasks import DEFAULT_TASK_PRIORITY, run_housekeeping
+
 from . import celery_queues, task_records
 
 TASK_RECEIVED = "received"
@@ -129,8 +133,8 @@ def task_internal_error_handler_2(sender, task_id, request, exception):
             parent_id=request.get("parent_id"),
             received=task_records.fetch(task_id, TASK_RECEIVED),
             started=task_records.fetch(task_id, TASK_STARTED),
-            args=request.get("args", list()),
-            kwargs=request.get("kwargs", dict()),
+            args=request.get("args", []),
+            kwargs=request.get("kwargs", {}),
             exception=exception,
         )
     _run_housekeeping_if_stale()

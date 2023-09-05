@@ -3,11 +3,13 @@
 The django cache is used as data storage to enable persistence and thread safety.
 """
 
+# pylint: disable = redefined-builtin
+
 from typing import Any, Optional
 
 from django.core.cache import cache
 
-from ..app_settings import TASKMONITOR_DATA_MAX_AGE
+from taskmonitor.app_settings import TASKMONITOR_DATA_MAX_AGE
 
 CACHE_KEY = "taskmonitor_records"
 

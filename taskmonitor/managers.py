@@ -1,7 +1,11 @@
+"""Managers for Task Monitor."""
+
+# pylint: disable = missing-class-docstring
+
 import datetime as dt
 import json
 import traceback as tb
-from typing import List
+from typing import List, Optional
 from uuid import UUID
 
 from django.core.serializers.json import DjangoJSONEncoder
@@ -43,21 +47,26 @@ class ListAsQuerySet(list):
         self._list_size = len(self)
 
     def all(self) -> models.QuerySet:
+        """:private:"""
         return self
 
     def none(self) -> models.QuerySet:
+        """:private:"""
         return ListAsQuerySet([], model=self.model)
 
     def get(self, *args, **kwargs):
+        """:private:"""
         try:
             return self[self._id_mapper[str(kwargs["id"])]]
         except KeyError:
             raise self.model.DoesNotExist from None
 
     def distinct(self):
+        """:private:"""
         return ListAsQuerySet(list(set(self)), model=self.model, distinct=True)
 
     def values(self, *args):
+        """:private:"""
         result = [
             {k: v for k, v in obj.__dict__.items() if not args or k in args}
             for obj in self
@@ -65,6 +74,7 @@ class ListAsQuerySet(list):
         return result
 
     def values_list(self, *args, **kwargs):
+        """:private:"""
         items = [tuple(obj.values()) for obj in self.values(*args)]
         if kwargs.get("flat"):
             items = [obj[0] for obj in items]
@@ -74,9 +84,11 @@ class ListAsQuerySet(list):
         return items
 
     def first(self):
+        """:private:"""
         return self[0] if self else None
 
     def filter(self, *args, **kwargs):
+        """:private:"""
         if args:
             raise NotImplementedError("filter with positional args not supported.")
         if not kwargs:
@@ -84,24 +96,28 @@ class ListAsQuerySet(list):
         new_list = [
             obj
             for obj in self
-            if all([str(getattr(obj, k)) == str(v) for k, v in kwargs.items()])
+            if all((str(getattr(obj, k)) == str(v) for k, v in kwargs.items()))
         ]
         return ListAsQuerySet(new_list, model=self.model)
 
     def order_by(self, *args, **kwargs):
+        """:private:"""
         if kwargs:
             raise NotImplementedError("order with kw args not supported.")
         if args:
             for prop in reversed(args):
                 if prop[0:1] == "-":
                     reverse = True
-                    prop = prop[1:]
+                    prop_2 = prop[1:]
                 else:
                     reverse = False
-                self.sort(key=lambda d: getattr(d, prop), reverse=reverse)
+                    prop_2 = prop
+                # pylint: disable = cell-var-from-loop
+                self.sort(key=lambda d: getattr(d, prop_2), reverse=reverse)
         return self
 
     def count(self):
+        """:private:"""
         return self._list_size
 
     def _clone(self):
@@ -110,11 +126,13 @@ class ListAsQuerySet(list):
 
 class QueuedTaskQuerySet(models.QuerySet):
     def count(self):
+        """Return cached count."""
         return celery_queues.queue_length()
 
 
 class QueuedTaskManagerBase(models.Manager):
     def get_queryset(self) -> models.QuerySet:
+        """Return queryset generated from celery API."""
         if celery_queues.queue_length() > TASKMONITOR_QUEUED_TASKS_ADMIN_LIMIT:
             return self._none()
         return self.from_dto_list(celery_queues.fetch_tasks())
@@ -141,7 +159,7 @@ QueuedTaskManager = QueuedTaskManagerBase.from_queryset(QueuedTaskQuerySet)
 
 class TaskLogQuerySet(models.QuerySet):
     def csv_line_generator(self, fields: List[str]):
-        """Return the tasklogs for a CSV file line by line.
+        """Return the task logs for a CSV file line by line.
         And return the field names as first line.
         """
         field_names = [field.name for field in fields]
@@ -171,12 +189,21 @@ class TaskLogQuerySet(models.QuerySet):
         return qs["task_runs__avg"]
 
     def oldest_date(self) -> dt.datetime:
+        """Return oldest timestamp."""
         return self.aggregate(oldest=Min("timestamp"))["oldest"]
 
     def newest_date(self) -> dt.datetime:
+        """Return newest timestamp."""
         return self.aggregate(youngest=Max("timestamp"))["youngest"]
 
+    def filter_stale_logs(self, max_hours: int) -> models.QuerySet:
+        """Filter stale logs."""
+        deadline = timezone.now() - dt.timedelta(hours=max_hours)
+        qs = self.filter(timestamp__lt=deadline)
+        return qs
 
+
+# pylint: disable = too-many-locals
 class TaskLogManagerBase(TableSizeMixin, models.Manager):
     def create_from_task(
         self,
@@ -188,12 +215,12 @@ class TaskLogManagerBase(TableSizeMixin, models.Manager):
         priority: int,
         args: list,
         kwargs: dict,
-        received: dt.datetime = None,
-        started: dt.datetime = None,
-        parent_id: str = None,
+        received: Optional[dt.datetime] = None,
+        started: Optional[dt.datetime] = None,
+        parent_id: Optional[str] = None,
         exception=None,
         result=None,
-        current_queue_length: int = None,
+        current_queue_length: Optional[int] = None,
     ) -> models.Model:
         """Create new object from a celery task."""
         params = {

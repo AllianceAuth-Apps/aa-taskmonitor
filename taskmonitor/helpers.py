@@ -1,6 +1,9 @@
+"""Helpers for Task Monitor."""
+
+# pylint: disable = protected-access
+
 import datetime as dt
 import functools
-import itertools
 
 
 class Echo:
@@ -21,32 +24,13 @@ def extract_app_name(task_name: str) -> str:
     except ValueError:
         if len(parts) == 2:
             return parts[0]
-        else:
-            return ""
+        return ""
     return parts[idx - 1] if idx > 0 else ""
 
 
-def next_number(key: str = None) -> int:
-    """Generate a sequence of numbers starting at 1.
-
-    Args:
-        key: key to generate sequence for.
-    """
-    if key is None:
-        key = "_general"
-    try:
-        return next_number._counter[key].__next__()
-    except AttributeError:
-        next_number._counter = dict()
-    except KeyError:
-        pass
-    next_number._counter[key] = itertools.count(start=1)
-    return next_number._counter[key].__next__()
-
-
-def dict_sort_keys(d: dict) -> dict:
+def dict_sort_keys(dct: dict) -> dict:
     """Return a copy of this dictionary with sorted keys."""
-    return dict(sorted(d.items(), key=lambda x: x[0].lower()))
+    return dict(sorted(dct.items(), key=lambda x: x[0].lower()))
 
 
 def truncate_list(lst: list) -> list:
@@ -70,9 +54,9 @@ def truncate_dict(dct: dict) -> dict:
 
 def _replace_nested_element(value):
     if isinstance(value, dict):
-        return dict()
-    elif isinstance(value, (list, tuple, set)):
-        return list()
+        return {}
+    if isinstance(value, (list, tuple, set)):
+        return []
     return value
 
 
@@ -80,7 +64,7 @@ def truncate_result(value):
     """Truncate nested items in results and return as new value."""
     if isinstance(value, dict):
         return truncate_dict(value)
-    elif isinstance(value, (list, tuple, set)):
+    if isinstance(value, (list, tuple, set)):
         return compress_list(truncate_list(value))
     return value
 

@@ -425,6 +425,31 @@ class TasksThroughputByApp(_CachedReport):
         return series
 
 
+class ExceptionsThroughput(_CachedReport):
+    is_included = False
+
+    def _calc_data(self):
+        series = []
+        exceptions_qs = (
+            TaskLog.objects.exclude(exception="")
+            .exclude(exception="Retry")
+            .values_list("exception", flat=True)
+            .distinct()
+        )
+        exceptions = sorted(list(exceptions_qs))
+        for exception in exceptions:
+            app_qs = TaskLog.objects.filter(exception=exception)
+            qs = (
+                app_qs.order_by("timestamp")
+                .annotate(x=TruncMinute("timestamp"))
+                .values("x")
+                .annotate(y=Count("id"))
+            )
+            my_data = self._truncate_minutes(sum, qs, 5)
+            series.append({"name": exception, "data": my_data})
+        return series
+
+
 def refresh_cache() -> None:
     """Refresh the cache."""
     for my_report in reports():

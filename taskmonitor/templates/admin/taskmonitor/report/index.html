@@ -67,18 +67,16 @@
                     <li><a class="tabLinks" href="#top-failed-tasks">Top tasks by failed runs</a></li>
                     <li><a class="tabLinks" href="#top-retried-tasks">Top tasks by retried runs</a></li>
                 </ul>
-                <h3>Task Throughput</h3>
+                <h3>Over time</h3>
                 <ul>
                     <li><a class="tabLinks" href="#throughput-by-state">Throughput by state</a></li>
                     <li><a class="tabLinks" href="#throughput-by-app">Throughput by app</a></li>
+                    <li><a class="tabLinks" href="#exceptions-over-time">Exceptions over time</a></li>
+                    <li><a class="tabLinks" href="#queue-length">Queue Length over time</a></li>
                 </ul>
                 <h3>Task analysis</h3>
                 <ul>
                     <li><a class="tabLinks" href="#task-statistics">Task runs vs. runtime</a></li>
-                </ul>
-                <h3>Queue</h3>
-                <ul>
-                    <li><a class="tabLinks" href="#queue-length">Queue Length over time</a></li>
                 </ul>
             </div>
 
@@ -148,10 +146,16 @@
                     {% include "admin/taskmonitor/report/chart_throughput_partial.html" with report_name="tasks_throughput_by_app" %}
                 </div>
 
+                <div id="exceptions-over-time" class="tabContent">
+                    <h2>Exceptions per minute</h2>
+                    {% include "admin/taskmonitor/report/chart_throughput_partial.html" with report_name="exceptions_throughput" %}
+                </div>
+
                 <div id="queue-length" class="tabContent">
                     <h2>Queue length over time</h2>
                     {% include "admin/taskmonitor/report/chart_throughput_partial.html" with report_name="queue_length_over_time" %}
                 </div>
+
 
                 <div id="task-statistics" class="tabContent">
                     <h2>Task runs vs. runtime (logarithmic scale)</h2>

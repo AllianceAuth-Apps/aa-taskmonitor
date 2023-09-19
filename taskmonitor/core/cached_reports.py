@@ -432,6 +432,7 @@ class ExceptionsThroughput(_CachedReport):
         series = []
         exceptions_qs = (
             TaskLog.objects.exclude(exception="")
+            .exclude(exception="Retry")
             .values_list("exception", flat=True)
             .distinct()
         )

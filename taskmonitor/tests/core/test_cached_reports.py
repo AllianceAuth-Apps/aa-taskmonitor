@@ -177,3 +177,33 @@ class TestTasksThroughputByApp(TestCase):
         result = obj._calc_data()
         # then
         self.assertListEqual(result, [])
+
+
+class TestExceptionsOverTime(TestCase):
+    def setUp(self) -> None:
+        cache.clear()
+
+    def test_should_create_queue_report(self):
+        # given
+        start_dt = dt.datetime(2023, 1, 1, 12, 0, tzinfo=utc)
+        TaskLogFactory(
+            received=start_dt,
+            started=start_dt,
+            timestamp=start_dt + dt.timedelta(seconds=5),
+            current_queue_length=30,
+            exception="Bravo",
+        )
+        TaskLogFactory(
+            received=start_dt,
+            started=start_dt,
+            timestamp=start_dt + dt.timedelta(seconds=5),
+            current_queue_length=30,
+            exception="Alpha",
+        )
+        start_dt += dt.timedelta(minutes=5)
+        report = cached_reports.ExceptionsThroughput()
+        # when
+        result = report._calc_data()
+        # then
+        self.assertEqual(result[0]["name"], "Alpha")
+        self.assertEqual(result[1]["name"], "Bravo")

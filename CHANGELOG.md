@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased] - yyyy-mm-dd
 
+## [0.19.0] - TBD
+
+### Added
+
+- Show button on reports page to navigate to logs
+
 ## [0.18.0] - 2023-09-19
 
 ### Added

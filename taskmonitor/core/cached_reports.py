@@ -412,7 +412,7 @@ class TasksThroughputByApp(_CachedReport):
         )
         for app_name in app_names:
             qs = (
-                TaskLog.objects.filter(state=TaskLog.State.SUCCESS)
+                TaskLog.objects.filter(state=TaskLog.State.SUCCESS, app_name=app_name)
                 .order_by("timestamp")
                 .annotate(x=TruncMinute("timestamp"))
                 .values("x")
@@ -461,7 +461,7 @@ class AppFailuresOverTime(_CachedReport):
         )
         for app_name in app_names:
             qs = (
-                TaskLog.objects.filter(state=TaskLog.State.FAILURE)
+                TaskLog.objects.filter(app_name=app_name, state=TaskLog.State.FAILURE)
                 .order_by("timestamp")
                 .annotate(x=TruncMinute("timestamp"))
                 .values("x")

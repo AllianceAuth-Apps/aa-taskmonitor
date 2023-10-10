@@ -7,12 +7,17 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased] - yyyy-mm-dd
 
-## [0.19.0] - TBD
+## [0.19.0] - 2023-10-10
 
 ### Added
 
 - New report: App failures over time
 - Show button on reports page to navigate to logs
+- Show when reports where last updated on reports page
+
+### Changed
+
+- Reduced frequency of house keeping and updating reports by half
 
 ## [0.18.0] - 2023-09-19
 

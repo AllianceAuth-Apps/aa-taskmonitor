@@ -74,14 +74,14 @@ class _CachedReport:
         """Clear the cache."""
         cache.delete(self.cache_key)
 
-    def last_update_at(self, ttl) -> Optional[dt.datetime]:
+    def last_update_at(self) -> Optional[dt.datetime]:
         """When the cache was last updated or None if there is no cache."""
         ttl = self._ttl()
         if not ttl:
             return None
         return timezone.now() - dt.timedelta(seconds=max(0, self.timeout - ttl))
 
-    def next_update_at(self, ttl) -> Optional[dt.datetime]:
+    def next_update_at(self) -> Optional[dt.datetime]:
         """When the cache will be updated next (earliest) or None if no cache."""
         ttl = self._ttl()
         if not ttl:

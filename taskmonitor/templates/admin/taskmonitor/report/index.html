@@ -181,7 +181,7 @@
                         {{ total_runs|intcomma }}
                     {% endif %}
                     task logs spanning {{ newest_date|timeuntil:oldest_date }}.
-                    This data is cached.
+                    This data is cached and was last updated {{ last_update_at|naturaltime|default:"?"}}.
                     All data of this app is stored for a maxmimum of {{ data_max_age }} hours.
                 </p>
             </div>

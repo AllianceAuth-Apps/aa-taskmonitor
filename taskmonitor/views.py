@@ -53,10 +53,11 @@ def admin_taskmonitor_download_csv(request) -> StreamingHttpResponse:
 @staff_member_required
 def admin_taskmonitor_reports(request):
     """Show the reports page."""
-    report = cached_reports.report("tasks_basics").data()
-    total_runs = report["total_runs"]
-    oldest_date = report["oldest_date"]
-    newest_date = report["newest_date"]
+    report = cached_reports.report("tasks_basics")
+    report_data = report.data()
+    total_runs = report_data["total_runs"]
+    oldest_date = report_data["oldest_date"]
+    newest_date = report_data["newest_date"]
     context = {
         "title": "Reports",
         "site_header": site_header,
@@ -67,6 +68,7 @@ def admin_taskmonitor_reports(request):
         "oldest_date": oldest_date,
         "newest_date": newest_date,
         "MAX_TOP": TASKMONITOR_REPORTS_MAX_TOP,
+        "last_update_at": report.last_update_at(),
     }
     return render(request, "admin/taskmonitor/report/index.html", context)
 

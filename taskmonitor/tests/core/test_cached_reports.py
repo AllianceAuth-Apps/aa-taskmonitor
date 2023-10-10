@@ -4,8 +4,8 @@ from unittest.mock import MagicMock, patch
 
 from pytz import utc
 
-from django.core.cache import cache
 from django.test import TestCase
+from django.utils.timezone import now
 
 from taskmonitor.core import cached_reports
 from taskmonitor.models import TaskLog
@@ -49,7 +49,7 @@ class TestCachedReports(TestCase):
 
 class TestQueueLengthOverTime(TestCase):
     def setUp(self) -> None:
-        cache.clear()
+        cached_reports.clear_cache()
 
     def test_should_create_queue_report(self):
         # given
@@ -180,9 +180,6 @@ class TestTasksThroughputByApp(TestCase):
 
 
 class TestExceptionsOverTime(TestCase):
-    def setUp(self) -> None:
-        cache.clear()
-
     def test_should_create_report(self):
         # given
         start_dt = dt.datetime(2023, 1, 1, 12, 0, tzinfo=utc)
@@ -210,9 +207,6 @@ class TestExceptionsOverTime(TestCase):
 
 
 class TestAppFailuresOverTime(TestCase):
-    def setUp(self) -> None:
-        cache.clear()
-
     def test_should_create_report(self):
         # given
         start_dt = dt.datetime(2023, 1, 1, 12, 0, tzinfo=utc)
@@ -238,3 +232,40 @@ class TestAppFailuresOverTime(TestCase):
         result = report._calc_data()
         # then
         self.assertTrue(result)
+
+
+class TestCachedReport2(TestCase):
+    """Testing a cached report without mocking the cache."""
+
+    def setUp(self) -> None:
+        cached_reports.clear_cache()
+
+    def test_should_create_report(self):
+        # given
+        start_dt = dt.datetime(2023, 1, 1, 12, 0, tzinfo=utc)
+        TaskLogFactory(
+            received=start_dt,
+            started=start_dt,
+            timestamp=start_dt + dt.timedelta(seconds=5),
+            current_queue_length=30,
+            exception="Bravo",
+            state=TaskLog.State.FAILURE,
+        )
+        TaskLogFactory(
+            received=start_dt,
+            started=start_dt,
+            timestamp=start_dt + dt.timedelta(seconds=5),
+            current_queue_length=30,
+            exception="Alpha",
+            state=TaskLog.State.FAILURE,
+        )
+        start_dt += dt.timedelta(minutes=5)
+        report = cached_reports.AppFailuresOverTime()
+        # when
+        result = report.data()
+        # then
+        self.assertTrue(result)
+        self.assertAlmostEqual(
+            report.last_update_at(), now(), delta=dt.timedelta(seconds=30)
+        )
+        self.assertLessEqual(report.last_update_at(), report.next_update_at())

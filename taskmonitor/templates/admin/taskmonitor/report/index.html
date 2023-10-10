@@ -97,7 +97,7 @@
                 </div>
 
                 <div id="task-througput" class="tabContent">
-                    <h2>Throughput in task executions per minute</h2>
+                    <h2>Completed tasks per minute</h2>
                     {% include "admin/taskmonitor/report/table_partial.html" with report_name="tasks_throughput" disable_percent="yes" %}
                 </div>
 
@@ -142,12 +142,12 @@
                 </div>
 
                 <div id="throughput-by-state" class="tabContent">
-                    <h2>Task throughput per minute by state</h2>
+                    <h2>Executed tasks per minute by state</h2>
                     {% include "admin/taskmonitor/report/chart_throughput_partial.html" with report_name="tasks_throughput_by_state" %}
                 </div>
 
                 <div id="throughput-by-app" class="tabContent">
-                    <h2>Task throughput per minute by app</h2>
+                    <h2>Completed tasks per minute by app</h2>
                     {% include "admin/taskmonitor/report/chart_throughput_partial.html" with report_name="tasks_throughput_by_app" %}
                 </div>
 

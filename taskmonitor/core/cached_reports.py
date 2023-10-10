@@ -365,7 +365,7 @@ class TasksTopRetried(_CachedReport):
 
 class TasksThroughput(_CachedReport):
     def _calc_data(self):
-        tasklogs_not_failed = TaskLog.objects.exclude(state=TaskLog.State.FAILURE)
+        tasklogs_not_failed = TaskLog.objects.filter(state=TaskLog.State.SUCCESS)
         tasks_throughput = []
         average_last_hours = {}
         for hours in [1, 3, 6, 12, 24]:
@@ -403,19 +403,17 @@ class TasksThroughputByApp(_CachedReport):
     is_included = False
 
     def _calc_data(self):
-        apps = report("task_runs_by_app").data()
-        if not apps:
-            return []
         series = []
-        app_names = [app["name"] for app in apps]
-        real_app_name = {name for name in app_names if name != APP_NAME_OTHERS}
+        app_names = (
+            TaskLog.objects.filter(state=TaskLog.State.SUCCESS)
+            .values_list("app_name", flat=True)
+            .distinct()
+            .order_by("app_name")
+        )
         for app_name in app_names:
-            if app_name in real_app_name:
-                app_qs = TaskLog.objects.filter(app_name=app_name)
-            else:
-                app_qs = TaskLog.objects.exclude(app_name__in=real_app_name)
             qs = (
-                app_qs.order_by("timestamp")
+                TaskLog.objects.filter(state=TaskLog.State.SUCCESS)
+                .order_by("timestamp")
                 .annotate(x=TruncMinute("timestamp"))
                 .values("x")
                 .annotate(y=Count("id"))
@@ -430,13 +428,13 @@ class ExceptionsThroughput(_CachedReport):
 
     def _calc_data(self):
         series = []
-        exceptions_qs = (
+        exceptions = (
             TaskLog.objects.exclude(exception="")
             .exclude(exception="Retry")
             .values_list("exception", flat=True)
             .distinct()
+            .order_by("exception")
         )
-        exceptions = sorted(list(exceptions_qs))
         for exception in exceptions:
             app_qs = TaskLog.objects.filter(exception=exception)
             qs = (

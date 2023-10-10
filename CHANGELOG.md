@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased] - yyyy-mm-dd
 
+## [0.19.1] - 2023-10-10
+
+### Fixed
+
+- Bug in new app failures report
+
 ## [0.19.0] - 2023-10-10
 
 ### Added

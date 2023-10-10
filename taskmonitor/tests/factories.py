@@ -14,27 +14,28 @@ from taskmonitor.models import TaskLog
 
 # generate fake apps and task names
 faker = faker.Faker()
-fake_tasks = {}
+_fake_tasks = {}
 for app_name in {faker.first_name().lower() for _ in range(24)}:
-    fake_tasks[app_name] = [
+    _fake_tasks[app_name] = [
         app_name + ".tasks." + "_".join(faker.words(3)).lower()
         for _ in range(randint(3, 20))
     ]
-fake_tasks_all = list(
-    itertools.chain(*[fake_tasks[app_name] for app_name in fake_tasks])
+_fake_tasks_all = list(
+    itertools.chain(*[_fake_tasks[app_name] for app_name in _fake_tasks])
 )
+fake_apps = list(_fake_tasks.keys())
 
-fake_words = [obj.lower() for obj in faker.words(50)]
-fake_numbers = [randint(0, 1_000_000) for _ in range(100)]
-fake_args = fake_words + fake_numbers
-shuffle(fake_args)
+_fake_words = [obj.lower() for obj in faker.words(50)]
+_fake_numbers = [randint(0, 1_000_000) for _ in range(100)]
+_fake_args = _fake_words + _fake_numbers
+shuffle(_fake_args)
 
 
 class TaskLogFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = TaskLog
 
-    app_name = factory.fuzzy.FuzzyChoice(fake_tasks.keys())
+    app_name = factory.fuzzy.FuzzyChoice(fake_apps)
     current_queue_length = factory.fuzzy.FuzzyInteger(0, 1_000)
     received = factory.fuzzy.FuzzyDateTime(
         timezone.now() - dt.timedelta(hours=23, minutes=59)
@@ -44,7 +45,7 @@ class TaskLogFactory(factory.django.DjangoModelFactory):
             o.received, end_dt=o.received + dt.timedelta(minutes=1)
         ).fuzz()
     )
-    task_name = factory.LazyAttribute(lambda o: choice(fake_tasks[o.app_name]))
+    task_name = factory.LazyAttribute(lambda o: choice(_fake_tasks[o.app_name]))
 
     @factory.lazy_attribute
     def task_id(self):
@@ -52,11 +53,11 @@ class TaskLogFactory(factory.django.DjangoModelFactory):
 
     @factory.lazy_attribute
     def args(self):
-        return list(choices(fake_args, k=randint(0, 10)))
+        return list(choices(_fake_args, k=randint(0, 10)))
 
     @factory.lazy_attribute
     def kwargs(self):
-        keys = choices(fake_words, k=randint(0, 20))
+        keys = choices(_fake_words, k=randint(0, 20))
         return {key: randint(0, 1_000_000) for key in keys}
 
     @factory.lazy_attribute
@@ -115,7 +116,7 @@ class TaskLogFactory(factory.django.DjangoModelFactory):
     @factory.lazy_attribute
     def result(self):
         if self.state == TaskLog.State.SUCCESS:
-            return choice(fake_args)
+            return choice(_fake_args)
         return None
 
 
@@ -170,7 +171,7 @@ class QueuedTaskRawFactory(factory.DictFactory):
     headers = factory.Dict(
         {
             "lang": "py",
-            "task": factory.LazyAttribute(lambda o: choice(fake_tasks_all)),
+            "task": factory.LazyAttribute(lambda o: choice(_fake_tasks_all)),
             "id": factory.Faker("uuid4"),
             "retries": 0,
             "origin": "dummy@QueuedTaskRawFactory",

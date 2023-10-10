@@ -14,11 +14,11 @@ TASKMONITOR_DELETE_STALE_BATCH_SIZE = clean_setting(
 """Size of task logs deleted together in one batch."""
 
 TASKMONITOR_HOUSEKEEPING_FREQUENCY = clean_setting(
-    "TASKMONITOR_HOUSEKEEPING_FREQUENCY", 15
+    "TASKMONITOR_HOUSEKEEPING_FREQUENCY", 30
 )
 """Frequency of house keeping runs in minutes."""
 
-TASKMONITOR_REPORTS_MAX_AGE = clean_setting("TASKMONITOR_REPORTS_MAX_AGE", 30)
+TASKMONITOR_REPORTS_MAX_AGE = clean_setting("TASKMONITOR_REPORTS_MAX_AGE", 60)
 """Max age of cached reports in minutes."""
 
 

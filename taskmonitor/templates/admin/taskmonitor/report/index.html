@@ -25,13 +25,17 @@
     <h1>
         {{ title }}
         <span class="float-right">
-        <a href="{% url 'taskmonitor:admin_taskmonitor_reports_recalculation' %}">
-            <input type="button" value="Recalc now"></a>
-        {% if debug_mode %}
-            <a href="{% url 'taskmonitor:admin_taskmonitor_reports_clear_cache' %}">
-                <input type="button" value="Clear cache">
+            <a href="{% url 'admin:taskmonitor_tasklog_changelist' %}">
+                <input type="button" value="Task Logs">
             </a>
-        {% endif %}
+            <a href="{% url 'taskmonitor:admin_taskmonitor_reports_recalculation' %}">
+                <input type="button" value="Recalc now">
+            </a>
+            {% if debug_mode %}
+                <a href="{% url 'taskmonitor:admin_taskmonitor_reports_clear_cache' %}">
+                    <input type="button" value="Clear cache">
+                </a>
+            {% endif %}
         </span>
     </h1>
     <br class="clear">
@@ -72,6 +76,7 @@
                     <li><a class="tabLinks" href="#throughput-by-state">Throughput by state</a></li>
                     <li><a class="tabLinks" href="#throughput-by-app">Throughput by app</a></li>
                     <li><a class="tabLinks" href="#exceptions-over-time">Exceptions over time</a></li>
+                    <li><a class="tabLinks" href="#app-failures-over-time">App failures over time</a></li>
                     <li><a class="tabLinks" href="#queue-length">Queue Length over time</a></li>
                 </ul>
                 <h3>Task analysis</h3>
@@ -92,7 +97,7 @@
                 </div>
 
                 <div id="task-througput" class="tabContent">
-                    <h2>Throughput in task executions per minute</h2>
+                    <h2>Completed tasks per minute</h2>
                     {% include "admin/taskmonitor/report/table_partial.html" with report_name="tasks_throughput" disable_percent="yes" %}
                 </div>
 
@@ -137,18 +142,23 @@
                 </div>
 
                 <div id="throughput-by-state" class="tabContent">
-                    <h2>Task throughput per minute by state</h2>
+                    <h2>Executed tasks per minute by state</h2>
                     {% include "admin/taskmonitor/report/chart_throughput_partial.html" with report_name="tasks_throughput_by_state" %}
                 </div>
 
                 <div id="throughput-by-app" class="tabContent">
-                    <h2>Task throughput per minute by app</h2>
+                    <h2>Completed tasks per minute by app</h2>
                     {% include "admin/taskmonitor/report/chart_throughput_partial.html" with report_name="tasks_throughput_by_app" %}
                 </div>
 
                 <div id="exceptions-over-time" class="tabContent">
                     <h2>Exceptions per minute</h2>
                     {% include "admin/taskmonitor/report/chart_throughput_partial.html" with report_name="exceptions_throughput" %}
+                </div>
+
+                <div id="app-failures-over-time" class="tabContent">
+                    <h2>App failures per minute</h2>
+                    {% include "admin/taskmonitor/report/chart_throughput_partial.html" with report_name="app_failures_over_time" %}
                 </div>
 
                 <div id="queue-length" class="tabContent">
@@ -171,7 +181,7 @@
                         {{ total_runs|intcomma }}
                     {% endif %}
                     task logs spanning {{ newest_date|timeuntil:oldest_date }}.
-                    This data is cached.
+                    This data is cached and was last updated {{ last_update_at|naturaltime|default:"?"}}.
                     All data of this app is stored for a maxmimum of {{ data_max_age }} hours.
                 </p>
             </div>

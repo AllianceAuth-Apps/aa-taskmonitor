@@ -450,6 +450,34 @@ class ExceptionsThroughput(_CachedReport):
         return series
 
 
+class AppFailuresOverTime(_CachedReport):
+    is_included = False
+
+    def _calc_data(self):
+        apps = report("task_runs_by_app").data()
+        if not apps:
+            return []
+
+        series = []
+        app_names = [app["name"] for app in apps]
+        real_app_name = {name for name in app_names if name != APP_NAME_OTHERS}
+        for app_name in app_names:
+            if app_name in real_app_name:
+                app_qs = TaskLog.objects.filter(app_name=app_name)
+            else:
+                app_qs = TaskLog.objects.exclude(app_name__in=real_app_name)
+            qs = (
+                app_qs.filter(state=TaskLog.State.FAILURE)
+                .order_by("timestamp")
+                .annotate(x=TruncMinute("timestamp"))
+                .values("x")
+                .annotate(y=Count("id"))
+            )
+            my_data = self._truncate_minutes(sum, qs, 5)
+            series.append({"name": app_name, "data": my_data})
+        return series
+
+
 def refresh_cache() -> None:
     """Refresh the cache."""
     for my_report in reports():

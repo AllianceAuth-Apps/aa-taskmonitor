@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Added
 
+- New report: App failures over time
 - Show button on reports page to navigate to logs
 
 ## [0.18.0] - 2023-09-19

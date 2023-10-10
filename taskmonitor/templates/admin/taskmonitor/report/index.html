@@ -76,6 +76,7 @@
                     <li><a class="tabLinks" href="#throughput-by-state">Throughput by state</a></li>
                     <li><a class="tabLinks" href="#throughput-by-app">Throughput by app</a></li>
                     <li><a class="tabLinks" href="#exceptions-over-time">Exceptions over time</a></li>
+                    <li><a class="tabLinks" href="#app-failures-over-time">App failures over time</a></li>
                     <li><a class="tabLinks" href="#queue-length">Queue Length over time</a></li>
                 </ul>
                 <h3>Task analysis</h3>
@@ -153,6 +154,11 @@
                 <div id="exceptions-over-time" class="tabContent">
                     <h2>Exceptions per minute</h2>
                     {% include "admin/taskmonitor/report/chart_throughput_partial.html" with report_name="exceptions_throughput" %}
+                </div>
+
+                <div id="app-failures-over-time" class="tabContent">
+                    <h2>App failures per minute</h2>
+                    {% include "admin/taskmonitor/report/chart_throughput_partial.html" with report_name="app_failures_over_time" %}
                 </div>
 
                 <div id="queue-length" class="tabContent">

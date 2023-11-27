@@ -203,8 +203,8 @@ class TaskLogQuerySet(models.QuerySet):
         return qs
 
 
-# pylint: disable = too-many-locals
 class TaskLogManagerBase(TableSizeMixin, models.Manager):
+    # pylint: disable = too-many-locals, too-many-arguments
     def create_from_task(
         self,
         *,

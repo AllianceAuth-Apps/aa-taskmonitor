@@ -7,11 +7,15 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased] - yyyy-mm-dd
 
-## [0.21.0] - TBD
+## [0.21.0] - 2023-12-04
 
 ### Added
 
-- New admin page with detailed statistics for all tasks
+- See detailed statistics for all tasks
+
+## Changed
+
+- Improved test suite
 
 ## [0.20.0] - 2023-11-27
 

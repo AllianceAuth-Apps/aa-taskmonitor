@@ -15,6 +15,7 @@ from django.db.models.functions import Round, TruncMinute
 from django.utils import timezone
 
 from allianceauth.services.hooks import get_extension_logger
+from app_utils.caching import cached_queryset
 from app_utils.database import TableSizeMixin
 from app_utils.logging import LoggerAddTag
 
@@ -268,6 +269,8 @@ class TaskLogManagerBase(TableSizeMixin, models.Manager):
 TaskLogManager = TaskLogManagerBase.from_queryset(TaskLogQuerySet)
 
 
+# TODO: Add ability to manually clear the cache & show how old the cache is
+# TODO: Make cache duration a setting
 class TaskStatisticManager(models.Manager):
     def get_queryset(self) -> models.QuerySet:
         """Return queryset with generated data from statistics query."""
@@ -279,7 +282,7 @@ class TaskStatisticManager(models.Manager):
             for field in TaskStatistic._meta.get_fields()
             if field.name not in excluded_fields
         ]
-        query = (
+        raw_query = (
             TaskLog.objects.values(name=F("task_name"))
             .annotate(app=F("app_name"))
             .annotate(runs_total=Count("pk"))
@@ -293,6 +296,11 @@ class TaskStatisticManager(models.Manager):
             .values(*field_names)
             .order_by("name")
         )
-        items = [{**obj, **{"id": num}} for num, obj in enumerate(query, start=1)]
+        effective_query = cached_queryset(
+            raw_query, key="taskmonitor-task-statistics", timeout=600
+        )
+        items = [
+            {**obj, **{"id": num}} for num, obj in enumerate(effective_query, start=1)
+        ]
         objs = [TaskStatistic(**obj) for obj in items]
         return ListAsQuerySet(objs, model=TaskStatistic)

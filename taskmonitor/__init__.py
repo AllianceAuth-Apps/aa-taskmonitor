@@ -3,5 +3,5 @@
 # pylint: disable = invalid-name
 default_app_config = "taskmonitor.apps.TaskMonitorConfig"
 
-__version__ = "0.21.0a1"
+__version__ = "0.21.0a2"
 __title__ = "Task Monitor"

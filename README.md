@@ -30,7 +30,7 @@ Task Monitor enables administrators to monitor celery tasks running on their sys
 - Stores many details in task logs to support the analysis of potential celery issues, including the parameters a task with called with and complete exception messages
 - Keeps the storage needs in check by automatically deleting older task logs and removing likely bloat from the collected data (but can also be turned off)
 - Admins can investigate task log with search & filters
-- Admins can view details for each task incl. exceptions and trace logs
+- Admins can view details for each task log incl. exceptions and trace logs
 - Admins can review reports with charts providing answers to common questions, e.g:
   - How many tasks have failed/retried?
   - How many tasks where run by each of my apps?
@@ -39,6 +39,7 @@ Task Monitor enables administrators to monitor celery tasks running on their sys
   - Which tasks failed the most?
   - How much backlog do I have in task queue over time?
 - Admins can export all task logs to a CSV file for further analysis with 3rd party tools (e.g. Google sheets)
+- Admins can see detailed statistics for all tasks
 - Command line utility to manage task logs and queue directly
 
 ## Screenshots
@@ -54,6 +55,10 @@ Task Monitor enables administrators to monitor celery tasks running on their sys
 ### Example chart in reports
 
 ![tasklog](https://i.imgur.com/OrVmZXT.png)
+
+### View detailed statistics for all tasks
+
+![tasklog](https://imgpile.com/images/GQ58Wj.png)
 
 ## Installation
 

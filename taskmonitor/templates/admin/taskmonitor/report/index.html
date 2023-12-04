@@ -173,17 +173,7 @@
                 </div>
 
                 <br>
-                <p>
-                    Total of
-                    {% if total_runs > 1000000 %}
-                        {{ total_runs|intword }}
-                    {% else %}
-                        {{ total_runs|intcomma }}
-                    {% endif %}
-                    task logs spanning {{ newest_date|timeuntil:oldest_date }}.
-                    This data is cached and was last updated {{ last_update_at|naturaltime|default:"?"}}.
-                    All data of this app is stored for a maxmimum of {{ data_max_age }} hours.
-                </p>
+                {% include "admin/taskmonitor/_task_info.html" %}
             </div>
 
 

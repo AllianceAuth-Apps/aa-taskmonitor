@@ -66,4 +66,5 @@ disable = [
     "import-outside-toplevel",
     "cyclic-import",
     "duplicate-code",
+    "fixme",
 ]

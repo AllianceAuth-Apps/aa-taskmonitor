@@ -41,7 +41,8 @@ compilemessages:
 		-l zh_Hans
 
 coverage:
-	coverage run ../myauth/manage.py test $(package).tests --keepdb --failfast --debug-mode && coverage html && coverage report
+	coverage run ../myauth/manage.py test $(package).tests --keepdb --failfast --timing && coverage html && coverage report -m
+	# coverage run --concurrency=multiprocessing $(package) test --keepdb --failfast --timing --parallel && coverage combine && coverage html && coverage report -m
 
 check_complexity:
 	flake8 $(package) --max-complexity=10

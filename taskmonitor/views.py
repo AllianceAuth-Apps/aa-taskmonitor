@@ -20,7 +20,7 @@ from taskmonitor.app_settings import (
 )
 from taskmonitor.core import cached_reports, celery_queues
 from taskmonitor.helpers import Echo
-from taskmonitor.models import TaskLog
+from taskmonitor.models import TaskLog, TaskStatistic
 
 logger = LoggerAddTag(get_extension_logger(__name__), __title__)
 
@@ -85,7 +85,7 @@ def admin_taskmonitor_reports_clear_cache(request):
 @staff_member_required
 def admin_taskmonitor_reports_recalculation(request):
     """Start the reports recalculation."""
-    tasks.refresh_reports_cache.apply_async(priority=tasks.DEFAULT_TASK_PRIORITY)
+    tasks.refresh_cached_data.apply_async(priority=tasks.DEFAULT_TASK_PRIORITY)
     messages.info(
         request,
         (
@@ -156,3 +156,11 @@ def admin_queued_task_clear_cache(request):
     """Clear the cache for queued tasks."""
     celery_queues.tasks_cache.clear()
     return redirect("admin:taskmonitor_queuedtask_changelist")
+
+
+@login_required
+@staff_member_required
+def admin_taskmonitor_statistics_clear_cache(request):
+    """Reload the reports page with cleared cache."""
+    TaskStatistic.objects.clear_cache()
+    return redirect("admin:taskmonitor_taskstatistic_changelist")

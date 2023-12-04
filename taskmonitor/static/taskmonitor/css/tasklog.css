@@ -1,0 +1,18 @@
+.field-_timestamp {
+    white-space: nowrap;
+}
+
+.field-task_name {
+    overflow-wrap: break-word;
+    word-break: break-all;
+}
+
+.field-_params {
+    overflow-wrap: break-word;
+    word-break: break-all;
+}
+
+.field-_exception {
+    overflow-wrap: break-word;
+    word-break: break-all;
+}

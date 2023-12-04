@@ -1,0 +1,15 @@
+{% load humanize %}
+
+<p class="text-muted">
+    Based on a total of
+    {% if total_runs > 1000000 %}
+        {{ total_runs|intword }}
+    {% else %}
+        {{ total_runs|intcomma }}
+    {% endif %}
+    task logs spanning {{ newest_date|timeuntil:oldest_date }}.
+    All data of this app is stored for a maxmimum of {{ data_max_age }} hours.
+    {% if last_update_at%}
+        This data is cached and was last updated {{ last_update_at|naturaltime|default:"?"}}.
+    {% endif %}
+</p>

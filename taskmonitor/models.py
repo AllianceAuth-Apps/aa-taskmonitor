@@ -8,7 +8,7 @@ from django.db import models
 
 from .core.celery_queues import QueuedTaskShort
 from .helpers import extract_app_name
-from .managers import QueuedTaskManager, TaskLogManager
+from .managers import QueuedTaskManager, TaskLogManager, TaskStatisticManager
 
 CHAR_FIELD_MAX_LENGTH = 255
 
@@ -66,6 +66,32 @@ class TaskReport(models.Model):
         verbose_name = "report"
 
     id = models.BigIntegerField(primary_key=True)
+
+
+class TaskStatistic(models.Model):
+    """Statistics for a task.
+
+    This is a fake model, which we need to this data on the admin site.
+    """
+
+    class Meta:
+        managed = False
+
+    name = models.CharField(max_length=CHAR_FIELD_MAX_LENGTH)
+    app = models.CharField(max_length=CHAR_FIELD_MAX_LENGTH)
+    runtime_min = models.FloatField()
+    runtime_avg = models.FloatField()
+    runtime_max = models.FloatField()
+    runtime_total = models.FloatField()
+    runs_succeeded = models.IntegerField()
+    runs_failed = models.IntegerField()
+    runs_retried = models.IntegerField()
+    runs_total = models.IntegerField()
+
+    objects = TaskStatisticManager()
+
+    def __str__(self):
+        return self.name
 
 
 class TaskLog(models.Model):

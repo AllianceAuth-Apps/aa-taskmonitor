@@ -17,7 +17,6 @@ from .app_settings import (
     TASKMONITOR_DATA_MAX_AGE,
     TASKMONITOR_QUEUED_TASKS_ADMIN_LIMIT,
     TASKMONITOR_QUEUED_TASKS_CACHE_TIMEOUT,
-    TASKMONITOR_STATISTICS_CACHE_TIMEOUT,
 )
 from .core import cached_reports, celery_queues
 from .models import QueuedTask, TaskLog, TaskReport, TaskStatistic
@@ -317,10 +316,7 @@ class TaskStatisticAdmin(admin.ModelAdmin):
         return False
 
     def changelist_view(self, request, extra_context=None):
-        context = {
-            "title": "Task Statistics",
-            "cache_timeout": TASKMONITOR_STATISTICS_CACHE_TIMEOUT,
-        }
+        context = {"title": "Task Statistics"}
         last_update_at = TaskStatistic.objects.cached_at()
         context.update(task_log_stats(last_update_at))
         extra_context = extra_context or {}

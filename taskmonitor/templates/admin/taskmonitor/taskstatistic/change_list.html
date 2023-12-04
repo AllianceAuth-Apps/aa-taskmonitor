@@ -11,13 +11,11 @@
 
 {% block object-tools-items %}
     {{ block.super }}
-    {% if cache_timeout %}
-        <li>
-            <a href="{% url 'taskmonitor:admin_taskmonitor_statistics_clear_cache' %}" class="btn btn-high">
-                {% translate "Recalc now" %}
-            </a>
-        </li>
-    {% endif %}
+    <li>
+        <a href="{% url 'taskmonitor:admin_taskmonitor_statistics_clear_cache' %}" class="btn btn-high">
+            {% translate "Recalc now" %}
+        </a>
+    </li>
 {% endblock %}
 
 {% block content %}

@@ -22,7 +22,7 @@ from app_utils.logging import LoggerAddTag
 from . import __title__
 from .app_settings import (
     TASKMONITOR_QUEUED_TASKS_ADMIN_LIMIT,
-    TASKMONITOR_STATISTICS_CACHE_TIMEOUT,
+    TASKMONITOR_REPORTS_MAX_AGE,
     TASKMONITOR_TRUNCATE_NESTED_DATA,
 )
 from .core import celery_queues
@@ -272,31 +272,24 @@ TaskLogManager = TaskLogManagerBase.from_queryset(TaskLogQuerySet)
 
 class TaskStatisticManager(models.Manager):
     _CACHE_KEY = "taskmonitor-task-statistics"
+    _CACHE_TIMEOUT = TASKMONITOR_REPORTS_MAX_AGE * 60
 
     def get_queryset(self) -> models.QuerySet:
         """Return queryset with generated data from statistics query."""
         from .models import TaskStatistic
 
-        if TASKMONITOR_STATISTICS_CACHE_TIMEOUT:
-            objs = cache.get_or_set(
-                key=self._CACHE_KEY,
-                default=self._run_query,
-                timeout=TASKMONITOR_STATISTICS_CACHE_TIMEOUT,
-            )
-        else:
-            objs = self._run_query()
+        objs = cache.get_or_set(
+            key=self._CACHE_KEY, default=self._run_query, timeout=self._CACHE_TIMEOUT
+        )
 
         return ListAsQuerySet(objs, model=TaskStatistic)
 
     @classmethod
     def refresh_cache(cls):
         """Update the query cache."""
-        if TASKMONITOR_STATISTICS_CACHE_TIMEOUT:
-            cache.set(
-                key=cls._CACHE_KEY,
-                value=cls._run_query(),
-                timeout=TASKMONITOR_STATISTICS_CACHE_TIMEOUT,
-            )
+        cache.set(
+            key=cls._CACHE_KEY, value=cls._run_query(), timeout=cls._CACHE_TIMEOUT
+        )
 
     @classmethod
     def clear_cache(cls):
@@ -309,9 +302,7 @@ class TaskStatisticManager(models.Manager):
         seconds = cache.ttl(cls._CACHE_KEY)
         if not seconds:
             return None
-        return timezone.now() - (
-            dt.timedelta(seconds=TASKMONITOR_STATISTICS_CACHE_TIMEOUT - seconds)
-        )
+        return timezone.now() - (dt.timedelta(seconds=cls._CACHE_TIMEOUT - seconds))
 
     @staticmethod
     def _run_query() -> list:

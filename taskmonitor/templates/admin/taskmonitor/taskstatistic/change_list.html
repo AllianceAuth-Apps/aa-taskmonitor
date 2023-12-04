@@ -13,13 +13,13 @@
     {% if cache_timeout %}
         <li>
             <a href="{% url 'taskmonitor:admin_taskmonitor_statistics_clear_cache' %}" class="btn btn-high">
-                {% translate "Clear Cache" %}
+                {% translate "Recalc now" %}
             </a>
         </li>
     {% endif %}
 {% endblock %}
 
 {% block content %}
-    {% include "admin/taskmonitor/_task_info.html" %}
     {{ block.super }}
+    {% include "admin/taskmonitor/_task_info.html" %}
 {% endblock %}

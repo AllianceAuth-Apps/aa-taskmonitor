@@ -295,6 +295,16 @@ class TaskStatisticManager(models.Manager):
         """Clear the query cache."""
         cache.delete(cls._CACHE_KEY)
 
+    @classmethod
+    def cached_at(cls) -> Optional[dt.datetime]:
+        """Return datetime when cache was last created or None if there is no cache."""
+        seconds = cache.ttl(cls._CACHE_KEY)
+        if not seconds:
+            return None
+        return timezone.now() - (
+            dt.timedelta(seconds=TASKMONITOR_STATISTICS_CACHE_TIMEOUT - seconds)
+        )
+
     @staticmethod
     def _run_query() -> list:
         from .models import TaskLog, TaskStatistic

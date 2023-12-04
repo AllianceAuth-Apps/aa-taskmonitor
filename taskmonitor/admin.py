@@ -329,6 +329,7 @@ class TaskStatisticAdmin(admin.ModelAdmin):
             "total_runs": total_runs,
             "oldest_date": oldest_date,
             "newest_date": newest_date,
+            "last_update_at": TaskStatistic.objects.cached_at(),
         }
         extra_context.update(context)
         return super().changelist_view(request, extra_context)

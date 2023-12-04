@@ -81,8 +81,7 @@ class QueuedTasksCache:
 
     def clear(self):
         """Clear the cache."""
-        if self.timeout:
-            cache.delete(self.cache_key)
+        cache.delete(self.cache_key)
 
     def created_at(self) -> Optional[dt.datetime]:
         """Return date when cache was created or None when cache is invalid."""

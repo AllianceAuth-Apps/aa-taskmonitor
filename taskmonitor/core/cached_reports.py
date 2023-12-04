@@ -479,7 +479,7 @@ def refresh_cache() -> None:
 
 
 def clear_cache() -> None:
-    """Clear the cache."""
+    """Clear cache for all reports."""
     for my_report in reports():
         my_report.clear_cache()
 

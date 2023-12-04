@@ -116,7 +116,7 @@ def special_task():
 
 
 @override_settings(CELERY_ALWAYS_EAGER=True, CELERY_EAGER_PROPAGATES_EXCEPTIONS=True)
-class TestRunTasks(TransactionTestCase):
+class TestTaskLogCreation(TransactionTestCase):
     def setUp(self) -> None:
         cache.clear()
 

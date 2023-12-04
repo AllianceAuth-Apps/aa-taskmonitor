@@ -10,7 +10,7 @@ from app_utils.logging import LoggerAddTag
 from . import __title__
 from .app_settings import TASKMONITOR_DATA_MAX_AGE, TASKMONITOR_DELETE_STALE_BATCH_SIZE
 from .core import cached_reports
-from .models import TaskLog
+from .models import TaskLog, TaskStatistic
 
 logger = LoggerAddTag(get_extension_logger(__name__), __title__)
 
@@ -21,7 +21,7 @@ DEFAULT_TASK_PRIORITY = 4
 def run_housekeeping():
     """Run all housekeeping tasks."""
     delete_stale_tasklogs.apply_async(priority=DEFAULT_TASK_PRIORITY)
-    refresh_reports_cache.apply_async(priority=DEFAULT_TASK_PRIORITY)
+    refresh_cached_data.apply_async(priority=DEFAULT_TASK_PRIORITY)
 
 
 # @shared_task
@@ -62,11 +62,11 @@ def delete_stale_tasklogs():
 
 
 @shared_task
-def refresh_reports_cache():
-    """Refresh cache for all reports."""
-    reports = cached_reports.reports()
-    logger.info(f"Refreshing caches for {len(reports)} reports...")
-    for report in reports:
+def refresh_cached_data():
+    """Refresh cached data incl. reports."""
+    refresh_statistics_cache.apply_async(priority=DEFAULT_TASK_PRIORITY)
+
+    for report in cached_reports.reports():
         refresh_single_report_cache.apply_async(
             priority=DEFAULT_TASK_PRIORITY, args=[report.name]
         )
@@ -77,3 +77,10 @@ def refresh_single_report_cache(report_name: str):
     """Refresh cache for given report."""
     cached_reports.report(report_name).refresh_cache()
     logger.info(f"Refreshed reports cache of {report_name}.")
+
+
+@shared_task(base=QueueOnce)
+def refresh_statistics_cache():
+    """Refresh cache for given report."""
+    TaskStatistic.objects.refresh_cache()
+    logger.info("Refreshed statistics cache.")

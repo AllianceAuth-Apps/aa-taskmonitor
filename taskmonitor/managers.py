@@ -270,8 +270,6 @@ class TaskLogManagerBase(TableSizeMixin, models.Manager):
 TaskLogManager = TaskLogManagerBase.from_queryset(TaskLogQuerySet)
 
 
-# TODO: Add ability to manually clear the cache & show how old the cache is
-# TODO: Make cache duration a setting
 class TaskStatisticManager(models.Manager):
     _CACHE_KEY = "taskmonitor-task-statistics"
 
@@ -289,6 +287,16 @@ class TaskStatisticManager(models.Manager):
             objs = self._run_query()
 
         return ListAsQuerySet(objs, model=TaskStatistic)
+
+    @classmethod
+    def refresh_cache(cls):
+        """Update the query cache."""
+        if TASKMONITOR_STATISTICS_CACHE_TIMEOUT:
+            cache.set(
+                key=cls._CACHE_KEY,
+                value=cls._run_query(),
+                timeout=TASKMONITOR_STATISTICS_CACHE_TIMEOUT,
+            )
 
     @classmethod
     def clear_cache(cls):

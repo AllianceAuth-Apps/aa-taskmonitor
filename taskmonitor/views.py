@@ -85,7 +85,7 @@ def admin_taskmonitor_reports_clear_cache(request):
 @staff_member_required
 def admin_taskmonitor_reports_recalculation(request):
     """Start the reports recalculation."""
-    tasks.refresh_reports_cache.apply_async(priority=tasks.DEFAULT_TASK_PRIORITY)
+    tasks.refresh_cached_data.apply_async(priority=tasks.DEFAULT_TASK_PRIORITY)
     messages.info(
         request,
         (

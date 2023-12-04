@@ -10,8 +10,8 @@ from uuid import UUID
 
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db import models
-from django.db.models import Avg, Count, Max, Min
-from django.db.models.functions import TruncMinute
+from django.db.models import Avg, Count, F, Max, Min, Q, Sum
+from django.db.models.functions import Round, TruncMinute
 from django.utils import timezone
 
 from allianceauth.services.hooks import get_extension_logger
@@ -266,3 +266,32 @@ class TaskLogManagerBase(TableSizeMixin, models.Manager):
 
 
 TaskLogManager = TaskLogManagerBase.from_queryset(TaskLogQuerySet)
+
+
+class TaskStatisticManager(models.Manager):
+    def get_queryset(self) -> models.QuerySet:
+        from .models import TaskLog, TaskStatistic
+
+        excluded_fields = {"id"}
+        field_names = [
+            field.name
+            for field in TaskStatistic._meta.get_fields()
+            if field.name not in excluded_fields
+        ]
+        query = (
+            TaskLog.objects.values(name=F("task_name"))
+            .annotate(app=F("app_name"))
+            .annotate(runs_total=Count("pk"))
+            .annotate(runs_succeeded=Count("pk", filter=Q(state=TaskLog.State.SUCCESS)))
+            .annotate(runs_failed=Count("pk", filter=Q(state=TaskLog.State.FAILURE)))
+            .annotate(runs_retried=Count("pk", filter=Q(state=TaskLog.State.RETRY)))
+            .annotate(runtime_min=Round(Min("runtime"), precision=1))
+            .annotate(runtime_avg=Round(Avg("runtime"), precision=1))
+            .annotate(runtime_max=Round(Max("runtime"), precision=1))
+            .annotate(runtime_total=Round(Sum("runtime"), precision=1))
+            .values(*field_names)
+            .order_by("name")
+        )
+        items = [{**obj, **{"id": num}} for num, obj in enumerate(query, start=1)]
+        objs = [TaskStatistic(**obj) for obj in items]
+        return ListAsQuerySet(objs, model=TaskStatistic)

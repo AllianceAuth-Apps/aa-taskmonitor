@@ -17,7 +17,7 @@ from .app_settings import (
     TASKMONITOR_QUEUED_TASKS_CACHE_TIMEOUT,
 )
 from .core import celery_queues
-from .models import QueuedTask, TaskLog, TaskReport
+from .models import QueuedTask, TaskLog, TaskReport, TaskStatistic
 
 
 class QueuedTaskAppsListFilter(FieldFilterCountsMemory):
@@ -260,3 +260,29 @@ def format_html_data(data) -> str:
     return html.format_html(
         "<code>{}</code>", json.dumps(data, sort_keys=True, indent=4)
     )
+
+
+@admin.register(TaskStatistic)
+class TaskStatisticAdmin(admin.ModelAdmin):
+    list_display = [
+        "name",
+        "runs_total",
+        "runs_succeeded",
+        "runs_failed",
+        "runs_retried",
+        "runtime_min",
+        "runtime_avg",
+        "runtime_max",
+        "runtime_total",
+    ]
+    list_display_links = None
+    list_filter = ["app"]
+
+    def has_add_permission(self, *args, **kwargs):
+        return False
+
+    def has_change_permission(self, *args, **kwargs):
+        return False
+
+    def has_delete_permission(self, *args, **kwargs):
+        return False

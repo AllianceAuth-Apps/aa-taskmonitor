@@ -13,11 +13,12 @@ from django.utils.translation import gettext_lazy as _
 from app_utils.admin import FieldFilterCountsDb, FieldFilterCountsMemory
 
 from .app_settings import (
+    TASKMONITOR_DATA_MAX_AGE,
     TASKMONITOR_QUEUED_TASKS_ADMIN_LIMIT,
     TASKMONITOR_QUEUED_TASKS_CACHE_TIMEOUT,
     TASKMONITOR_STATISTICS_CACHE_TIMEOUT,
 )
-from .core import celery_queues
+from .core import cached_reports, celery_queues
 from .models import QueuedTask, TaskLog, TaskReport, TaskStatistic
 
 
@@ -314,9 +315,20 @@ class TaskStatisticAdmin(admin.ModelAdmin):
 
     def changelist_view(self, request, extra_context=None):
         extra_context = extra_context or {}
+
+        report = cached_reports.report("tasks_basics")
+        report_data = report.data()
+        total_runs = report_data["total_runs"]
+        oldest_date = report_data["oldest_date"]
+        newest_date = report_data["newest_date"]
+
         context = {
             "title": "Task Statistics",
             "cache_timeout": TASKMONITOR_STATISTICS_CACHE_TIMEOUT,
+            "data_max_age": TASKMONITOR_DATA_MAX_AGE,
+            "total_runs": total_runs,
+            "oldest_date": oldest_date,
+            "newest_date": newest_date,
         }
         extra_context.update(context)
         return super().changelist_view(request, extra_context)

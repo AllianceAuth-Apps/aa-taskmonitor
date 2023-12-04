@@ -19,10 +19,7 @@
     {% endif %}
 {% endblock %}
 
-{% comment %} {% block content %}
-    <p>
-        Snapshot at {{ cache_created_at }} with {{ task_count|intcomma }} tasks.
-        Data is cached for {{ cache_timeout }} seconds.
-    </p>
+{% block content %}
+    {% include "admin/taskmonitor/_task_info.html" %}
     {{ block.super }}
-{% endblock %} {% endcomment %}
+{% endblock %}

@@ -266,17 +266,50 @@ def format_html_data(data) -> str:
 class TaskStatisticAdmin(admin.ModelAdmin):
     list_display = [
         "name",
-        "runs_total",
-        "runs_succeeded",
-        "runs_failed",
-        "runs_retried",
-        "runtime_min",
-        "runtime_avg",
-        "runtime_max",
-        "runtime_total",
+        "_runs_total",
+        "_runs_succeeded",
+        "_runs_failed",
+        "_runs_retried",
+        "_runtime_min",
+        "_runtime_avg",
+        "_runtime_max",
+        "_runtime_total",
     ]
     list_display_links = None
     list_filter = ["app"]
+    ordering = ["name"]
+
+    @admin.display(ordering="runs_total")
+    def _runs_total(self, obj: TaskStatistic):
+        return f"{obj.runs_total:,}"
+
+    @admin.display(ordering="runs_succeeded")
+    def _runs_succeeded(self, obj: TaskStatistic):
+        return f"{obj.runs_succeeded:,}"
+
+    @admin.display(ordering="runs_failed")
+    def _runs_failed(self, obj: TaskStatistic):
+        return f"{obj.runs_failed:,}"
+
+    @admin.display(ordering="runs_retried")
+    def _runs_retried(self, obj: TaskStatistic):
+        return f"{obj.runs_retried:,}"
+
+    @admin.display(ordering="runtime_min")
+    def _runtime_min(self, obj: TaskStatistic):
+        return f"{obj.runtime_min:,}"
+
+    @admin.display(ordering="runtime_avg")
+    def _runtime_avg(self, obj: TaskStatistic):
+        return f"{obj.runtime_avg:,}"
+
+    @admin.display(ordering="runtime_max")
+    def _runtime_max(self, obj: TaskStatistic):
+        return f"{obj.runtime_max:,}"
+
+    @admin.display(ordering="runtime_total")
+    def _runtime_total(self, obj: TaskStatistic):
+        return f"{obj.runtime_total:,}"
 
     def has_add_permission(self, *args, **kwargs):
         return False

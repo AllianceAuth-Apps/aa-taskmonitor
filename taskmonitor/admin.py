@@ -264,6 +264,9 @@ def format_html_data(data) -> str:
 
 @admin.register(TaskStatistic)
 class TaskStatisticAdmin(admin.ModelAdmin):
+    class Media:
+        css = {"all": ("taskmonitor/css/statistics.css",)}
+
     list_display = [
         "name",
         "_runs_total",

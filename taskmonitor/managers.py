@@ -11,7 +11,7 @@ from uuid import UUID
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db import models
 from django.db.models import Avg, Count, F, Max, Min, Q, Sum
-from django.db.models.functions import Round, TruncMinute
+from django.db.models.functions import TruncMinute
 from django.utils import timezone
 
 from allianceauth.services.hooks import get_extension_logger
@@ -289,10 +289,10 @@ class TaskStatisticManager(models.Manager):
             .annotate(runs_succeeded=Count("pk", filter=Q(state=TaskLog.State.SUCCESS)))
             .annotate(runs_failed=Count("pk", filter=Q(state=TaskLog.State.FAILURE)))
             .annotate(runs_retried=Count("pk", filter=Q(state=TaskLog.State.RETRY)))
-            .annotate(runtime_min=Round(Min("runtime"), precision=1))
-            .annotate(runtime_avg=Round(Avg("runtime"), precision=1))
-            .annotate(runtime_max=Round(Max("runtime"), precision=1))
-            .annotate(runtime_total=Round(Sum("runtime"), precision=1))
+            .annotate(runtime_min=Min("runtime"))
+            .annotate(runtime_avg=Avg("runtime"))
+            .annotate(runtime_max=Max("runtime"))
+            .annotate(runtime_total=Sum("runtime"))
             .values(*field_names)
             .order_by("name")
         )

@@ -297,19 +297,23 @@ class TaskStatisticAdmin(admin.ModelAdmin):
 
     @admin.display(ordering="runtime_min")
     def _runtime_min(self, obj: TaskStatistic):
-        return f"{obj.runtime_min:,}"
+        return self._format_float(obj.runtime_min)
 
     @admin.display(ordering="runtime_avg")
     def _runtime_avg(self, obj: TaskStatistic):
-        return f"{obj.runtime_avg:,}"
+        return self._format_float(obj.runtime_avg)
 
     @admin.display(ordering="runtime_max")
     def _runtime_max(self, obj: TaskStatistic):
-        return f"{obj.runtime_max:,}"
+        return self._format_float(obj.runtime_max)
 
     @admin.display(ordering="runtime_total")
     def _runtime_total(self, obj: TaskStatistic):
-        return f"{obj.runtime_total:,}"
+        return self._format_float(obj.runtime_total)
+
+    @staticmethod
+    def _format_float(value) -> str:
+        return f"{value:,.2f}"
 
     def has_add_permission(self, *args, **kwargs):
         return False

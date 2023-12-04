@@ -1,0 +1,28 @@
+{% extends "admin/change_list.html" %}
+{% load i18n %}
+{% load humanize %}
+{% load static %}
+
+{% block extrastyle %}
+    {{ block.super }}
+    <link rel="stylesheet" type="text/css" href="{% static 'taskmonitor/css/statistics.css' %}">
+{% endblock %}
+
+{% block object-tools-items %}
+    {{ block.super }}
+    {% if cache_timeout %}
+        <li>
+            <a href="{% url 'taskmonitor:admin_taskmonitor_statistics_clear_cache' %}" class="btn btn-high">
+                {% translate "Clear Cache" %}
+            </a>
+        </li>
+    {% endif %}
+{% endblock %}
+
+{% comment %} {% block content %}
+    <p>
+        Snapshot at {{ cache_created_at }} with {{ task_count|intcomma }} tasks.
+        Data is cached for {{ cache_timeout }} seconds.
+    </p>
+    {{ block.super }}
+{% endblock %} {% endcomment %}

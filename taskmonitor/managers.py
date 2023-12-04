@@ -8,6 +8,7 @@ import traceback as tb
 from typing import List, Optional
 from uuid import UUID
 
+from django.core.cache import cache
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db import models
 from django.db.models import Avg, Count, F, Max, Min, Q, Sum
@@ -15,13 +16,13 @@ from django.db.models.functions import TruncMinute
 from django.utils import timezone
 
 from allianceauth.services.hooks import get_extension_logger
-from app_utils.caching import cached_queryset
 from app_utils.database import TableSizeMixin
 from app_utils.logging import LoggerAddTag
 
 from . import __title__
 from .app_settings import (
     TASKMONITOR_QUEUED_TASKS_ADMIN_LIMIT,
+    TASKMONITOR_STATISTICS_CACHE_TIMEOUT,
     TASKMONITOR_TRUNCATE_NESTED_DATA,
 )
 from .core import celery_queues
@@ -272,8 +273,30 @@ TaskLogManager = TaskLogManagerBase.from_queryset(TaskLogQuerySet)
 # TODO: Add ability to manually clear the cache & show how old the cache is
 # TODO: Make cache duration a setting
 class TaskStatisticManager(models.Manager):
+    _CACHE_KEY = "taskmonitor-task-statistics"
+
     def get_queryset(self) -> models.QuerySet:
         """Return queryset with generated data from statistics query."""
+        from .models import TaskStatistic
+
+        if TASKMONITOR_STATISTICS_CACHE_TIMEOUT:
+            objs = cache.get_or_set(
+                key=self._CACHE_KEY,
+                default=self._run_query,
+                timeout=TASKMONITOR_STATISTICS_CACHE_TIMEOUT,
+            )
+        else:
+            objs = self._run_query()
+
+        return ListAsQuerySet(objs, model=TaskStatistic)
+
+    @classmethod
+    def clear_cache(cls):
+        """Clear the query cache."""
+        cache.delete(cls._CACHE_KEY)
+
+    @staticmethod
+    def _run_query() -> list:
         from .models import TaskLog, TaskStatistic
 
         excluded_fields = {"id"}
@@ -282,7 +305,7 @@ class TaskStatisticManager(models.Manager):
             for field in TaskStatistic._meta.get_fields()
             if field.name not in excluded_fields
         ]
-        raw_query = (
+        query = (
             TaskLog.objects.values(name=F("task_name"))
             .annotate(app=F("app_name"))
             .annotate(runs_total=Count("pk"))
@@ -296,11 +319,6 @@ class TaskStatisticManager(models.Manager):
             .values(*field_names)
             .order_by("name")
         )
-        effective_query = cached_queryset(
-            raw_query, key="taskmonitor-task-statistics", timeout=600
-        )
-        items = [
-            {**obj, **{"id": num}} for num, obj in enumerate(effective_query, start=1)
-        ]
+        items = [{**obj, **{"id": num}} for num, obj in enumerate(query, start=1)]
         objs = [TaskStatistic(**obj) for obj in items]
-        return ListAsQuerySet(objs, model=TaskStatistic)
+        return objs

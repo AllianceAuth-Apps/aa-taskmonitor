@@ -37,6 +37,11 @@ to protect against crashing caused by too high memory consumption.
 TASKMONITOR_REPORTS_MAX_TOP = clean_setting("TASKMONITOR_REPORTS_MAX_TOP", 20)
 """Max items to show in the top reports. e.g. 10 will shop the top ten items."""
 
+TASKMONITOR_STATISTICS_CACHE_TIMEOUT = clean_setting(
+    "TASKMONITOR_STATISTICS_CACHE_TIMEOUT", 1800
+)
+"""Timeout for caching task statistics in seconds. 0 will deactivate the cache."""
+
 TASKMONITOR_TRUNCATE_NESTED_DATA = clean_setting(
     "TASKMONITOR_TRUNCATE_NESTED_DATA", True
 )

@@ -52,4 +52,9 @@ urlpatterns = [
         views.admin_queued_task_clear_cache,
         name="admin_queued_task_clear_cache",
     ),
+    path(
+        "admin_taskmonitor_statistics_clear_cache",
+        views.admin_taskmonitor_statistics_clear_cache,
+        name="admin_taskmonitor_statistics_clear_cache",
+    ),
 ]

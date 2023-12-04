@@ -15,6 +15,7 @@ from app_utils.admin import FieldFilterCountsDb, FieldFilterCountsMemory
 from .app_settings import (
     TASKMONITOR_QUEUED_TASKS_ADMIN_LIMIT,
     TASKMONITOR_QUEUED_TASKS_CACHE_TIMEOUT,
+    TASKMONITOR_STATISTICS_CACHE_TIMEOUT,
 )
 from .core import celery_queues
 from .models import QueuedTask, TaskLog, TaskReport, TaskStatistic
@@ -177,6 +178,15 @@ class TaskLogAdmin(admin.ModelAdmin):
             pass
         return self.readonly_fields
 
+    def change_view(self, request, object_id, form_url="", extra_context=None):
+        extra_context = extra_context or {}
+        obj = get_object_or_404(TaskLog, pk=object_id)
+        extra_context["tasklog_text"] = obj.astext()
+        return super().change_view(
+            request, object_id, form_url, extra_context=extra_context
+        )
+
+    @admin.display
     def _params(self, obj):
         if obj.args and not obj.kwargs:
             return html.format_html("<code>{}</code>", json.dumps(obj.args))
@@ -239,34 +249,9 @@ class TaskLogAdmin(admin.ModelAdmin):
     def _traceback(self, obj):
         return format_html_lines(obj.traceback)
 
-    def change_view(self, request, object_id, form_url="", extra_context=None):
-        extra_context = extra_context or {}
-        obj = get_object_or_404(TaskLog, pk=object_id)
-        extra_context["tasklog_text"] = obj.astext()
-        return super().change_view(
-            request, object_id, form_url, extra_context=extra_context
-        )
-
-
-def format_html_lines(text) -> str:
-    return safestring.mark_safe(
-        "<br>".join(
-            [html.format_html("<code>{}</code>", line) for line in text.splitlines()]
-        )
-    )
-
-
-def format_html_data(data) -> str:
-    return html.format_html(
-        "<code>{}</code>", json.dumps(data, sort_keys=True, indent=4)
-    )
-
 
 @admin.register(TaskStatistic)
 class TaskStatisticAdmin(admin.ModelAdmin):
-    class Media:
-        css = {"all": ("taskmonitor/css/statistics.css",)}
-
     list_display = [
         "name",
         "_runs_total",
@@ -326,3 +311,26 @@ class TaskStatisticAdmin(admin.ModelAdmin):
 
     def has_delete_permission(self, *args, **kwargs):
         return False
+
+    def changelist_view(self, request, extra_context=None):
+        extra_context = extra_context or {}
+        context = {
+            "title": "Task Statistics",
+            "cache_timeout": TASKMONITOR_STATISTICS_CACHE_TIMEOUT,
+        }
+        extra_context.update(context)
+        return super().changelist_view(request, extra_context)
+
+
+def format_html_lines(text) -> str:
+    return safestring.mark_safe(
+        "<br>".join(
+            [html.format_html("<code>{}</code>", line) for line in text.splitlines()]
+        )
+    )
+
+
+def format_html_data(data) -> str:
+    return html.format_html(
+        "<code>{}</code>", json.dumps(data, sort_keys=True, indent=4)
+    )

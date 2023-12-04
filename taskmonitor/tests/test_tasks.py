@@ -5,8 +5,7 @@ from django.test import TestCase, override_settings
 from django.utils import timezone
 
 from taskmonitor import tasks
-from taskmonitor.core import cached_reports
-from taskmonitor.models import TaskLog, TaskStatistic
+from taskmonitor.models import TaskLog
 
 from .factories import TaskLogFactory
 
@@ -33,16 +32,35 @@ class TestDeleteStaleTasklogs(TestCase):
         self.assertEqual(spy_TaskLog.objects.filter.call_count, 2)
 
 
-@patch(TASKS_PATH + ".TaskStatistic", wraps=TaskStatistic)
-@patch(TASKS_PATH + ".cached_reports", wraps=cached_reports)
 @override_settings(CELERY_ALWAYS_EAGER=True, CELERY_EAGER_PROPAGATES_EXCEPTIONS=True)
 class TestRefreshCachedData(TestCase):
-    def test_should_refresh_cached_data(self, mock_cached_reports, mock_TaskStatistic):
-        # given
+    @classmethod
+    def setUpClass(cls) -> None:
+        super().setUpClass()
         TaskLogFactory()
         TaskLogFactory()
+
+    @patch(TASKS_PATH + ".refresh_statistics_cache")
+    @patch(TASKS_PATH + ".refresh_single_report_cache")
+    def test_should_refresh_cached_data(
+        self, mock_refresh_single_report_cache, mock_refresh_statistics_cache
+    ):
         # when
-        tasks.refresh_cached_data.delay()
+        tasks.refresh_cached_data()
         # then
-        self.assertEqual(mock_cached_reports.report.call_count, 18)
+        self.assertEqual(mock_refresh_single_report_cache.apply_async.call_count, 18)
+        self.assertTrue(mock_refresh_statistics_cache.apply_async.called)
+
+    @patch(TASKS_PATH + ".cached_reports", spec=True)
+    def test_should_refresh_reports_cache(self, mock_cached_report):
+        # when
+        tasks.refresh_single_report_cache("dummy")
+        # then
+        self.assertTrue(mock_cached_report.report.return_value.refresh_cache.called)
+
+    @patch(TASKS_PATH + ".TaskStatistic")
+    def test_should_refresh_statistics_cache(self, mock_TaskStatistic):
+        # when
+        tasks.refresh_statistics_cache()
+        # then
         self.assertTrue(mock_TaskStatistic.objects.refresh_cache.called)

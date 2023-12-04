@@ -270,6 +270,7 @@ TaskLogManager = TaskLogManagerBase.from_queryset(TaskLogQuerySet)
 
 class TaskStatisticManager(models.Manager):
     def get_queryset(self) -> models.QuerySet:
+        """Return queryset with generated data from statistics query."""
         from .models import TaskLog, TaskStatistic
 
         excluded_fields = {"id"}

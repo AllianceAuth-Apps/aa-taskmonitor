@@ -282,19 +282,19 @@ class TaskStatisticAdmin(admin.ModelAdmin):
     list_filter = ["app"]
     ordering = ["name"]
 
-    @admin.display(ordering="runs_total")
+    @admin.display(ordering="runs_total", description="runs")
     def _runs_total(self, obj: TaskStatistic):
         return f"{obj.runs_total:,}"
 
-    @admin.display(ordering="runs_succeeded")
+    @admin.display(ordering="runs_succeeded", description="succeeded")
     def _runs_succeeded(self, obj: TaskStatistic):
         return f"{obj.runs_succeeded:,}"
 
-    @admin.display(ordering="runs_failed")
+    @admin.display(ordering="runs_failed", description="failed")
     def _runs_failed(self, obj: TaskStatistic):
         return f"{obj.runs_failed:,}"
 
-    @admin.display(ordering="runs_retried")
+    @admin.display(ordering="runs_retried", description="retried")
     def _runs_retried(self, obj: TaskStatistic):
         return f"{obj.runs_retried:,}"
 

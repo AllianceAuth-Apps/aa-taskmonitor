@@ -2,6 +2,7 @@
 
 # pylint: disable = missing-class-docstring, missing-function-docstring
 
+import datetime as dt
 import json
 from typing import Optional
 
@@ -116,9 +117,6 @@ class TaskLogExceptionsListFilter(FieldFilterCountsDb):
 
 @admin.register(TaskLog)
 class TaskLogAdmin(admin.ModelAdmin):
-    class Media:
-        css = {"all": ("taskmonitor/css/admin.css",)}
-
     list_display = (
         "_timestamp",
         "task_name",
@@ -178,6 +176,11 @@ class TaskLogAdmin(admin.ModelAdmin):
         except Exception:  # pylint: disable = broad-exception-caught
             pass
         return self.readonly_fields
+
+    def changelist_view(self, request, extra_context=None):
+        extra_context = extra_context or {}
+        extra_context.update(task_log_stats())
+        return super().changelist_view(request, extra_context)
 
     def change_view(self, request, object_id, form_url="", extra_context=None):
         extra_context = extra_context or {}
@@ -314,25 +317,32 @@ class TaskStatisticAdmin(admin.ModelAdmin):
         return False
 
     def changelist_view(self, request, extra_context=None):
-        extra_context = extra_context or {}
-
-        report = cached_reports.report("tasks_basics")
-        report_data = report.data()
-        total_runs = report_data["total_runs"]
-        oldest_date = report_data["oldest_date"]
-        newest_date = report_data["newest_date"]
-
         context = {
             "title": "Task Statistics",
             "cache_timeout": TASKMONITOR_STATISTICS_CACHE_TIMEOUT,
-            "data_max_age": TASKMONITOR_DATA_MAX_AGE,
-            "total_runs": total_runs,
-            "oldest_date": oldest_date,
-            "newest_date": newest_date,
-            "last_update_at": TaskStatistic.objects.cached_at(),
         }
+        last_update_at = TaskStatistic.objects.cached_at()
+        context.update(task_log_stats(last_update_at))
+        extra_context = extra_context or {}
         extra_context.update(context)
         return super().changelist_view(request, extra_context)
+
+
+def task_log_stats(last_update_at: Optional[dt.datetime] = None) -> dict:
+    """Return dict with task log stats."""
+    report = cached_reports.report("tasks_basics")
+    report_data = report.data()
+    total_runs = report_data["total_runs"]
+    oldest_date = report_data["oldest_date"]
+    newest_date = report_data["newest_date"]
+    context = {
+        "total_runs": total_runs,
+        "oldest_date": oldest_date,
+        "newest_date": newest_date,
+        "data_max_age": TASKMONITOR_DATA_MAX_AGE,
+        "last_update_at": last_update_at,
+    }
+    return context
 
 
 def format_html_lines(text) -> str:

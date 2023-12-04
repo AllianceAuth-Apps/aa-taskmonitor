@@ -5,9 +5,11 @@
 import datetime as dt
 import json
 from typing import Optional
+from urllib.parse import urlencode
 
 from django.contrib import admin
 from django.shortcuts import get_object_or_404, redirect
+from django.urls import reverse
 from django.utils import html, safestring, timezone
 from django.utils.translation import gettext_lazy as _
 
@@ -178,7 +180,7 @@ class TaskLogAdmin(admin.ModelAdmin):
 
     def changelist_view(self, request, extra_context=None):
         extra_context = extra_context or {}
-        extra_context.update(task_log_stats())
+        extra_context.update(_task_log_stats())
         return super().changelist_view(request, extra_context)
 
     def change_view(self, request, object_id, form_url="", extra_context=None):
@@ -237,26 +239,26 @@ class TaskLogAdmin(admin.ModelAdmin):
     @admin.display(description="Result")
     def _result(self, obj):
         if obj.state == TaskLog.State.SUCCESS:
-            return format_html_data(obj.result)
+            return _format_html_data(obj.result)
         return "-"
 
     @admin.display(description="Args")
     def _args(self, obj):
-        return format_html_data(obj.args)
+        return _format_html_data(obj.args)
 
     @admin.display(description="Kwargs")
     def _kwargs(self, obj):
-        return format_html_data(obj.kwargs)
+        return _format_html_data(obj.kwargs)
 
     @admin.display(description="Traceback")
     def _traceback(self, obj):
-        return format_html_lines(obj.traceback)
+        return _format_html_lines(obj.traceback)
 
 
 @admin.register(TaskStatistic)
 class TaskStatisticAdmin(admin.ModelAdmin):
     list_display = [
-        "name",
+        "_name",
         "_runs_total",
         "_runs_succeeded",
         "_runs_failed",
@@ -269,6 +271,13 @@ class TaskStatisticAdmin(admin.ModelAdmin):
     list_display_links = None
     list_filter = ["app"]
     ordering = ["name"]
+
+    @admin.display(ordering="name", description="name")
+    def _name(self, obj: TaskStatistic):
+        base_url = reverse("admin:taskmonitor_tasklog_changelist")
+        query_encoded = urlencode({"task_name": obj.name})
+        url = f"{base_url}?{query_encoded}"
+        return html.format_html('<a href="{}">{}</a>', url, obj.name)
 
     @admin.display(ordering="runs_total", description="runs")
     def _runs_total(self, obj: TaskStatistic):
@@ -318,13 +327,13 @@ class TaskStatisticAdmin(admin.ModelAdmin):
     def changelist_view(self, request, extra_context=None):
         context = {"title": "Task Statistics"}
         last_update_at = TaskStatistic.objects.cached_at()
-        context.update(task_log_stats(last_update_at))
+        context.update(_task_log_stats(last_update_at))
         extra_context = extra_context or {}
         extra_context.update(context)
         return super().changelist_view(request, extra_context)
 
 
-def task_log_stats(last_update_at: Optional[dt.datetime] = None) -> dict:
+def _task_log_stats(last_update_at: Optional[dt.datetime] = None) -> dict:
     """Return dict with task log stats."""
     report = cached_reports.report("tasks_basics")
     report_data = report.data()
@@ -341,7 +350,7 @@ def task_log_stats(last_update_at: Optional[dt.datetime] = None) -> dict:
     return context
 
 
-def format_html_lines(text) -> str:
+def _format_html_lines(text) -> str:
     return safestring.mark_safe(
         "<br>".join(
             [html.format_html("<code>{}</code>", line) for line in text.splitlines()]
@@ -349,7 +358,7 @@ def format_html_lines(text) -> str:
     )
 
 
-def format_html_data(data) -> str:
+def _format_html_data(data) -> str:
     return html.format_html(
         "<code>{}</code>", json.dumps(data, sort_keys=True, indent=4)
     )

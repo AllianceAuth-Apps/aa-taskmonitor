@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 - See detailed statistics for all tasks
 
-## Changed
+### Changed
 
 - Improved test suite
 

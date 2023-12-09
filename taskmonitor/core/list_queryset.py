@@ -3,8 +3,6 @@
 from dataclasses import dataclass
 from typing import Any
 
-from django.db.models import QuerySet
-
 
 class QuerySetQueryStub:
     """A stub to implement the query property."""
@@ -57,43 +55,52 @@ class _FilterObj:
 class ListAsQuerySet(list):
     """Masquerade a list as QuerySet."""
 
-    def __init__(self, *args, model, distinct=False, **kwargs):
+    def __init__(self, *args, **kwargs):
+        try:
+            model = kwargs.pop("model")
+        except KeyError:
+            raise ValueError("You must specify a model") from None
+
         self.model = model
         self.query = QuerySetQueryStub()
-        self.distinct_enabled = distinct
+        self.is_distinct = False
         super().__init__(*args, **kwargs)
         self._id_mapper = {str(obj.id): n for n, obj in enumerate(self)}
         self._list_size = len(self)
 
-    def all(self) -> QuerySet:
+    def all(self) -> "ListAsQuerySet":
         """:private:"""
+        if self.is_distinct:
+            return self._make_list_distinct(self)
         return self
 
-    def count(self):
+    def count(self) -> int:
         """:private:"""
         return self._list_size
 
     def _clone(self):
-        return self._clone_with_new_list(self)
+        return self._make_clone()
 
-    def _clone_with_new_list(self, new_list: list):
-        return ListAsQuerySet(
-            list(new_list), model=self.model, distinct=self.distinct_enabled
-        )
+    def _make_clone(self, new_list: list = None) -> "ListAsQuerySet":
+        if new_list is None:
+            new_list = self
+        obj = type(self)(list(new_list), model=self.model)
+        obj.is_distinct = self.is_distinct
+        return obj
 
-    def distinct(self):
+    def distinct(self) -> "ListAsQuerySet":
         """:private:"""
-        self.distinct_enabled = True
+        self.is_distinct = True
         return self
 
-    def first(self):
+    def first(self) -> Any:
         """:private:"""
         try:
             return self[0]
         except IndexError:
             return None
 
-    def filter(self, *args, **kwargs):
+    def filter(self, *args, **kwargs) -> "ListAsQuerySet":
         """:private:"""
         if args:
             raise NotImplementedError(
@@ -111,25 +118,25 @@ class ListAsQuerySet(list):
             if all(filter_obj.is_matching(obj) for filter_obj in filter_objs)
         ]
 
-        return ListAsQuerySet(new_list, model=self.model)
+        return self._make_clone(new_list=new_list)
 
-    def get(self, *args, **kwargs):
+    def get(self, *args, **kwargs) -> Any:
         """:private:"""
         try:
             return self[self._id_mapper[str(kwargs["id"])]]
         except KeyError:
             raise self.model.DoesNotExist from None
 
-    def last(self):
+    def last(self) -> Any:
         """:private:"""
         try:
             return self[-1]
         except IndexError:
             return None
 
-    def none(self) -> QuerySet:
+    def none(self) -> "ListAsQuerySet":
         """:private:"""
-        return ListAsQuerySet([], model=self.model)
+        return self._make_clone(new_list=[])
 
     def order_by(self, *args, **kwargs):
         """:private:"""
@@ -151,9 +158,7 @@ class ListAsQuerySet(list):
             # pylint: disable = cell-var-from-loop
             new_list.sort(key=lambda d: getattr(d, prop_2), reverse=reverse)
 
-        return ListAsQuerySet(
-            new_list, model=self.model, distinct=self.distinct_enabled
-        )
+        return self._make_clone(new_list=new_list)
 
     def values(self, *args):
         """:private:"""
@@ -176,8 +181,12 @@ class ListAsQuerySet(list):
                     "more than one field."
                 )
             items = (obj[0] for obj in items)
-            if self.distinct_enabled:
-                return list(dict.fromkeys(items))
+            if self.is_distinct:
+                return self._make_list_distinct(items)
 
         result = list(items)
         return result
+
+    @staticmethod
+    def _make_list_distinct(items):
+        return list(dict.fromkeys(items))

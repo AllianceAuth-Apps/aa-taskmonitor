@@ -5,20 +5,30 @@ from taskmonitor.models import QueuedTask
 from taskmonitor.tests.factories import QueuedTaskFactory
 
 
-class TestOther(TestCase):
-    def test_all(self):
+class TestAll(TestCase):
+    def test_should_return_all_objs(self):
         # given
-        data = [
-            QueuedTaskFactory.build(),
-            QueuedTaskFactory.build(),
-            QueuedTaskFactory.build(),
-        ]
+        t1 = QueuedTaskFactory.build()
+        t2 = QueuedTaskFactory.build()
+        data = [t1, t2]
         qs = ListAsQuerySet(data, model=QueuedTask)
         # when
         result = qs.all()
         # then
         self.assertEqual(result, data)
 
+    def test_should_return_all_objs_with_distinct(self):
+        # given
+        t1 = QueuedTaskFactory.build()
+        data = [t1, t1]
+        qs = ListAsQuerySet(data, model=QueuedTask)
+        # when
+        result = qs.distinct().all()
+        # then
+        self.assertEqual(result, [t1])
+
+
+class TestOther(TestCase):
     def test_count(self):
         # given
         data = [QueuedTaskFactory.build(), QueuedTaskFactory.build()]
@@ -117,6 +127,7 @@ class TestOther(TestCase):
 
         # then
         self.assertEqual(result, data)
+        self.assertIsNot(result, data)
 
 
 class TestFilter(TestCase):
@@ -290,10 +301,10 @@ class TestOrderBy(TestCase):
         t2 = QueuedTaskFactory.build(name="alpha", priority=2)
         t3 = QueuedTaskFactory.build(name="alpha", priority=1)
         data = [t1, t2, t3]
-        qs = ListAsQuerySet(data, model=QueuedTask, distinct=True)
+        qs = ListAsQuerySet(data, model=QueuedTask)
 
         # when
-        result = qs.order_by("name").values_list("name", flat=True)
+        result = qs.distinct().order_by("name").values_list("name", flat=True)
 
         # then
         self.assertEqual(result, ["alpha", "charlie"])
@@ -351,7 +362,7 @@ class TestValuesList(TestCase):
         t2 = QueuedTaskFactory.build(app_name="alpha", priority=2)
         t3 = QueuedTaskFactory.build(app_name="charlie", priority=1)
         data = [t1, t2, t3]
-        qs = ListAsQuerySet(data, model=QueuedTask, distinct=True)
+        qs = ListAsQuerySet(data, model=QueuedTask)
 
         # when
         result = qs.distinct().values_list("app_name", flat=True)

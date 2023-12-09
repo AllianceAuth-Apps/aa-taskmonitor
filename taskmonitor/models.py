@@ -19,8 +19,9 @@ class QueuedTask(models.Model):
     class Meta:
         managed = False
 
-    app_name = models.CharField(max_length=CHAR_FIELD_MAX_LENGTH)
     id = models.UUIDField(default=uuid.uuid4, primary_key=True)
+
+    app_name = models.CharField(max_length=CHAR_FIELD_MAX_LENGTH)
     name = models.CharField(max_length=CHAR_FIELD_MAX_LENGTH)
     priority = models.PositiveIntegerField(null=True, default=None)
     position = models.PositiveIntegerField()

@@ -10,7 +10,7 @@ from factory.faker import faker
 
 from django.utils import timezone
 
-from taskmonitor.models import TaskLog
+from taskmonitor.models import QueuedTask, TaskLog
 
 # generate fake apps and task names
 faker = faker.Faker()
@@ -220,3 +220,20 @@ class QueuedTaskRawFactory(factory.DictFactory):
     #         },
     #     }
     # ]
+
+
+class QueuedTaskFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = QueuedTask
+
+    id = factory.Sequence(lambda n: n + 1)
+    app_name = factory.fuzzy.FuzzyChoice(fake_apps)
+    priority = factory.fuzzy.FuzzyInteger(0, 9)
+    position = factory.Sequence(lambda n: n)
+
+    @factory.lazy_attribute
+    def name(obj):
+        try:
+            return choice(_fake_tasks[obj.app_name])
+        except KeyError:
+            return choice(_fake_tasks_all)

@@ -19,8 +19,9 @@ class QueuedTask(models.Model):
     class Meta:
         managed = False
 
-    app_name = models.CharField(max_length=CHAR_FIELD_MAX_LENGTH)
     id = models.UUIDField(default=uuid.uuid4, primary_key=True)
+
+    app_name = models.CharField(max_length=CHAR_FIELD_MAX_LENGTH)
     name = models.CharField(max_length=CHAR_FIELD_MAX_LENGTH)
     priority = models.PositiveIntegerField(null=True, default=None)
     position = models.PositiveIntegerField()
@@ -28,7 +29,7 @@ class QueuedTask(models.Model):
     objects = QueuedTaskManager()
 
     def __str__(self):
-        return self.id
+        return f"id={self.id}, name={self.name}"
 
     @classmethod
     def from_dict(cls, obj: dict, position: int) -> "QueuedTask":
@@ -66,6 +67,9 @@ class TaskReport(models.Model):
         verbose_name = "report"
 
     id = models.BigIntegerField(primary_key=True)
+
+    def __str__(self) -> str:
+        return f"id={self.id}"
 
 
 class TaskStatistic(models.Model):

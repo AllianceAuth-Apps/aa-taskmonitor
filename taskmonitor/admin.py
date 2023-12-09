@@ -271,6 +271,31 @@ class TaskStatisticAdmin(admin.ModelAdmin):
     list_display_links = None
     list_filter = ["app"]
     ordering = ["name"]
+    search_fields = ["name"]
+
+    def get_search_results(self, request, queryset, search_term):
+        if not search_term:
+            return queryset, False
+
+        qs = queryset.filter(name__icontains=search_term)
+        return qs, False
+
+    def changelist_view(self, request, extra_context=None):
+        context = {"title": "Task Statistics"}
+        last_update_at = TaskStatistic.objects.cached_at()
+        context.update(_task_log_stats(last_update_at))
+        extra_context = extra_context or {}
+        extra_context.update(context)
+        return super().changelist_view(request, extra_context)
+
+    def has_add_permission(self, *args, **kwargs):
+        return False
+
+    def has_change_permission(self, *args, **kwargs):
+        return False
+
+    def has_delete_permission(self, *args, **kwargs):
+        return False
 
     @admin.display(ordering="name", description="name")
     def _name(self, obj: TaskStatistic):
@@ -314,23 +339,6 @@ class TaskStatisticAdmin(admin.ModelAdmin):
     @staticmethod
     def _format_float(value) -> str:
         return f"{value:,.2f}"
-
-    def has_add_permission(self, *args, **kwargs):
-        return False
-
-    def has_change_permission(self, *args, **kwargs):
-        return False
-
-    def has_delete_permission(self, *args, **kwargs):
-        return False
-
-    def changelist_view(self, request, extra_context=None):
-        context = {"title": "Task Statistics"}
-        last_update_at = TaskStatistic.objects.cached_at()
-        context.update(_task_log_stats(last_update_at))
-        extra_context = extra_context or {}
-        extra_context.update(context)
-        return super().changelist_view(request, extra_context)
 
 
 def _task_log_stats(last_update_at: Optional[dt.datetime] = None) -> dict:

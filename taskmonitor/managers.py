@@ -26,104 +26,10 @@ from .app_settings import (
     TASKMONITOR_TRUNCATE_NESTED_DATA,
 )
 from .core import celery_queues
+from .core.list_queryset import ListAsQuerySet
 from .helpers import extract_app_name, truncate_dict, truncate_list, truncate_result
 
 logger = LoggerAddTag(get_extension_logger(__name__), __title__)
-
-
-class QuerySetQueryStub:
-    def __init__(self) -> None:
-        self.select_related = None
-        self.order_by = []
-
-
-class ListAsQuerySet(list):
-    """Masquerade a list as QuerySet."""
-
-    def __init__(self, *args, model, distinct=False, **kwargs):
-        self.model = model
-        self.query = QuerySetQueryStub()
-        self.distinct_enabled = distinct
-        super().__init__(*args, **kwargs)
-        self._id_mapper = {str(obj.id): n for n, obj in enumerate(self)}
-        self._list_size = len(self)
-
-    def all(self) -> models.QuerySet:
-        """:private:"""
-        return self
-
-    def none(self) -> models.QuerySet:
-        """:private:"""
-        return ListAsQuerySet([], model=self.model)
-
-    def get(self, *args, **kwargs):
-        """:private:"""
-        try:
-            return self[self._id_mapper[str(kwargs["id"])]]
-        except KeyError:
-            raise self.model.DoesNotExist from None
-
-    def distinct(self):
-        """:private:"""
-        return ListAsQuerySet(list(set(self)), model=self.model, distinct=True)
-
-    def values(self, *args):
-        """:private:"""
-        result = [
-            {k: v for k, v in obj.__dict__.items() if not args or k in args}
-            for obj in self
-        ]
-        return result
-
-    def values_list(self, *args, **kwargs):
-        """:private:"""
-        items = [tuple(obj.values()) for obj in self.values(*args)]
-        if kwargs.get("flat"):
-            items = [obj[0] for obj in items]
-            if self.distinct_enabled:
-                return list(dict.fromkeys(items))
-            return items
-        return items
-
-    def first(self):
-        """:private:"""
-        return self[0] if self else None
-
-    def filter(self, *args, **kwargs):
-        """:private:"""
-        if args:
-            raise NotImplementedError("filter with positional args not supported.")
-        if not kwargs:
-            return self
-        new_list = [
-            obj
-            for obj in self
-            if all((str(getattr(obj, k)) == str(v) for k, v in kwargs.items()))
-        ]
-        return ListAsQuerySet(new_list, model=self.model)
-
-    def order_by(self, *args, **kwargs):
-        """:private:"""
-        if kwargs:
-            raise NotImplementedError("order with kw args not supported.")
-        if args:
-            for prop in reversed(args):
-                if prop[0:1] == "-":
-                    reverse = True
-                    prop_2 = prop[1:]
-                else:
-                    reverse = False
-                    prop_2 = prop
-                # pylint: disable = cell-var-from-loop
-                self.sort(key=lambda d: getattr(d, prop_2), reverse=reverse)
-        return self
-
-    def count(self):
-        """:private:"""
-        return self._list_size
-
-    def _clone(self):
-        return self
 
 
 class QueuedTaskQuerySet(models.QuerySet):

@@ -5,29 +5,6 @@ from taskmonitor.models import QueuedTask
 from taskmonitor.tests.factories import QueuedTaskFactory
 
 
-class TestAll(TestCase):
-    def test_should_return_all_objs(self):
-        # given
-        t1 = QueuedTaskFactory.build()
-        t2 = QueuedTaskFactory.build()
-        data = [t1, t2]
-        qs = ListAsQuerySet(data, model=QueuedTask)
-        # when
-        result = qs.all()
-        # then
-        self.assertEqual(result, data)
-
-    def test_should_return_all_objs_with_distinct(self):
-        # given
-        t1 = QueuedTaskFactory.build()
-        data = [t1, t1]
-        qs = ListAsQuerySet(data, model=QueuedTask)
-        # when
-        result = qs.distinct().all()
-        # then
-        self.assertEqual(result, [t1])
-
-
 class TestOther(TestCase):
     def test_count(self):
         # given
@@ -128,6 +105,29 @@ class TestOther(TestCase):
         # then
         self.assertEqual(result, data)
         self.assertIsNot(result, data)
+
+
+class TestAll(TestCase):
+    def test_should_return_all_objs(self):
+        # given
+        t1 = QueuedTaskFactory.build()
+        t2 = QueuedTaskFactory.build()
+        data = [t1, t2]
+        qs = ListAsQuerySet(data, model=QueuedTask)
+        # when
+        result = qs.all()
+        # then
+        self.assertEqual(result, data)
+
+    def test_should_return_all_objs_with_distinct(self):
+        # given
+        t1 = QueuedTaskFactory.build()
+        data = [t1, t1]
+        qs = ListAsQuerySet(data, model=QueuedTask)
+        # when
+        result = qs.distinct().all()
+        # then
+        self.assertEqual(result, [t1])
 
 
 class TestFilter(TestCase):
@@ -326,6 +326,20 @@ class TestValues(TestCase):
             result,
             [{"name": "charlie", "priority": 1}, {"name": "alpha", "priority": 2}],
         )
+
+    def test_should_return_data_with_distinct(self):
+        # given
+        t1 = QueuedTaskFactory.build(name="charlie")
+        t2 = QueuedTaskFactory.build(name="alpha")
+        t3 = QueuedTaskFactory.build(name="alpha")
+        data = [t1, t2, t3]
+        qs = ListAsQuerySet(data, model=QueuedTask)
+
+        # when
+        result = qs.distinct().values("name")
+
+        # then
+        self.assertEqual(result, [{"name": "charlie"}, {"name": "alpha"}])
 
 
 class TestValuesList(TestCase):

@@ -1,5 +1,6 @@
 """Definition of ListQuerySet."""
 
+from collections import OrderedDict
 from dataclasses import dataclass
 from typing import Any
 
@@ -53,17 +54,18 @@ class _FilterObj:
 
 
 class ListAsQuerySet(list):
-    """Masquerade a list as QuerySet."""
+    """Masquerade a list as QuerySet.
 
-    def __init__(self, *args, **kwargs):
-        try:
-            model = kwargs.pop("model")
-        except KeyError:
-            raise ValueError("You must specify a model") from None
+    Args:
+        - model: Django model (mandatory)
+        - is_distinct: Whether result should be distinct (optional)
+    """
 
+    def __init__(self, *args, model, **kwargs):
         self.model = model
+        self.is_distinct = kwargs.pop("is_distinct", False)
         self.query = QuerySetQueryStub()
-        self.is_distinct = False
+
         super().__init__(*args, **kwargs)
         self._id_mapper = {str(obj.id): n for n, obj in enumerate(self)}
         self._list_size = len(self)
@@ -84,8 +86,7 @@ class ListAsQuerySet(list):
     def _make_clone(self, new_list: list = None) -> "ListAsQuerySet":
         if new_list is None:
             new_list = self
-        obj = type(self)(list(new_list), model=self.model)
-        obj.is_distinct = self.is_distinct
+        obj = type(self)(list(new_list), model=self.model, is_distinct=self.is_distinct)
         return obj
 
     def distinct(self) -> "ListAsQuerySet":
@@ -162,7 +163,12 @@ class ListAsQuerySet(list):
 
     def values(self, *args):
         """:private:"""
-        return list(self._values(*args))
+        result = list(self._values(*args))
+        if self.is_distinct:
+            return list(
+                OrderedDict((frozenset(item.items()), item) for item in result).values()
+            )
+        return result
 
     def _values(self, *args):
         result = (

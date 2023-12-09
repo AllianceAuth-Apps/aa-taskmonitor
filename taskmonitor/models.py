@@ -29,7 +29,7 @@ class QueuedTask(models.Model):
     objects = QueuedTaskManager()
 
     def __str__(self):
-        return self.id
+        return f"id={self.id}, name={self.name}"
 
     @classmethod
     def from_dict(cls, obj: dict, position: int) -> "QueuedTask":
@@ -67,6 +67,9 @@ class TaskReport(models.Model):
         verbose_name = "report"
 
     id = models.BigIntegerField(primary_key=True)
+
+    def __str__(self) -> str:
+        return f"id={self.id}"
 
 
 class TaskStatistic(models.Model):

@@ -228,6 +228,12 @@ class QueuedTaskFactory(factory.django.DjangoModelFactory):
 
     id = factory.Sequence(lambda n: n + 1)
     app_name = factory.fuzzy.FuzzyChoice(fake_apps)
-    name = factory.LazyAttribute(lambda o: choice(_fake_tasks[o.app_name]))
     priority = factory.fuzzy.FuzzyInteger(0, 9)
     position = factory.Sequence(lambda n: n)
+
+    @factory.lazy_attribute
+    def name(obj):
+        try:
+            return choice(_fake_tasks[obj.app_name])
+        except KeyError:
+            return choice(_fake_tasks_all)

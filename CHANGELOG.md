@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Added
 
-- Optional mapping for app names
+- Task name can be custom and contain a different name for the "app" then the regular package name (e.g. see standings_requests vs. standingsrequests). To fix this we are adding an optional mapping feature for app names. This can be configured with the new setting `TASKMONITOR_APP_NAME_MAPPING_CONFIG`
 
 ## [0.22.0] - 2023-12-09
 

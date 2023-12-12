@@ -8,7 +8,7 @@ from typing import List, NamedTuple, Optional
 from django.core.cache import cache
 from django.utils import timezone
 
-from taskmonitor.helpers import extract_app_name
+from taskmonitor.core import app_names
 
 
 class QueuedTaskShort(NamedTuple):
@@ -28,7 +28,7 @@ class QueuedTaskShort(NamedTuple):
         properties = obj["properties"] if "properties" in obj else {}
         task_name = headers["task"]
         return cls(
-            app_name=extract_app_name(task_name),
+            app_name=app_names.from_task_name(task_name),
             id=headers["id"],
             name=task_name,
             priority=properties.get("priority"),

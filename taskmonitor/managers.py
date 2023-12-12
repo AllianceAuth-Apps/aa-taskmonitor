@@ -25,9 +25,9 @@ from .app_settings import (
     TASKMONITOR_REPORTS_MAX_AGE,
     TASKMONITOR_TRUNCATE_NESTED_DATA,
 )
-from .core import celery_queues
+from .core import app_names, celery_queues
 from .core.list_queryset import ListAsQuerySet
-from .helpers import extract_app_name, truncate_dict, truncate_list, truncate_result
+from .helpers import truncate_dict, truncate_list, truncate_result
 
 logger = LoggerAddTag(get_extension_logger(__name__), __title__)
 
@@ -132,7 +132,7 @@ class TaskLogManagerBase(TableSizeMixin, models.Manager):
     ) -> models.Model:
         """Create new object from a celery task."""
         params = {
-            "app_name": extract_app_name(task_name),
+            "app_name": app_names.from_task_name(task_name),
             "priority": priority,
             "parent_id": UUID(parent_id) if parent_id else None,
             "received": received,

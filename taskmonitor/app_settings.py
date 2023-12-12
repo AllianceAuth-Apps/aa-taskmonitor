@@ -41,3 +41,17 @@ TASKMONITOR_TRUNCATE_NESTED_DATA = clean_setting(
     "TASKMONITOR_TRUNCATE_NESTED_DATA", True
 )
 """Whether deeply nested task params and results are truncated."""
+
+TASKMONITOR_APP_NAME_MAPPING_CUSTOM = clean_setting(
+    "TASKMONITOR_APP_NAME_MAPPING_CUSTOM", {}
+)
+"""Ability to map tasks to the same app name.
+Map must be a dictionary with string keys and list of strings as value.
+All app names in the list will be replaced by it's key.
+"""
+
+TASKMONITOR_APP_NAME_MAPPING_DEFAULTS = {"standingsrequests": ["standings_requests"]}
+"""Default app mappings.
+
+Can be overridden or extended through TASKMONITOR_APP_NAME_MAPPING_CUSTOM.
+"""

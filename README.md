@@ -132,17 +132,18 @@ Here is a list of available settings for this app. They can be configured by add
 
 Note that all settings are optional and the app will use the documented default settings if they are not used.
 
-Name | Description | Default
--- | -- | --
-`TASKMONITOR_ENABLED`| Global switch to enable/disable task monitor. | `True`
-`TASKMONITOR_DATA_MAX_AGE`| Max age of logged tasks in hours. Older logs be deleted automatically. | `24`
-`TASKMONITOR_DELETE_STALE_BATCH_SIZE`| Size of task logs deleted together in one batch. | `5_000`
-`TASKMONITOR_HOUSEKEEPING_FREQUENCY`| Frequency of house keeping runs in minutes. | `15`
-`TASKMONITOR_QUEUED_TASKS_CACHE_TIMEOUT`| Timeout for caching queued tasks in seconds. | `10`
-`TASKMONITOR_QUEUED_TASKS_ADMIN_LIMIT`| The admin page will stop showing the list of queued tasks above this limit to protect against crashing caused by too high memory consumption. | `100_000`
-`TASKMONITOR_REPORTS_MAX_AGE`| Max age of cached reports in minutes. | `30`
-`TASKMONITOR_REPORTS_MAX_TOP`| Max items to show in the top reports. e.g. 10 will shop the top ten items. | `15`
-`TASKMONITOR_TRUNCATE_NESTED_DATA`| Whether deeply nested task params and results are truncated. Please see FAQ for details. | `True`
+Name|Description|Default
+--|--|--
+`TASKMONITOR_APP_NAME_MAPPING_CONFIG`|Ability to map tasks to the same app name. Map must be a dictionary with string keys and list of strings as value. All app names in the list will be replaced by it's key.|`{}`
+`TASKMONITOR_DATA_MAX_AGE`|Max age of logged tasks in hours. Older logs be deleted automatically.|`24`
+`TASKMONITOR_DELETE_STALE_BATCH_SIZE`|Size of task logs deleted together in one batch.|`5000`
+`TASKMONITOR_ENABLED`|Global switch to enable/disable task monitor.|`True`
+`TASKMONITOR_HOUSEKEEPING_FREQUENCY`|Frequency of house keeping runs in minutes.|`30`
+`TASKMONITOR_QUEUED_TASKS_ADMIN_LIMIT`|The admin page will stop showing the list of queued tasks above this limit to protect against crashing caused by too high memory consumption.|`100000`
+`TASKMONITOR_QUEUED_TASKS_CACHE_TIMEOUT`|Timeout for caching queued tasks in seconds. 0 will deactivate the cache.|`10`
+`TASKMONITOR_REPORTS_MAX_AGE`|Max age of cached reports in minutes.|`60`
+`TASKMONITOR_REPORTS_MAX_TOP`|Max items to show in the top reports. e.g. 10 will shop the top ten items.|`20`
+`TASKMONITOR_TRUNCATE_NESTED_DATA`|Whether deeply nested task params and results are truncated.|`True`
 
 ## FAQ
 

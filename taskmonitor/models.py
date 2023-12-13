@@ -6,8 +6,8 @@ import uuid
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db import models
 
+from .core import app_names
 from .core.celery_queues import QueuedTaskShort
-from .helpers import extract_app_name
 from .managers import QueuedTaskManager, TaskLogManager, TaskStatisticManager
 
 CHAR_FIELD_MAX_LENGTH = 255
@@ -40,7 +40,7 @@ class QueuedTask(models.Model):
         properties = obj["properties"] if "properties" in obj else {}
         task_name = headers["task"]
         return cls(
-            app_name=extract_app_name(task_name),
+            app_name=app_names.from_task_name(task_name),
             id=headers["id"],
             name=task_name,
             priority=properties.get("priority"),

@@ -16,18 +16,6 @@ class Echo:
         return value
 
 
-def extract_app_name(task_name: str) -> str:
-    """Extract the app name from a typical task name."""
-    parts = task_name.split(".")
-    try:
-        idx = parts.index("tasks")
-    except ValueError:
-        if len(parts) == 2:
-            return parts[0]
-        return ""
-    return parts[idx - 1] if idx > 0 else ""
-
-
 def dict_sort_keys(dct: dict) -> dict:
     """Return a copy of this dictionary with sorted keys."""
     return dict(sorted(dct.items(), key=lambda x: x[0].lower()))

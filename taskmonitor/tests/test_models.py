@@ -5,11 +5,12 @@ from unittest.mock import patch
 
 from django.test import TestCase
 from django.utils import timezone
+from django.utils.timezone import now
 
 from taskmonitor.core.celery_queues import QueuedTaskShort
-from taskmonitor.models import QueuedTask, TaskLog
+from taskmonitor.models import QueuedTask, TaskLog, TaskReport
 
-from .factories import QueuedTaskRawFactory, TaskLogFactory
+from .factories import QueuedTaskRawFactory, TaskLogFactory, TaskStatisticFactory
 from .fake_exceptions import make_fake_exception
 
 MODELS_PATH = "taskmonitor.models"
@@ -17,6 +18,12 @@ MANAGERS_PATH = "taskmonitor.managers"
 
 
 class TestTaskLog(TestCase):
+    def test_should_return_str(self):
+        # given
+        obj = TaskLogFactory()
+        # when/then
+        self.assertTrue(str(obj))
+
     def test_should_convert_to_json(self):
         # given
         obj = TaskLogFactory()
@@ -26,6 +33,25 @@ class TestTaskLog(TestCase):
         obj_2 = json.loads(data)
         self.assertEqual(obj_2["task_name"], obj.task_name)
         self.assertEqual(obj_2["task_id"], str(obj.task_id))
+
+    def test_should_calculate_runtime_when_saved(self):
+        # given
+        my_now = now()
+        started = my_now - dt.timedelta(seconds=42)
+        timestamp = my_now
+
+        # when
+        obj = TaskLogFactory(started=started, timestamp=timestamp)
+
+        # then
+        self.assertEqual(obj.runtime, 42)
+
+    def test_should_not_calculate_runtime_when_saved_but_not_started(self):
+        # when
+        obj = TaskLogFactory(started=None)
+
+        # then
+        self.assertIsNone(obj.runtime)
 
 
 class TestTaskLogQuerySet(TestCase):
@@ -334,6 +360,14 @@ class TestCalcThroughput(TestCase):
 
 
 class TestQueuedTask(TestCase):
+    def test_should_return_str(self):
+        # given
+        queued_task_raw = QueuedTaskRawFactory()
+        obj = QueuedTask.from_dict(queued_task_raw, 99)
+
+        # when/then
+        self.assertTrue(str(obj))
+
     def test_should_create_objects_from_dict(self):
         # given
         queued_task_raw = QueuedTaskRawFactory()
@@ -396,3 +430,19 @@ class TestQueuedTaskManager(TestCase):
 
 def raw_task_ids(lst):
     return [obj["headers"]["id"] for obj in lst]
+
+
+class TestTaskReport(TestCase):
+    def test_should_return_str(self):
+        # given
+        obj = TaskReport(id=99)
+        # then
+        self.assertTrue(str(obj))
+
+
+class TestStatistic(TestCase):
+    def test_should_return_str(self):
+        # given
+        obj = TaskStatisticFactory.build()
+        # then
+        self.assertTrue(str(obj))

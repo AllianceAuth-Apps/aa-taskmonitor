@@ -78,4 +78,3 @@ deploy-pypi:
 
     only:
         - tags
-        - master

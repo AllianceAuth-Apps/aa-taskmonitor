@@ -106,6 +106,11 @@ class TestOther(TestCase):
         self.assertEqual(result, data)
         self.assertIsNot(result, data)
 
+    def test_should_raise_error_when_trying_to_create(self):
+        # when/then
+        with self.assertRaises(NotImplementedError):
+            QueuedTaskFactory.create()
+
 
 class TestAll(TestCase):
     def test_should_return_all_objs(self):

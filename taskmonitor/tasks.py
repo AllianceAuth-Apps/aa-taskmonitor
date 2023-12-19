@@ -1,6 +1,6 @@
 """Tasks for Task Monitor."""
 
-from celery import shared_task
+from celery import chain, shared_task
 
 from allianceauth.services.hooks import get_extension_logger
 from allianceauth.services.tasks import QueueOnce
@@ -64,12 +64,13 @@ def delete_stale_tasklogs():
 @shared_task
 def refresh_cached_data():
     """Refresh cached data incl. reports."""
-    refresh_statistics_cache.apply_async(priority=DEFAULT_TASK_PRIORITY)
 
-    for report in cached_reports.reports():
-        refresh_single_report_cache.apply_async(
-            priority=DEFAULT_TASK_PRIORITY, args=[report.name]
-        )
+    tasks = [
+        refresh_single_report_cache.si(report.name).set(priority=DEFAULT_TASK_PRIORITY)
+        for report in cached_reports.reports()
+    ]
+    tasks.append(refresh_statistics_cache.si().set(priority=DEFAULT_TASK_PRIORITY))
+    chain(tasks).delay()
 
 
 @shared_task(base=QueueOnce)

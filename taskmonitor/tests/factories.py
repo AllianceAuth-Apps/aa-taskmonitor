@@ -2,6 +2,7 @@ import datetime as dt
 import itertools
 from dataclasses import asdict, dataclass
 from random import choice, choices, randint, shuffle
+from typing import Generic, TypeVar
 from uuid import UUID
 
 import factory
@@ -10,7 +11,15 @@ from factory.faker import faker
 
 from django.utils import timezone
 
-from taskmonitor.models import QueuedTask, TaskLog
+from taskmonitor.models import QueuedTask, TaskLog, TaskStatistic
+
+T = TypeVar("T")
+
+
+class BaseMetaFactory(Generic[T], factory.base.FactoryMetaClass):
+    def __call__(cls, *args, **kwargs) -> T:
+        return super().__call__(*args, **kwargs)
+
 
 # generate fake apps and task names
 faker = faker.Faker()
@@ -31,7 +40,9 @@ _fake_args = _fake_words + _fake_numbers
 shuffle(_fake_args)
 
 
-class TaskLogFactory(factory.django.DjangoModelFactory):
+class TaskLogFactory(
+    factory.django.DjangoModelFactory, metaclass=BaseMetaFactory[TaskLog]
+):
     class Meta:
         model = TaskLog
 
@@ -62,7 +73,7 @@ class TaskLogFactory(factory.django.DjangoModelFactory):
 
     @factory.lazy_attribute
     def runtime(self):
-        return (self.timestamp - self.started).total_seconds()
+        return (self.timestamp - self.started).total_seconds() if self.started else None
 
     @factory.lazy_attribute
     def priority(self):
@@ -107,7 +118,10 @@ class TaskLogFactory(factory.django.DjangoModelFactory):
             population=[0.5, 1, 10, 30, 120],
             weights=[75, 10, 5, 5, 5],
         )[0]
-        start_dt = self.started + dt.timedelta(seconds=0.1)
+        if self.started:
+            start_dt = self.started + dt.timedelta(seconds=0.1)
+        else:
+            start_dt = self.received
         return factory.fuzzy.FuzzyDateTime(
             start_dt=start_dt,
             end_dt=start_dt + dt.timedelta(seconds=max_duration),
@@ -222,7 +236,9 @@ class QueuedTaskRawFactory(factory.DictFactory):
     # ]
 
 
-class QueuedTaskFactory(factory.django.DjangoModelFactory):
+class QueuedTaskFactory(
+    factory.django.DjangoModelFactory, metaclass=BaseMetaFactory[QueuedTask]
+):
     class Meta:
         model = QueuedTask
 
@@ -237,3 +253,22 @@ class QueuedTaskFactory(factory.django.DjangoModelFactory):
             return choice(_fake_tasks[obj.app_name])
         except KeyError:
             return choice(_fake_tasks_all)
+
+
+class TaskStatisticFactory(
+    factory.django.DjangoModelFactory, metaclass=BaseMetaFactory[TaskStatistic]
+):
+    class Meta:
+        model = TaskStatistic
+
+    id = factory.Sequence(lambda n: n + 1)
+    app = factory.fuzzy.FuzzyChoice(fake_apps)
+    name = factory.LazyAttribute(lambda o: choice(_fake_tasks[o.app]))
+    runtime_min = factory.fuzzy.FuzzyFloat(0.1, 100)
+    runtime_avg = factory.fuzzy.FuzzyFloat(0.1, 100)
+    runtime_max = factory.fuzzy.FuzzyFloat(0.1, 100)
+    runtime_total = factory.fuzzy.FuzzyFloat(100, 10_000)
+    runs_succeeded = factory.fuzzy.FuzzyInteger(10, 10_000)
+    runs_failed = factory.fuzzy.FuzzyInteger(0, 1_000)
+    runs_retried = factory.fuzzy.FuzzyInteger(0, 1_000)
+    runs_total = factory.fuzzy.FuzzyInteger(10, 10_000)

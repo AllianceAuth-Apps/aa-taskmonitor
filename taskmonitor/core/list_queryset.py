@@ -89,6 +89,10 @@ class ListAsQuerySet(list):
         obj = type(self)(list(new_list), model=self.model, is_distinct=self.is_distinct)
         return obj
 
+    def create(self, *args, **kwargs) -> Any:
+        """:private:"""
+        raise NotImplementedError("ListAsQuerySet can not write to the database.")
+
     def distinct(self) -> "ListAsQuerySet":
         """:private:"""
         self.is_distinct = True

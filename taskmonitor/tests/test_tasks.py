@@ -40,27 +40,11 @@ class TestRefreshCachedData(TestCase):
         TaskLogFactory()
         TaskLogFactory()
 
-    @patch(TASKS_PATH + ".refresh_statistics_cache")
-    @patch(TASKS_PATH + ".refresh_single_report_cache")
-    def test_should_refresh_cached_data(
-        self, mock_refresh_single_report_cache, mock_refresh_statistics_cache
-    ):
+    @patch(TASKS_PATH + ".TaskStatistic")
+    @patch(TASKS_PATH + ".cached_reports.report", spec=True)
+    def test_should_refresh_cached_data(self, mock_cached_report, mock_TaskStatistic):
         # when
         tasks.refresh_cached_data()
         # then
-        self.assertEqual(mock_refresh_single_report_cache.apply_async.call_count, 18)
-        self.assertTrue(mock_refresh_statistics_cache.apply_async.called)
-
-    @patch(TASKS_PATH + ".cached_reports", spec=True)
-    def test_should_refresh_reports_cache(self, mock_cached_report):
-        # when
-        tasks.refresh_single_report_cache("dummy")
-        # then
-        self.assertTrue(mock_cached_report.report.return_value.refresh_cache.called)
-
-    @patch(TASKS_PATH + ".TaskStatistic")
-    def test_should_refresh_statistics_cache(self, mock_TaskStatistic):
-        # when
-        tasks.refresh_statistics_cache()
-        # then
+        self.assertEqual(mock_cached_report.return_value.refresh_cache.call_count, 18)
         self.assertTrue(mock_TaskStatistic.objects.refresh_cache.called)

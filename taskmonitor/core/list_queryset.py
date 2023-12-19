@@ -90,6 +90,7 @@ class ListAsQuerySet(list):
         return obj
 
     def create(self, *args, **kwargs) -> Any:
+        """:private:"""
         raise NotImplementedError("ListAsQuerySet can not write to the database.")
 
     def distinct(self) -> "ListAsQuerySet":

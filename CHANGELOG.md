@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased] - yyyy-mm-dd
 
+## [1.0.0] - tbd
+
+### Changed
+
+- Breaking Change: Removed support for AA 3
+
 ## [0.23.1] - 2023-12-19
 
 ### Changed

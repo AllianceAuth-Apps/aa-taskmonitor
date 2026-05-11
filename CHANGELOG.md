@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased] - yyyy-mm-dd
 
-## [1.0.0a1] - 2025-05-11
+## [1.0.0] - 2025-05-11
 
 This release is a major update with breaking changes.
 It adds support for AA5 and now requires Python 3.10 or higher.

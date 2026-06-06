@@ -12,6 +12,32 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 This release is a major update with breaking changes.
 It adds support for AA5 and now requires Python 3.10 or higher.
 
+### Upgrade notes
+
+If you are upgrading from AA4 and are running MariaDB there are some additional steps to follow.
+
+Due to a breaking change in Django 5 with regards to MariaDB you must reset taskmonitor migrations before migrating to AA5.
+Note that you will loose all task logs.
+
+#### 1 - Migrate to zero
+
+First migrate to zero. This will remove all tables for taskmonitor. This step should be done before migrating to AA5, but can also be done after the fact.
+
+```sh
+python manage.py migrate taskmonitor zero
+```
+
+Should you run into errors please remove the tables manually. The steps are decribed in "".
+
+### 2 - Re-apply migrations
+
+Then after you switched over to AA5 and Django 5 you can re-apply the migrations.
+This will re-create all tables for taskmonitor.
+
+```sh
+python manage.py migrate
+```
+
 ### Changed
 
 - BREAKING CHANGE: Removed support for Python 3.8

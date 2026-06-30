@@ -6,11 +6,10 @@ import uuid
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db import models
 
+from taskmonitor.core import app_names
+from taskmonitor.core.celery_queues import QueuedTaskShort
 from taskmonitor.core.json_encoders import UniversalJSONEncoder
-
-from .core import app_names
-from .core.celery_queues import QueuedTaskShort
-from .managers import QueuedTaskManager, TaskLogManager, TaskStatisticManager
+from taskmonitor.managers import QueuedTaskManager, TaskLogManager, TaskStatisticManager
 
 CHAR_FIELD_MAX_LENGTH = 255
 

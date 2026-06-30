@@ -11,7 +11,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Changed
 
+- Improved JSON serialization when storing task logs for the fields args, kwargs and result
 - Removed logger tag
+- Refactoring
 
 ### Fixed
 
@@ -37,7 +39,7 @@ First migrate to zero. This will remove all tables for taskmonitor. This step sh
 python manage.py migrate taskmonitor zero
 ```
 
-Should you run into errors please remove the tables manually. The steps are decribed in "".
+Should you run into errors please remove the tables manually. The steps are described in "".
 
 ### 2 - Re-apply migrations
 

@@ -10,9 +10,12 @@ from django.utils.timezone import now
 
 from taskmonitor.core.celery_queues import QueuedTaskShort
 from taskmonitor.models import QueuedTask, TaskLog, TaskReport
-
-from .factories import QueuedTaskRawFactory, TaskLogFactory, TaskStatisticFactory
-from .fake_exceptions import make_fake_exception
+from taskmonitor.tests.factories import (
+    QueuedTaskRawFactory,
+    TaskLogFactory,
+    TaskStatisticFactory,
+)
+from taskmonitor.tests.fake_exceptions import make_fake_exception
 
 MODELS_PATH = "taskmonitor.models"
 MANAGERS_PATH = "taskmonitor.managers"

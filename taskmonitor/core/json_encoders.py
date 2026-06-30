@@ -1,3 +1,5 @@
+"""Encoders for JSON."""
+
 import json
 from datetime import date, datetime
 from decimal import Decimal
@@ -9,20 +11,20 @@ class UniversalJSONEncoder(json.JSONEncoder):
     and falls back to str() for anything else it can't natively encode.
     """
 
-    def default(self, obj):
-        if isinstance(obj, (datetime, date)):
-            return obj.isoformat()
+    def default(self, o):
+        if isinstance(o, (datetime, date)):
+            return o.isoformat()
 
-        if isinstance(obj, (set, frozenset)):
-            return list(obj)
+        if isinstance(o, (set, frozenset)):
+            return list(o)
 
-        if hasattr(obj, "__dict__") and not callable(obj):
-            return obj.__dict__
+        if hasattr(o, "__dict__") and not callable(o):
+            return o.__dict__
 
-        if isinstance(obj, Decimal) or isinstance(obj, UUID):
-            return str(obj)
+        if isinstance(o, (Decimal, UUID)):
+            return str(o)
 
         try:
-            return super().default(obj)
+            return super().default(o)
         except TypeError:
-            return str(obj)
+            return str(o)

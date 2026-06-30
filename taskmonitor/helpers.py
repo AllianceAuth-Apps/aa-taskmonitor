@@ -4,6 +4,10 @@
 
 import datetime as dt
 import functools
+import json
+from datetime import date, datetime
+from decimal import Decimal
+from uuid import UUID
 
 
 class Echo:
@@ -14,6 +18,38 @@ class Echo:
     def write(self, value):
         """Write the value by returning it, instead of storing in a buffer."""
         return value
+
+
+class UniversalEncoder(json.JSONEncoder):
+    """
+    A JSON encoder that handles custom classes, datetimes, sets, Decimals,
+    and falls back to str() for anything else it can't natively encode.
+    """
+
+    def default(self, obj):
+        # 1. Handle dates and times
+        if isinstance(obj, (datetime, date)):
+            return obj.isoformat()
+
+        # 2. Handle sets (convert to lists)
+        if isinstance(obj, (set, frozenset)):
+            return list(obj)
+
+        # 3. Handle arbitrary objects / custom class instances
+        if hasattr(obj, "__dict__"):
+            return obj.__dict__
+
+        # 4. Handle special numeric types and UUIDs
+        if isinstance(obj, Decimal):
+            return float(obj)  # Or str(obj) if you need to preserve exact precision
+        if isinstance(obj, UUID):
+            return str(obj)
+
+        # 5. Catch-all fallback for everything else (e.g., functions, complex numbers)
+        try:
+            return super().default(obj)
+        except TypeError:
+            return str(obj)
 
 
 def dict_sort_keys(dct: dict) -> dict:

@@ -12,9 +12,7 @@ import redis
 from django.conf import settings
 
 from allianceauth.services.hooks import get_extension_logger
-from app_utils.logging import LoggerAddTag
 
-from taskmonitor import __title__
 from taskmonitor.app_settings import TASKMONITOR_QUEUED_TASKS_CACHE_TIMEOUT
 from taskmonitor.helpers import memcached
 
@@ -24,7 +22,7 @@ PRIORITY_SEP = "\x06\x16"
 DEFAULT_PRIORITY_STEPS = range(10)
 QUEUED_TASKS_CACHE_KEY = "queued-tasks-cache-key"
 
-logger = LoggerAddTag(get_extension_logger(__name__), __title__)
+logger = get_extension_logger(__name__)
 
 
 def _redis_client():

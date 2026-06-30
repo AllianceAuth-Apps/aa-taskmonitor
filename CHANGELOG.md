@@ -169,7 +169,7 @@ We strongly recommend to run the migrations while AA is stopped in order to avoi
 
 ### Changed
 
-- Reenabled "Reports" button on tasklogs admin page
+- Reenabled "Reports" button on task logs admin page
 - Timestamps now shown with more precision
 
 ### Fixed
@@ -230,7 +230,7 @@ We strongly recommend to run the migrations while AA is stopped in order to avoi
 
 ### Fixed
 
-- Deleting large amount of stale tasklogs fails due to transaction timeout
+- Deleting large amount of stale task logs fails due to transaction timeout
 
 ## [0.11.1] - 2023-02-06
 

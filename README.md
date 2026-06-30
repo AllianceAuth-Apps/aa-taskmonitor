@@ -5,9 +5,9 @@ An Alliance Auth app for monitoring celery tasks.
 [![release](https://img.shields.io/pypi/v/aa-taskmonitor?label=release)](https://pypi.org/project/aa-taskmonitor/)
 [![python](https://img.shields.io/pypi/pyversions/aa-taskmonitor)](https://pypi.org/project/aa-taskmonitor/)
 [![django](https://img.shields.io/pypi/djversions/aa-taskmonitor?label=django)](https://pypi.org/project/aa-taskmonitor/)
-[![pipeline](https://gitlab.com/ErikKalkoken/aa-taskmonitor/badges/master/pipeline.svg)](https://gitlab.com/ErikKalkoken/aa-taskmonitor/-/pipelines)
-[![codecov](https://codecov.io/gl/ErikKalkoken/aa-taskmonitor/branch/master/graph/badge.svg?token=MNEUWD6X4Q)](https://codecov.io/gl/ErikKalkoken/aa-taskmonitor)
-[![license](https://img.shields.io/badge/license-MIT-green)](https://gitlab.com/ErikKalkoken/aa-taskmonitor/-/blob/master/LICENSE)
+[![CI/CD Pipeline](https://github.com/AllianceAuth-Apps/aa-taskmonitor/actions/workflows/ci-cd.yaml/badge.svg)](https://github.com/AllianceAuth-Apps/aa-taskmonitor/actions/workflows/ci-cd.yaml)
+[![codecov](https://codecov.io/github/AllianceAuth-Apps/aa-taskmonitor/graph/badge.svg?token=KKl7c1qjGT)](https://codecov.io/github/AllianceAuth-Apps/aa-taskmonitor)
+[![license](https://img.shields.io/badge/license-MIT-green)](https://github.com/AllianceAuth-Apps/aa-taskmonitor#MIT-1-ov-file)
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![chat](https://img.shields.io/discord/790364535294132234)](https://discord.gg/zmh52wnfvM)
@@ -46,19 +46,19 @@ Task Monitor enables administrators to monitor celery tasks running on their sys
 
 ### Full log of all recently executed tasks
 
-![tasklog](https://i.imgur.com/jo1McnJ.png)
+![task log](https://i.imgur.com/jo1McnJ.png)
 
 ### View details for each task incl. exception tracelogs
 
-![tasklog](https://i.imgur.com/3XMc8Zi.png)
+![task log](https://i.imgur.com/3XMc8Zi.png)
 
 ### Example chart in reports
 
-![tasklog](https://i.imgur.com/OrVmZXT.png)
+![task log](https://i.imgur.com/OrVmZXT.png)
 
 ### View detailed statistics for all tasks
 
-![tasklog](https://imgpile.com/images/GQ58Wj.png)
+![task log](https://imgpile.com/images/GQ58Wj.png)
 
 ## Installation
 
